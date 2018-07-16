@@ -75,10 +75,6 @@ namespace ibc
       IMAGE_TYPE_FOURCC         = 8192,
       IMAGE_TYPE_MULTI_CH       = 9216,
       IMAGE_TYPE_JPEG           = 10240,
-      IMAGE_TYPE_NAITIVE        = 16384,
-      IMAGE_TYPE_NAITIVE_MONO,
-      IMAGE_TYPE_NAITIVE_COLOR,
-      IMAGE_TYPE_NAITIVE_COLOR_ALPHA,
       IMAGE_TYPE_ANY            = 32765
     };
 
@@ -105,7 +101,9 @@ namespace ibc
       DATA_TYPE_16BIT         = 16,
       DATA_TYPE_24BIT         = 24,
       DATA_TYPE_32BIT         = 32,
+      DATA_TYPE_40BIT         = 40,
       DATA_TYPE_48BIT         = 48,
+      DATA_TYPE_54BIT         = 56,
       DATA_TYPE_64BIT         = 64,
       DATA_TYPE_FLOAT         = 512,
       DATA_TYPE_DOUBLE        = 1024
@@ -180,7 +178,6 @@ namespace ibc
       mDataType               = DATA_TYPE_NOT_SPECIFIED;
       mBayerType              = BAYER_TYPE_NOT_SPECIFIED;
       mFourCC                 = 0;
-      mIsBottomUp             = false;
       mComponentsPerPixel     = 0;
     }
     // -------------------------------------------------------------------------
@@ -188,16 +185,15 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageFormat(ImageType inImageType, BufferFormat inBufferFormat, DataType inDataType,
                 BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
-                uint32 inFourCC = 0, bool inIsBottomUp = false,
-                int inComponentsPerPixel = -1)
+                uint32 inFourCC = 0,
+                int inComponentsPerPixel = 0)
     {
       mImageType              = inImageType;
       mBufferFormat           = inBufferFormat;
       mDataType               = inDataType;
       mBayerType              = inBayerType;
       mFourCC                 = inFourCC;
-      mIsBottomUp             = inIsBottomUp;
-      if (mComponentsPerPixel < 0)
+      if (mComponentsPerPixel == 0)
         mComponentsPerPixel = retrieveCoponentsPerPixel(inImageType);
       else
         mComponentsPerPixel = inComponentsPerPixel;
@@ -232,52 +228,34 @@ namespace ibc
     DataType        mDataType;
     BayerType       mBayerType;
     uint32          mFourCC;
-    bool            mIsBottomUp;
-    int             mComponentsPerPixel;
+    unsigned int    mComponentsPerPixel;
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // retrieveNativeImageType
-    // -------------------------------------------------------------------------
-    static ImageFormat  &retrieveNativeImageFormat(ImageType inType = IMAGE_TYPE_NAITIVE)
-    {
-      switch (inType)
-      {
-        case IMAGE_TYPE_NAITIVE_MONO:
-          return retrieveNativeMonoImageFormat;
-        case IMAGE_TYPE_NAITIVE:
-        case IMAGE_TYPE_NAITIVE_COLOR:
-          return retrieveNativeColorImageFormat();
-        case IMAGE_TYPE_NAITIVE_COLOR_ALPHA:
-          return retrieveNativeColorAlphaImageFormat();
-      }
-      return retrieveNativeColorImageFormat();
-    }
-    // -------------------------------------------------------------------------
     // retrieveNativeMonoFormat
     // -------------------------------------------------------------------------
-    static ImageFormat  &retrieveNativeMonoImageFormat()
+    static ImageFormat  retrieveNativeMonoImageFormat()
     {
       return ImageFormat(IMAGE_TYPE_MONO, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
     // retrieveNativeColorImageFormat
     // -------------------------------------------------------------------------
-    static ImageFormat  &retrieveNativeColorImageFormat()
+    static ImageFormat  retrieveNativeColorImageFormat()
     {
       return ImageFormat(IMAGE_TYPE_BGR, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
     // retrieveNativeColorAlphaImageFormat
     // -------------------------------------------------------------------------
-    static ImageFormat  &retrieveNativeColorAlphaImageFormat()
+    static ImageFormat  retrieveNativeColorAlphaImageFormat()
     {
       return ImageFormat(IMAGE_TYPE_BGRA, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
-    // obtainOnePixelCount
+    // coponentsPerPixel
     // -------------------------------------------------------------------------
-    static int  retrieveCoponentsPerPixel(ImageType inType)
+    static int  coponentsPerPixel(ImageType inType)
     {
       switch (inType)
       {
@@ -301,34 +279,77 @@ namespace ibc
       }
       return 0;
     }
+    // -------------------------------------------------------------------------
+    // sizeOfData
+    // -------------------------------------------------------------------------
+    static size_t  sizeOfData(DataType inType)
+    {
+      switch (inType)
+      {
+        case DATA_TYPE_8BIT:
+          return 1;
+        case DATA_TYPE_16BIT:
+          return 2;
+        case DATA_TYPE_24BIT:
+          return 3;
+        case DATA_TYPE_32BIT:
+          return 4;
+        case DATA_TYPE_40BIT:
+          return 5;
+        case DATA_TYPE_48BIT:
+          return 6;
+        case DATA_TYPE_54BIT:
+          return 7;
+        case DATA_TYPE_64BIT:
+          return 8;
+        case DATA_TYPE_FLOAT:
+          return 4;
+        case DATA_TYPE_DOUBLE:
+          return 8;
+      }
+      return 0;
+    }
+    // -------------------------------------------------------------------------
+    // isPlanar
+    // -------------------------------------------------------------------------
+    static bool isPlanar(BufferFormat inBufferFormat)
+    {
+      if (inBufferFormat == BUFFER_FORMAT_PLANAR_ALIGNED ||
+          inBufferFormat == BUFFER_FORMAT_PLANAR_PACKED)
+        return true;
+
+      return false;
+    }
   }
 
   // ---------------------------------------------------------------------------
-  // ImageSize class
+  // ImageHeader class
   // ---------------------------------------------------------------------------
-  class  ImageSize
+  class  ImageHeader
   {
   public:
     // -------------------------------------------------------------------------
-    // ImageBuffer
+    // ImageHeader
     // -------------------------------------------------------------------------
-    ImageSize()
+    ImageHeader(ImageFormat inFormat,
+                uint32 inWidth, uint32 inHeight,
+                bool inIsBottomUp = false,
+                size_t inBufferSize = 0;
+                size_t inHeaderOffset = 0,
+                size_t inPixelStep = 0,  size_t inWidthStep = 0,
+                size_t inPlaneStep = 0)
     {
-      mWidth                  = 0;
-      mHeight                 = 0;
-      mWidthStep              = 0;
-      mPlaneStep              = 0;
-    }
-    // -------------------------------------------------------------------------
-    // ImageBuffer
-    // -------------------------------------------------------------------------
-    ImageSize(uint32 inWidth, uint32 inHeight,
-                size_t inWidthStep, size_t inPlaneStep)
-    {
-      mWidth                  = inWidth;
-      mHeight                 = inHeight;
-      mWidthStep              = inWidthStep;
-      mPlaneStep              = inPlaneStep;
+      mFormat         = inFormat;
+      mWidth          = inWidth;
+      mHeight         = inHeight;
+      mIsBottomUp     = inIsBottomUp;
+      mBufferSize     = inBufferSize;
+      mHeaderOffset   = inHeaderOffset;
+      mPixelStep      = inPixelStep;
+      mWidthStep      = inWidthStep;
+      mPlaneStep      = inPlaneStep;
+      if (mBufferSize == 0)
+        mBufferSize = calculateBufferSize(this);
     }
     // -------------------------------------------------------------------------
     // ~ImageFormat
@@ -337,14 +358,56 @@ namespace ibc
     {
     }
 
+    // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // calculateBufferSize
+    // -------------------------------------------------------------------------
+    static size_t calculateBufferSize(ImageHeader inHeader)
+    {
+      size_t  size;
+
+      if (mPlaneStep != 0)
+      {
+        size  = ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        size *= mPlaneStep;
+        size += mHeaderOffset;
+        return size;
+      }
+      if (mWidthStep != 0)
+      {
+        size  =  inHeader.mSize.mHeight * mWidthStep;
+        if (ImageFormat::isPlanar(inHeader.mFormat.mBufferFormat))
+          size  *= ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        size += mHeaderOffset;
+        return size;
+      }
+      if (mPixelStep != 0)
+      {
+        size  =  inHeader.mSize.mWidth * inHeader.mSize.mPixelStep;
+        size  *= inHeader.mSize.mHeight;
+        if (ImageFormat::isPlanar(inHeader.mFormat.mBufferFormat))
+          size  *= ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        size += mHeaderOffset;
+        return size;
+      }
+      size =  ImageFormat::sizeOfData(inHeader.mFormat.mDataType);
+      size *= ImageFormat::coponentsPerPixel(mFormat.mImageType);
+      size *= inHeader.mSize.mWidth;
+      size *= inHeader.mSize.mHeight;
+      return size;
+    }
+
     // Member variables --------------------------------------------------------
+    ImageFormat     mFormat;
     uint32          mWidth;
     uint32          mHeight;
+    bool            mIsBottomUp;
+    size_t          mBufferSize;
+    size_t          mHeaderOffset;
+    size_t          mPixelStep;
     size_t          mWidthStep;
     size_t          mPlaneStep;
-//  uint32          mImageBufferPixelCount;
   }
-
  };
 };
 

@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include "ibc/image/image_exception.h"
 #include "ibc/image/image_buffer.hpp"
+#include "ibc/image/display_interface.hpp"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -50,24 +51,10 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // DisplayBuffer class
   // ---------------------------------------------------------------------------
-   template <typename ImageBufferType> class  DisplayBuffer : public ImageBuffer<ImageBufferType>
+   template <typename ImageBufferType> class  DisplayBuffer :
+          public ImageBuffer<ImageBufferType>, virtual public DisplayInterface
   {
   public:
-    // Enum --------------------------------------------------------------------
-    enum DisplayMapMode
-    {
-      DISPLAY_MAP_NOT_SPECIFIED   = 0,
-      DISPLAY_MAP_ANY,
-      DISPLAY_MAP_NONE,
-      DISPLAY_MAP_DIRECT,
-
-      DISPLAY_MAP_PARTIAL         = 1024,
-
-      DISPLAY_MAP_LUT_1D          = 2048,
-
-      DISPLAY_MAP_LUT_3D          = 4096
-    };
-
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // DisplayImageBuffer
@@ -130,14 +117,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getDisplayBufferPtr
     // -------------------------------------------------------------------------
-    const unsigned char *getDisplayBufferPtr()
+    virtual const unsigned char *getDisplayBufferPtr()
     {  
       return allocateDisplayBuffer();
     }
     // -------------------------------------------------------------------------
     // getDisplayBufferSize
     // -------------------------------------------------------------------------
-    size_t  getDisplayBufferSize()
+    virtual size_t  getDisplayBufferSize()
     {
       if (mUseParentBuffer == true)
         return getImageBufferSize();
@@ -147,35 +134,35 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getDisplayMapMode
     // -------------------------------------------------------------------------
-    DisplayMapMode  getDisplayMapMode()
+    virtual DisplayMapMode  getDisplayMapMode()
     {
       return mMapMode;
     }
     // -------------------------------------------------------------------------
     // setDisplayMapMode
     // -------------------------------------------------------------------------
-    bool  setDisplayMapMode(DisplayMapMode inMapMode)
+    virtual bool  setDisplayMapMode(DisplayMapMode inMapMode)
     {
       return false;
     }
     // -------------------------------------------------------------------------
     // setAsBufferUpdateNeeded
     // -------------------------------------------------------------------------
-    void  setAsBufferUpdateNeeded()
+    virtual void  setAsBufferUpdateNeeded()
     {
       mIsBufferUpdateNeeded = true;
     }
     // -------------------------------------------------------------------------
     // clearIsBufferUpdateNeededFlag
     // -------------------------------------------------------------------------
-    void  clearIsBufferUpdateNeededFlag()
+    virtual void  clearIsBufferUpdateNeededFlag()
     {
       mIsBufferUpdateNeeded = false;
     }
     // -------------------------------------------------------------------------
     // isBufferUpdateNeeded
     // -------------------------------------------------------------------------
-    bool  isBufferUpdateNeeded()
+    virtual bool  isBufferUpdateNeeded()
     {
       return mIsBufferUpdateNeeded;
     }
