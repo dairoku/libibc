@@ -45,48 +45,48 @@ namespace ibc
  namespace image
  {
   // ---------------------------------------------------------------------------
-  // ImageFormat class
+  // ImageType class
   // ---------------------------------------------------------------------------
-  class  ImageFormat
+  class  ImageType
   {
   public:
     // Enum --------------------------------------------------------------------
-    enum  ImageType
+    enum  PixelType
     {
-      IMAGE_TYPE_NOT_SPECIFIED  = 0,
-      IMAGE_TYPE_RAW            = 1024,
-      IMAGE_TYPE_MONO           = 2048,
-      IMAGE_TYPE_BAYER          = 3072,
-      IMAGE_TYPE_RGB            = 4096,
-      IMAGE_TYPE_RGBA,
-      IMAGE_TYPE_BGR,
-      IMAGE_TYPE_BGRA,
-      IMAGE_TYPE_CMY            = 5120,
-      IMAGE_TYPE_CMYK,
-      IMAGE_TYPE_HSL            = 6144,
-      IMAGE_TYPE_HSB,
-      IMAGE_TYPE_LUV,
-      IMAGE_TYPE_LAB,
-      IMAGE_TYPE_YUV410         = 7168, // YUV9
-      IMAGE_TYPE_YUV411,
-      IMAGE_TYPE_YUV420,                // YUV12
-      IMAGE_TYPE_YUV422,
-      IMAGE_TYPE_YUV444,
-      IMAGE_TYPE_FOURCC         = 8192,
-      IMAGE_TYPE_MULTI_CH       = 9216,
-      IMAGE_TYPE_JPEG           = 10240,
-      IMAGE_TYPE_ANY            = 32765
+      PIXEL_TYPE_NOT_SPECIFIED  = 0,
+      PIXEL_TYPE_RAW            = 1024,
+      PIXEL_TYPE_MONO           = 2048,
+      PIXEL_TYPE_BAYER          = 3072,
+      PIXEL_TYPE_RGB            = 4096,
+      PIXEL_TYPE_RGBA,
+      PIXEL_TYPE_BGR,
+      PIXEL_TYPE_BGRA,
+      PIXEL_TYPE_CMY            = 5120,
+      PIXEL_TYPE_CMYK,
+      PIXEL_TYPE_HSL            = 6144,
+      PIXEL_TYPE_HSB,
+      PIXEL_TYPE_LUV,
+      PIXEL_TYPE_LAB,
+      PIXEL_TYPE_YUV410         = 7168, // YUV9
+      PIXEL_TYPE_YUV411,
+      PIXEL_TYPE_YUV420,                // YUV12
+      PIXEL_TYPE_YUV422,
+      PIXEL_TYPE_YUV444,
+      PIXEL_TYPE_FOURCC         = 8192,
+      PIXEL_TYPE_MULTI_CH       = 9216,
+      PIXEL_TYPE_JPEG           = 10240,
+      PIXEL_TYPE_ANY            = 32765
     };
 
-     enum  BufferFormat
+     enum  BufferType
     {
-      BUFFER_FORMAT_NOT_SPECIFIED = 0,
-      BUFFER_FORMAT_PIXEL_ALIGNED,
-      BUFFER_FORMAT_PIXEL_PACKED,
-      BUFFER_FORMAT_PLANAR_ALIGNED,
-      BUFFER_FORMAT_PLANAR_PACKED,
-      BUFFER_FORMAT_COMPRESSION   = 10240,
-      BUFFER_FORMAT_ANY           = 32765
+      BUFFER_TYPE_NOT_SPECIFIED = 0,
+      BUFFER_TYPE_PIXEL_ALIGNED,
+      BUFFER_TYPE_PIXEL_PACKED,
+      BUFFER_TYPE_PLANAR_ALIGNED,
+      BUFFER_TYPE_PLANAR_PACKED,
+      BUFFER_TYPE_COMPRESSION   = 10240,
+      BUFFER_TYPE_ANY           = 32765
     };
 
     enum  DataType
@@ -122,8 +122,8 @@ namespace ibc
   
     enum  ChannelType
     {
-      CH_TYPE_NOT_SPECIFIED = 0,
-      CH_TYPE_LUMINANCE     = 1024,
+      CH_TYPE_NOT_SPECIFIED   = 0,
+      CH_TYPE_LUMINANCE       = 1024,
       CH_TYPE_RED,
       CH_TYPE_GREEN,
       CH_TYPE_BLUE,
@@ -143,38 +143,38 @@ namespace ibc
       CH_TYPE_A_STAR,
       CH_TYPE_B_STAR,
       CH_TYPE_Y,
-      CH_TYPE_U,          // Cb
-      CH_TYPE_V,          // Cr
-      CH_TYPE_R_0         = 2048,
+      CH_TYPE_U,            // Cb
+      CH_TYPE_V,            // Cr
+      CH_TYPE_R_0           = 2048,
       CH_TYPE_R_1,
-      CH_TYPE_G_0         = 2064,
+      CH_TYPE_G_0           = 2064,
       CH_TYPE_G_1,
-      CH_TYPE_B_0         = 2080,
+      CH_TYPE_B_0           = 2080,
       CH_TYPE_B_1,
-      CH_TYPE_W_0         = 2096,
+      CH_TYPE_W_0           = 2096,
       CH_TYPE_W_1,
-      CH_TYPE_IR_0        = 2112,
+      CH_TYPE_IR_0          = 2112,
       CH_TYPE_IR_1,
-      CH_TYPE_Y_0         = 3072,
+      CH_TYPE_Y_0           = 3072,
       CH_TYPE_Y_1,
       CH_TYPE_Y_3,
       CH_TYPE_Y_4,
-      CH_TYPE_U_0         = 3088,
+      CH_TYPE_U_0           = 3088,
       CH_TYPE_U_1,
-      CH_TYPE_V_0         = 3104,
+      CH_TYPE_V_0           = 3104,
       CH_TYPE_V_1,
-      CH_TYPE_MULTI_0     = 4096,
-      CH_TYPE_ANY         = 32765
+      CH_TYPE_MULTI_0       = 4096,
+      CH_TYPE_ANY           = 32765
     };
 
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // ImageBuffer
     // -------------------------------------------------------------------------
-    ImageFormat()
+    ImageType()
     {
-      mImageType              = IMAGE_TYPE_NOT_SPECIFIED;
-      mBufferFormat           = BUFFER_FORMAT_NOT_SPECIFIED;
+      mPixelType              = PIXEL_TYPE_NOT_SPECIFIED;
+      mBufferType             = BUFFER_TYPE_NOT_SPECIFIED;
       mDataType               = DATA_TYPE_NOT_SPECIFIED;
       mBayerType              = BAYER_TYPE_NOT_SPECIFIED;
       mFourCC                 = 0;
@@ -183,25 +183,25 @@ namespace ibc
     // -------------------------------------------------------------------------
     // ImageBuffer
     // -------------------------------------------------------------------------
-    ImageFormat(ImageType inImageType, BufferFormat inBufferFormat, DataType inDataType,
+    ImageType(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
                 BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
                 uint32 inFourCC = 0,
                 int inComponentsPerPixel = 0)
     {
-      mImageType              = inImageType;
-      mBufferFormat           = inBufferFormat;
+      mPixelType              = inPixelType;
+      mBufferType             = inBufferType;
       mDataType               = inDataType;
       mBayerType              = inBayerType;
       mFourCC                 = inFourCC;
       if (mComponentsPerPixel == 0)
-        mComponentsPerPixel = retrieveCoponentsPerPixel(inImageType);
+        mComponentsPerPixel = coponentsPerPixel(inPixelType);
       else
         mComponentsPerPixel = inComponentsPerPixel;
     }
     // -------------------------------------------------------------------------
-    // ~ImageFormat
+    // ~ImageType
     // -------------------------------------------------------------------------
-    virtual ~ImageFormat()
+    virtual ~ImageType()
     {
     }
     // Member functions --------------------------------------------------------
@@ -210,9 +210,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     bool  isValid()
     {
-      if (mImageType == IMAGE_TYPE_NOT_SPECIFIED)
+      if (mPixelType == PIXEL_TYPE_NOT_SPECIFIED)
         return false;
-      if (mBufferFormat == BUFFER_FORMAT_NOT_SPECIFIED)
+      if (mBufferType == BUFFER_TYPE_NOT_SPECIFIED)
         return false;
       if (mDataType == DATA_TYPE_NOT_SPECIFIED)
         return false;
@@ -223,58 +223,56 @@ namespace ibc
       return true;
     }
     // Member variables --------------------------------------------------------
-    ImageType       mImageType;
-    BufferFormat    mBufferFormat;
+    PixelType       mPixelType;
+    BufferType      mBufferType;
     DataType        mDataType;
     BayerType       mBayerType;
-    uint32          mFourCC;
-    unsigned int    mComponentsPerPixel;
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // retrieveNativeMonoFormat
     // -------------------------------------------------------------------------
-    static ImageFormat  retrieveNativeMonoImageFormat()
+    static ImageType  retrieveNativeMonoImageType()
     {
-      return ImageFormat(IMAGE_TYPE_MONO, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
+      return ImageType(PIXEL_TYPE_MONO, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
-    // retrieveNativeColorImageFormat
+    // retrieveNativeColorImageType
     // -------------------------------------------------------------------------
-    static ImageFormat  retrieveNativeColorImageFormat()
+    static ImageType  retrieveNativeColorImageType()
     {
-      return ImageFormat(IMAGE_TYPE_BGR, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
+      return ImageType(PIXEL_TYPE_BGR, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
-    // retrieveNativeColorAlphaImageFormat
+    // retrieveNativeColorAlphaImageType
     // -------------------------------------------------------------------------
-    static ImageFormat  retrieveNativeColorAlphaImageFormat()
+    static ImageType  retrieveNativeColorAlphaImageType()
     {
-      return ImageFormat(IMAGE_TYPE_BGRA, BUFFER_FORMAT_PIXEL_ALIGNED, DATA_TYPE_8BIT);
+      return ImageType(PIXEL_TYPE_BGRA, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
     }
     // -------------------------------------------------------------------------
     // coponentsPerPixel
     // -------------------------------------------------------------------------
-    static int  coponentsPerPixel(ImageType inType)
+    static int  coponentsPerPixel(PixelType inType)
     {
       switch (inType)
       {
-        case IMAGE_TYPE_RAW:
-        case IMAGE_TYPE_MONO:
-        case IMAGE_TYPE_BAYER:
+        case PIXEL_TYPE_RAW:
+        case PIXEL_TYPE_MONO:
+        case PIXEL_TYPE_BAYER:
           return 1;
-        case IMAGE_TYPE_RGB:
-        case IMAGE_TYPE_BGR:
-        case IMAGE_TYPE_CMY:
-        case IMAGE_TYPE_HSL:
-        case IMAGE_TYPE_HSB:
-        case IMAGE_TYPE_LUV:
-        case IMAGE_TYPE_LAB:
-        case IMAGE_TYPE_YUV444:
+        case PIXEL_TYPE_RGB:
+        case PIXEL_TYPE_BGR:
+        case PIXEL_TYPE_CMY:
+        case PIXEL_TYPE_HSL:
+        case PIXEL_TYPE_HSB:
+        case PIXEL_TYPE_LUV:
+        case PIXEL_TYPE_LAB:
+        case PIXEL_TYPE_YUV444:
           return 3;
-        case IMAGE_TYPE_RGBA:
-        case IMAGE_TYPE_BGRA:
-        case IMAGE_TYPE_CMYK:
+        case PIXEL_TYPE_RGBA:
+        case PIXEL_TYPE_BGRA:
+        case PIXEL_TYPE_CMYK:
           return 4;
       }
       return 0;
@@ -312,10 +310,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // isPlanar
     // -------------------------------------------------------------------------
-    static bool isPlanar(BufferFormat inBufferFormat)
+    static bool isPlanar(BufferType inBufferType)
     {
-      if (inBufferFormat == BUFFER_FORMAT_PLANAR_ALIGNED ||
-          inBufferFormat == BUFFER_FORMAT_PLANAR_PACKED)
+      if (inBufferType == BUFFER_TYPE_PLANAR_ALIGNED ||
+          inBufferType == BUFFER_TYPE_PLANAR_PACKED)
         return true;
 
       return false;
@@ -323,15 +321,15 @@ namespace ibc
   }
 
   // ---------------------------------------------------------------------------
-  // ImageHeader class
+  // ImageFormat class
   // ---------------------------------------------------------------------------
-  class  ImageHeader
+  class  ImageFormat
   {
   public:
     // -------------------------------------------------------------------------
-    // ImageHeader
+    // ImageFormat
     // -------------------------------------------------------------------------
-    ImageHeader(ImageFormat inFormat,
+    ImageFormat(ImageType inType,
                 uint32 inWidth, uint32 inHeight,
                 bool inIsBottomUp = false,
                 size_t inBufferSize = 0;
@@ -339,7 +337,7 @@ namespace ibc
                 size_t inPixelStep = 0,  size_t inWidthStep = 0,
                 size_t inPlaneStep = 0)
     {
-      mFormat         = inFormat;
+      mType           = inType;
       mWidth          = inWidth;
       mHeight         = inHeight;
       mIsBottomUp     = inIsBottomUp;
@@ -352,7 +350,7 @@ namespace ibc
         mBufferSize = calculateBufferSize(this);
     }
     // -------------------------------------------------------------------------
-    // ~ImageFormat
+    // ~ImageType
     // -------------------------------------------------------------------------
     virtual ~ImageSize()
     {
@@ -362,13 +360,13 @@ namespace ibc
     // -------------------------------------------------------------------------
     // calculateBufferSize
     // -------------------------------------------------------------------------
-    static size_t calculateBufferSize(ImageHeader inHeader)
+    static size_t calculateBufferSize(ImageFormat inHeader)
     {
       size_t  size;
 
       if (mPlaneStep != 0)
       {
-        size  = ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        size  = ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
         size *= mPlaneStep;
         size += mHeaderOffset;
         return size;
@@ -376,8 +374,8 @@ namespace ibc
       if (mWidthStep != 0)
       {
         size  =  inHeader.mSize.mHeight * mWidthStep;
-        if (ImageFormat::isPlanar(inHeader.mFormat.mBufferFormat))
-          size  *= ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        if (ImageType::isPlanar(inHeader.mFormat.mBufferType))
+          size  *= ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
         size += mHeaderOffset;
         return size;
       }
@@ -385,20 +383,22 @@ namespace ibc
       {
         size  =  inHeader.mSize.mWidth * inHeader.mSize.mPixelStep;
         size  *= inHeader.mSize.mHeight;
-        if (ImageFormat::isPlanar(inHeader.mFormat.mBufferFormat))
-          size  *= ImageFormat::coponentsPerPixel(inHeader.mFormat.mImageType);
+        if (ImageType::isPlanar(inHeader.mFormat.mBufferType))
+          size  *= ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
         size += mHeaderOffset;
         return size;
       }
-      size =  ImageFormat::sizeOfData(inHeader.mFormat.mDataType);
-      size *= ImageFormat::coponentsPerPixel(mFormat.mImageType);
+      size =  ImageType::sizeOfData(inHeader.mFormat.mDataType);
+      size *= ImageType::coponentsPerPixel(mFormat.mPixelType);
       size *= inHeader.mSize.mWidth;
       size *= inHeader.mSize.mHeight;
       return size;
     }
 
     // Member variables --------------------------------------------------------
-    ImageFormat     mFormat;
+    ImageType       mType;
+    uint32          mFourCC;
+    unsigned int    mComponentsPerPixel;
     uint32          mWidth;
     uint32          mHeight;
     bool            mIsBottomUp;
