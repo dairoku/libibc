@@ -39,9 +39,10 @@
 #include "ibc/gtkmm/image_view.h"
 
 // =============================================================================
-// ImageViewBase class
+// ImageView class
 // =============================================================================
 ibc::gtkmm::ImageView::ImageView()
+    : Glib::ObjectBase("ImageView")
 {
   signal_realize().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageView::on_widget_created));
 }

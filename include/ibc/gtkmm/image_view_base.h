@@ -48,19 +48,12 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // ImageView class
   // ---------------------------------------------------------------------------
-  class ImageViewBase : public Gtk::Scrollable, public Gtk::Widget  // Note: Order of Scrollable -> Widget is very important
+  class ImageViewBase : virtual public Gtk::Scrollable, virtual public Gtk::Widget  // Note: Order of Scrollable -> Widget is very important
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     ImageViewBase();
     virtual ~ImageViewBase();
-
-    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> hadjustment_;
-    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> vadjustment_;
-    Glib::Property<Gtk::ScrollablePolicy> hscroll_policy_;
-    Glib::Property<Gtk::ScrollablePolicy> vscroll_policy_;
-    sigc::connection hadjustment_connection_;
-    sigc::connection vadjustment_connection_;
 
   protected:
     virtual void  on_realize();
@@ -78,6 +71,13 @@ namespace ibc
     virtual void configure_hadjustment();
     virtual void configure_vadjustment();
     virtual void adjustment_value_changed();
+
+    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> hadjustment_;
+    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> vadjustment_;
+    Glib::Property<Gtk::ScrollablePolicy> hscroll_policy_;
+    Glib::Property<Gtk::ScrollablePolicy> vscroll_policy_;
+    sigc::connection hadjustment_connection_;
+    sigc::connection vadjustment_connection_;
 
     double m_window_x, m_window_y, m_window_width, m_window_height;
     double m_width, m_height;

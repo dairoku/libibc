@@ -42,7 +42,7 @@
 // ImageViewBase class
 // =============================================================================
 ibc::gtkmm::ImageViewBase::ImageViewBase()
-    : Glib::ObjectBase("my_draw_area"),
+    : Glib::ObjectBase("ImageViewBase"),
       hadjustment_(*this, "hadjustment"),
       vadjustment_(*this, "vadjustment"),
       hscroll_policy_(*this, "hscroll-policy", Gtk::SCROLL_NATURAL),

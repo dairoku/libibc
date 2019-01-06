@@ -49,7 +49,7 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // ImageView class
   // ---------------------------------------------------------------------------
-  class ImageView : public ImageViewBase
+  class ImageView : virtual public ImageViewBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
