@@ -28,7 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/10
-  \brief    Header file for handling the image buffer
+  \brief    Format file for handling the image buffer
 
   This file defines the image buffer class for the IBC Library
 */
@@ -91,7 +91,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // setImageBufferPtr
     // -------------------------------------------------------------------------
-    void  setImageBufferPtr(void *inImagePtr, Image::ImageHeader inHeader)
+    void  setImageBufferPtr(void *inImagePtr, Image::ImageFormat inFormat)
     {
       if (mAllocatedImageBuffer != NULL)
       {
@@ -99,7 +99,7 @@ namespace ibc
         mAllocatedImageBuffer = NULL;
       }
 
-      mHeader = inHeader;
+      mImageFormat = inFormat;
       mExternalImageBuffer = inImagePtr;
 
       parameterModified();
@@ -108,13 +108,13 @@ namespace ibc
     // -------------------------------------------------------------------------
     // allocateImageBuffer
     // -------------------------------------------------------------------------
-    void  allocateImageBuffer(Image::ImageHeader inHeader)
+    void  allocateImageBuffer(Image::ImageFormat inFormat)
     {
       if (mAllocatedImageBuffer != NULL)
       {
-        if (mImageHeader.getBufferSize() == inHeader.getBufferSize())
+        if (mImageFormat.mBufferSize == inFormat.mBufferSize)
         {
-          mImageHeader = inHeader;
+          mImageFormat = inFormat;
           return;
         }
 
@@ -122,10 +122,10 @@ namespace ibc
         mAllocatedImageBuffer = NULL;
       }
 
-      mImageHeader = inHeader;
+      mImageFormat = inFormat;
       mExternalImageBuffer = NULL;
 
-      mAllocatedImageBuffer = new unsigned char[mImageHeader.getBufferSize()];
+      mAllocatedImageBuffer = new unsigned char[mImageFormat.mBufferSize];
       if (mAllocatedImageBuffer == NULL)
       {
         if (mThrowsEx == false)
@@ -140,51 +140,51 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  setMonoImageBufferPtr(int inWidth, int inHeight, void *inImagePtr, bool inIsBottomUp = false)
     {
-      ImageHeader header(ImageFormat::retrieveNativeMonoImageFormat(),
+      ImageFormat format(ImageFormat::retrieveNativeMonoImageFormat(),
                          inWidth, inHeight,
                          inIsBottomUp);
-      setImageBufferPtr(inImagePtr, header);
+      setImageBufferPtr(inImagePtr, format);
     }
     // -------------------------------------------------------------------------
     // setColorImageBufferPtr
     // -------------------------------------------------------------------------
     void  setColorImageBufferPtr(int inWidth, int inHeight, void *inImagePtr, bool inIsBottomUp = false)
     {
-      ImageHeader header(ImageFormat::retrieveNativeColorImageFormat(),
+      ImageFormat format(ImageFormat::retrieveNativeColorImageFormat(),
                          inWidth, inHeight,
                          inIsBottomUp);
-      setImageBufferPtr(inImagePtr, header);
+      setImageBufferPtr(inImagePtr, format);
     }
     // -------------------------------------------------------------------------
     // allocateMonoImageBuffer
     // -------------------------------------------------------------------------
     void  allocateMonoImageBuffer(int inWidth, int inHeight, bool inIsBottomUp = false)
     {
-      ImageHeader header(ImageFormat::retrieveNativeMonoImageFormat(),
+      ImageFormat format(ImageFormat::retrieveNativeMonoImageFormat(),
                          inWidth, inHeight,
                          inIsBottomUp);
-      allocateImageBuffer(header);
+      allocateImageBuffer(format);
     }
     // -------------------------------------------------------------------------
     // allocateColorImageBuffer
     // -------------------------------------------------------------------------
     void  allocateColorImageBuffer(int inWidth, int inHeight, bool inIsBottomUp = false)
     {
-      ImageHeader header(ImageFormat::retrieveNativeColorImageFormat(),
+      ImageFormat format(ImageFormat::retrieveNativeColorImageFormat(),
                          inWidth, inHeight,
                          inIsBottomUp);
-      allocateImageBuffer(header);
+      allocateImageBuffer(format);
     }
     // -------------------------------------------------------------------------
     // copyIntoImageBuffer
     // -------------------------------------------------------------------------
-    void  copyIntoImageBuffer(const void *inImagePtr, Image::ImageHeader inHeader)
+    void  copyIntoImageBuffer(const void *inImagePtr, Image::ImageFormat inFormat)
     {
-      allocateImageBuffer(inHeader);
+      allocateImageBuffer(inFormat);
 
-      ::CopyMemory(mAllocatedImageBuffer, inImagePtr, mImageHeader.mBufferSize);
+      ::CopyMemory(mAllocatedImageBuffer, inImagePtr, mImageFormat.mBufferSize);
 
-      parameterModified();
+      //parameterModified();
       imageBufferModified();
     }
     // -------------------------------------------------------------------------
@@ -201,18 +201,11 @@ namespace ibc
       mIsImageModified = true;
     }
     // -------------------------------------------------------------------------
-    // getImageHeader
-    // -------------------------------------------------------------------------
-    ImageFormat  getImageHeader()
-    {
-      return mHeader;
-    }
-    // -------------------------------------------------------------------------
     // getImageFormat
     // -------------------------------------------------------------------------
     ImageFormat  getImageFormat()
     {
-      return mHeader.mFormat;
+      return mImageFormat;
     }
     // -------------------------------------------------------------------------
     // isImageModified
@@ -293,15 +286,7 @@ namespace ibc
     ImageBufferType *mAllocatedImageBuffer;
     ImageBufferType *mExternalImageBuffer;
 
-    ImageFormat     mFormat;
-    ImageSize       mSize;
-    //BufferFormat    mFormat;
-    //int             mWidth;
-    //int             mHeight;
-    //bool            mIsBottomUp;
-    //int             mOnePixelCount;
-    //int             mImageBufferPixelCount;
-    //size_t          mImageBufferSize;
+    ImageFormat     mImageFormat;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------

@@ -55,31 +55,29 @@ namespace ibc
           public ImageBuffer<ImageBufferType>, virtual public DisplayInterface
   {
   public:
+    // Enum --------------------------------------------------------------------
+    enum DisplayMapMode
+    {
+      DISPLAY_MAP_NOT_SPECIFIED	      = 0,
+      DISPLAY_MAP_ANY,
+      DISPLAY_MAP_NONE,
+      DISPLAY_MAP_DIRECT,
+
+      DISPLAY_MAP_PARTIAL             = 1024,
+
+      DISPLAY_MAP_LUT_1D              = 2048,
+
+      DISPLAY_MAP_LUT_3D              = 4096
+    };
+
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // DisplayImageBuffer
     // -------------------------------------------------------------------------
-    DisplayBuffer()
+    DisplayBuffer(DisplayMapMode inMapMode = DISPLAY_MAP_NOT_SPECIFIED)
       : ImageBuffer()
     {
-      if (typeid(ImageBufferType) == typeid(unsigned char))
-      {
-        mMapMode = DISPLAY_MAP_NONE;
-        mUseParentBuffer = true;
-      }
-      else
-      {
-        mMapMode          = DISPLAY_MAP_NOT_SPECIFIED;
-        mUseParentBuffer  = false;
-      }
-
-      mDisplayBuffer      = NULL;
-
-      mDisplayFormat  = BUFFER_FORMAT_NOT_SPECIFIED;
-      mDisplayWidth   = 0;
-      mDisplayHeight  = 0;
-      mDisplayIsBottomUp    = false;
-
+      mMapMode = inMapMode;
       mIsBufferUpdateNeeded = false;
     }
     // -------------------------------------------------------------------------
@@ -87,8 +85,6 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~DisplayBuffer()
     {
-      if (mDisplayBuffer != NULL)
-        delete mDisplayBuffer;
     }
 
     // Member functions --------------------------------------------------------
@@ -115,21 +111,32 @@ namespace ibc
       clearIsBufferUpdateNeededFlag();
     }
     // -------------------------------------------------------------------------
+    // setDisplayBufferPtr
+    // -------------------------------------------------------------------------
+    virtual void  setDisplayBufferPtr(void *inImagePtr, Image::ImageFormat inFormat)
+    {  
+      mDisplayBuffer.setImageBufferPtr(inImagePtr, inFormat);
+    }
+    // -------------------------------------------------------------------------
+    // allocateDisplayBuffer
+    // -------------------------------------------------------------------------
+    virtual void allocateDisplayBuffer(Image::ImageFormat inFormat)
+    {  
+      mDisplayBuffer.allocateDisplayBuffer(inFormat);
+    }
+    // -------------------------------------------------------------------------
     // getDisplayBufferPtr
     // -------------------------------------------------------------------------
     virtual const unsigned char *getDisplayBufferPtr()
     {  
-      return allocateDisplayBuffer();
+      return mDisplayBuffer.getImageBufferPtr();
     }
     // -------------------------------------------------------------------------
-    // getDisplayBufferSize
+    // getDisplayBufferFormat
     // -------------------------------------------------------------------------
-    virtual size_t  getDisplayBufferSize()
+    virtual ImageFormat  getDisplayBufferFormat()
     {
-      if (mUseParentBuffer == true)
-        return getImageBufferSize();
-
-      return mDisplayBufferSize;
+      return mDisplayBuffer.getImageFormat();
     }
     // -------------------------------------------------------------------------
     // getDisplayMapMode
@@ -167,72 +174,21 @@ namespace ibc
       return mIsBufferUpdateNeeded;
     }
 
-    // Static Functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // obtainNativeColorFormat
-    // -------------------------------------------------------------------------
-    static BufferFormat obtainNativeColorFormat()
-    {
-    }
-
   protected:
     // Member variables --------------------------------------------------------
     DisplayMapMode  mMapMode;
 
-    bool            mUseParentBuffer;
-    unsigned char   *mDisplayBuffer;
-
-    BufferFormat    mDisplayFormat;
-    int             mDisplayWidth;
-    int             mDisplayHeight;
-    bool            mDisplayIsBottomUp;
-    size_t          mDisplayBufferSize;
-
-    bool            mIsBufferUpdateNeeded;
+    ImageBuffer<unsigned char>  mDisplayBuffer;
+    bool  mIsBufferUpdateNeeded;
 
     // Member functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // allocateDisplayBuffer
-    // -------------------------------------------------------------------------
-    unsigned char  *allocateDisplayBuffer()
-    {
-      if (mUseParentBuffer == true)
-        return getImageBufferPtr();
-
-      if (mAllocatedImageBuffer == NULL && mExternalImageBuffer == NULL)
-        return NULL;
-
-      //if (mWidth != mDisplayWidth && mHeight != mDisplayHeight && mFormat != mDisplayFormat)
-      if (mWidth != mDisplayWidth || mHeight != mDisplayHeight || mFormat != mDisplayFormat)
-      {
-        if (mDisplayBuffer != NULL)
-          delete mDisplayBuffer;
-
-        mMapMode = DISPLAY_MAP_DIRECT;
-        mDisplayWidth = mWidth;
-        mDisplayHeight = mHeight;
-        mDisplayFormat = mFormat;
-        mDisplayBufferSize = mImageBufferPixelCount * sizeof(unsigned char);
-
-        mDisplayBuffer = new unsigned char[mImageBufferPixelCount];
-        if (mDisplayBuffer == NULL)
-          throw ImageException(Exception::MEMORY_ERROR,
-                "mDisplayBuffer == NULL", BLEU_EXCEPTION_LOCATION_MACRO, 0);
-        setAsBufferUpdateNeeded();
-      }
-
-      if (isBufferUpdateNeeded() || isImageModified())
-        updateDisplayBuffer();
-
-      return mDisplayBuffer;
-    }
     // ---------------------------------------------------------------------
     // displayMapDirect
     // ---------------------------------------------------------------------
     void  displayMapDirect()
     {
       ImageBufferType  *srcPtr = getImageBufferPtr();
-      unsigned char  *dstPtr = mDisplayBuffer;
+      unsigned char  *dstPtr = getDisplayBufferPtr();
 
       for (int y = 0; y < mDisplayWidth; y++)
         for (int x = 0; x < mDisplayWidth * mOnePixelCount; x++, dstPtr++, srcPtr++)

@@ -169,7 +169,7 @@ namespace ibc
 
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // ImageBuffer
+    // ImageType
     // -------------------------------------------------------------------------
     ImageType()
     {
@@ -181,7 +181,7 @@ namespace ibc
       mComponentsPerPixel     = 0;
     }
     // -------------------------------------------------------------------------
-    // ImageBuffer
+    // ImageType
     // -------------------------------------------------------------------------
     ImageType(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
                 BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
@@ -350,9 +350,9 @@ namespace ibc
         mBufferSize = calculateBufferSize(this);
     }
     // -------------------------------------------------------------------------
-    // ~ImageType
+    // ~ImageFormat
     // -------------------------------------------------------------------------
-    virtual ~ImageSize()
+    virtual ~ImageFormat()
     {
     }
 
