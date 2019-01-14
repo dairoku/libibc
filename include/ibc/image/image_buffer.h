@@ -37,8 +37,7 @@
 #define IBC_IMAGE_IMAGE_BUFFER_H_
 
 // Includes --------------------------------------------------------------------
-#include <Windows.h>
-#include <stdio.h>
+#include <csring>
 #include "ibc/image/image.h"
 #include "ibc/image/image_exception.h"
 
@@ -59,8 +58,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageBuffer()
     {
-      mAllocatedImageBuffer   = NULL;
-      mExternalImageBuffer    = NULL;
+      mAllocatedImageBufferPtr   = NULL;
+      mExternalImageBufferPtr    = NULL;
 
       mIsImageModified        = false;
     }
@@ -69,8 +68,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~ImageBuffer()
     {
-      if (mAllocatedImageBuffer != NULL)
-        delete mAllocatedImageBuffer;
+      if (mAllocatedImageBufferPtr != NULL)
+        delete mAllocatedImageBufferPtr;
     }
 
     // Member functions --------------------------------------------------------
@@ -79,28 +78,28 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  updateImageBufferPtr(void *inImagePtr)
     {
-      if (mAllocatedImageBuffer != NULL)
+      if (mAllocatedImageBufferPtr != NULL)
       {
-        delete mAllocatedImageBuffer;
-        mAllocatedImageBuffer = NULL;
+        delete mAllocatedImageBufferPtr;
+        mAllocatedImageBufferPtr = NULL;
       }
 
-      mExternalImageBuffer = inImagePtr;
+      mExternalImageBufferPtr = inImagePtr;
       imageBufferModified();
     }
     // -------------------------------------------------------------------------
     // setImageBufferPtr
     // -------------------------------------------------------------------------
-    void  setImageBufferPtr(void *inImagePtr, Image::ImageFormat inFormat)
+    void  setImageBufferPtr(void *inImagePtr, const Image::ImageFormat &inFormat)
     {
-      if (mAllocatedImageBuffer != NULL)
+      if (mAllocatedImageBufferPtr != NULL)
       {
-        delete mAllocatedImageBuffer;
-        mAllocatedImageBuffer = NULL;
+        delete mAllocatedImageBufferPtr;
+        mAllocatedImageBufferPtr = NULL;
       }
 
       mImageFormat = inFormat;
-      mExternalImageBuffer = inImagePtr;
+      mExternalImageBufferPtr = inImagePtr;
 
       parameterModified();
       imageBufferModified();
@@ -108,9 +107,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     // allocateImageBuffer
     // -------------------------------------------------------------------------
-    void  allocateImageBuffer(Image::ImageFormat inFormat)
+    void  allocateImageBuffer(const Image::ImageFormat &inFormat)
     {
-      if (mAllocatedImageBuffer != NULL)
+      if (mAllocatedImageBufferPtr != NULL)
       {
         if (mImageFormat.mBufferSize == inFormat.mBufferSize)
         {
@@ -118,80 +117,33 @@ namespace ibc
           return;
         }
 
-        delete mAllocatedImageBuffer;
-        mAllocatedImageBuffer = NULL;
+        delete mAllocatedImageBufferPtr;
+        mAllocatedImageBufferPtr = NULL;
       }
 
       mImageFormat = inFormat;
-      mExternalImageBuffer = NULL;
+      mExternalImageBufferPtr = NULL;
 
-      mAllocatedImageBuffer = new unsigned char[mImageFormat.mBufferSize];
-      if (mAllocatedImageBuffer == NULL)
+      mAllocatedImageBufferPtr = new unsigned char[mImageFormat.mBufferSize];
+      if (mAllocatedImageBufferPtr == NULL)
       {
         if (mThrowsEx == false)
           throw ImageException(Exception::MEMORY_ERROR,
-            "mAllocatedImageBuffer == NULL", BLEU_EXCEPTION_LOCATION_MACRO, 0);
+            "mAllocatedImageBufferPtr == NULL", BLEU_EXCEPTION_LOCATION_MACRO, 0);
       }
 
       parameterModified();
     }
     // -------------------------------------------------------------------------
-    // setMonoImageBufferPtr
-    // -------------------------------------------------------------------------
-    void  setMonoImageBufferPtr(int inWidth, int inHeight, void *inImagePtr, bool inIsBottomUp = false)
-    {
-      ImageFormat format(ImageFormat::retrieveNativeMonoImageFormat(),
-                         inWidth, inHeight,
-                         inIsBottomUp);
-      setImageBufferPtr(inImagePtr, format);
-    }
-    // -------------------------------------------------------------------------
-    // setColorImageBufferPtr
-    // -------------------------------------------------------------------------
-    void  setColorImageBufferPtr(int inWidth, int inHeight, void *inImagePtr, bool inIsBottomUp = false)
-    {
-      ImageFormat format(ImageFormat::retrieveNativeColorImageFormat(),
-                         inWidth, inHeight,
-                         inIsBottomUp);
-      setImageBufferPtr(inImagePtr, format);
-    }
-    // -------------------------------------------------------------------------
-    // allocateMonoImageBuffer
-    // -------------------------------------------------------------------------
-    void  allocateMonoImageBuffer(int inWidth, int inHeight, bool inIsBottomUp = false)
-    {
-      ImageFormat format(ImageFormat::retrieveNativeMonoImageFormat(),
-                         inWidth, inHeight,
-                         inIsBottomUp);
-      allocateImageBuffer(format);
-    }
-    // -------------------------------------------------------------------------
-    // allocateColorImageBuffer
-    // -------------------------------------------------------------------------
-    void  allocateColorImageBuffer(int inWidth, int inHeight, bool inIsBottomUp = false)
-    {
-      ImageFormat format(ImageFormat::retrieveNativeColorImageFormat(),
-                         inWidth, inHeight,
-                         inIsBottomUp);
-      allocateImageBuffer(format);
-    }
-    // -------------------------------------------------------------------------
     // copyIntoImageBuffer
     // -------------------------------------------------------------------------
-    void  copyIntoImageBuffer(const void *inImagePtr, Image::ImageFormat inFormat)
+    void  copyIntoImageBuffer(const void *inImagePtr, const Image::ImageFormat &inFormat)
     {
       allocateImageBuffer(inFormat);
 
-      ::CopyMemory(mAllocatedImageBuffer, inImagePtr, mImageFormat.mBufferSize);
+      ::std::memcpy(mAllocatedImageBufferPtr, inImagePtr, mImageFormat.mBufferSize);
 
-      //parameterModified();
       imageBufferModified();
-    }
-    // -------------------------------------------------------------------------
-    // flipImageBuffer
-    // -------------------------------------------------------------------------
-    bool  flipImageBuffer()
-    {
     }
     // -------------------------------------------------------------------------
     // markAsImageModified
@@ -199,13 +151,6 @@ namespace ibc
     void  markAsImageModified()
     {
       mIsImageModified = true;
-    }
-    // -------------------------------------------------------------------------
-    // getImageFormat
-    // -------------------------------------------------------------------------
-    ImageFormat  getImageFormat()
-    {
-      return mImageFormat;
     }
     // -------------------------------------------------------------------------
     // isImageModified
@@ -219,78 +164,82 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  *getImageBufferPtr()
     {
-      if (mAllocatedImageBuffer == NULL)
-        return mExternalImageBuffer;
-      return mAllocatedImageBuffer;
+      if (mAllocatedImageBufferPtr == NULL)
+        return mExternalImageBufferPtr;
+      return mAllocatedImageBufferPtr;
+    }
+    // -------------------------------------------------------------------------
+    // checkImageBuffer
+    // -------------------------------------------------------------------------
+    bool  checkImageBufferPtr()
+    {
+      if (mAllocatedImageBufferPtr == NULL && mExternalImageBufferPtr == NULL)
+        return false;
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // getImageBufferPlanePtr
+    // -------------------------------------------------------------------------
+    void  *getImageBufferPlanePtr(unsigned int inPlaneIndex = 0)
+    {
+      void  *bufferPtr = getImageBufferPtr();
+      bufferPtr += mImageFormat.getPlaneOffset(inPlaneIndex);
+      return bufferPtr;
     }
     // -------------------------------------------------------------------------
     // getImageBufferLinePtr
     // -------------------------------------------------------------------------
-    void  *getImageBufferLinePtr(int inY)
+    void  *getImageBufferLinePtr(unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
     {
       void  *bufferPtr = getImageBufferPtr();
-
-      bufferPtr += getWidth() * getOnePixelCount() * inY;
-
+      bufferPtr += mImageFormat.getLineOffset(inY, inPlaneIndex);
       return bufferPtr;
     }
-
-    // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // obtainNativeColorFormat
+    // getImageBufferPixelPtr
     // -------------------------------------------------------------------------
-    static BufferFormat  obtainNativeColorFormat()
+    void  *getImageBufferPixelPtr(unsigned int inX = 0, , unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
     {
-      return BUFFER_FORMAT_BGR;
+      void  *bufferPtr = getImageBufferPtr();
+      bufferPtr += mImageFormat.getPixelOffset(inX, inY, inPlaneIndex);
+      return bufferPtr;
     }
     // -------------------------------------------------------------------------
-    // obtainNativeColorAlphaFormat
+    // getImageFormat
     // -------------------------------------------------------------------------
-    static BufferFormat  obtainNativeColorAlphaFormat()
+    ImageFormat  getImageFormat()
     {
-      return BUFFER_FORMAT_BGRA;
+      return mImageFormat;
     }
     // -------------------------------------------------------------------------
-    // checkBufferFormat
+    // getPixelAreaSize
     // -------------------------------------------------------------------------
-    static BufferFormat  checkBufferFormat(BufferFormat inFormat)
+    size_t  getImagePixelAreaSize()
     {
-      if (inFormat == BUFFER_FORMAT_NAITIVE_COLOR)
-        return obtainNativeColorFormat();
-      if (inFormat == BUFFER_FORMAT_NAITIVE_COLOR_ALPHA)
-        return obtainNativeColorAlphaFormat();
-      return inFormat;
+      return mImageFormat.mPixelAreaSize;
     }
     // -------------------------------------------------------------------------
-    // obtainOnePixelCount
+    // getWidth
     // -------------------------------------------------------------------------
-    static int  obtainOnePixelCount(BufferFormat inFormat)
+    int  getWidth()
     {
-      switch (inFormat)
-      {
-        case BUFFER_FORMAT_MONO:
-          return 1;
-        case BUFFER_FORMAT_RGB:
-        case BUFFER_FORMAT_BGR:
-          return 3;
-        case BUFFER_FORMAT_RGBA:
-        case BUFFER_FORMAT_BGRA:
-          return 4;
-      }
-      return 0;
+      return mImageFormat.mWidth;
+    }
+    // -------------------------------------------------------------------------
+    // getHeight
+    // -------------------------------------------------------------------------
+    int  getHeight()
+    {
+      return mImageFormat.mHeight;
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    bool            mIsBitmapBitsDirectMapMode;
-    ImageBufferType *mAllocatedImageBuffer;
-    ImageBufferType *mExternalImageBuffer;
-
     ImageFormat     mImageFormat;
+    void *mAllocatedImageBufferPtr;
+    void *mExternalImageBufferPtr;
 
     // Member functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // clearIsImageModifiedFlag
     // -------------------------------------------------------------------------
     void  clearIsImageModifiedFlag()
     {

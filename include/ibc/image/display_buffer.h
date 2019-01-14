@@ -37,7 +37,6 @@
 #define IBC_IMAGE_DISPLAY_BUFFER_H_
 
 // Includes --------------------------------------------------------------------
-#include <Windows.h>
 #include <stdio.h>
 #include "ibc/image/image_exception.h"
 #include "ibc/image/image_buffer.hpp"
@@ -72,7 +71,7 @@ namespace ibc
 
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // DisplayImageBuffer
+    // DisplayBuffer
     // -------------------------------------------------------------------------
     DisplayBuffer(DisplayMapMode inMapMode = DISPLAY_MAP_NOT_SPECIFIED)
       : ImageBuffer()

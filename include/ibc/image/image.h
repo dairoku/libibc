@@ -77,7 +77,7 @@ namespace ibc
       PIXEL_TYPE_JPEG           = 10240,
       PIXEL_TYPE_ANY            = 32765
     };
-
+  
      enum  BufferType
     {
       BUFFER_TYPE_NOT_SPECIFIED = 0,
@@ -88,7 +88,7 @@ namespace ibc
       BUFFER_TYPE_COMPRESSION   = 10240,
       BUFFER_TYPE_ANY           = 32765
     };
-
+  
     enum  DataType
     {
       DATA_TYPE_NOT_SPECIFIED = 0,
@@ -109,7 +109,7 @@ namespace ibc
       DATA_TYPE_DOUBLE        = 1024
       DATA_TYPE_ANY           = 32765
     };
-
+  
     enum  BayerType
     {
       BAYER_TYPE_NOT_SPECIFIED  = 0,
@@ -167,6 +167,13 @@ namespace ibc
       CH_TYPE_ANY           = 32765
     };
 
+    // Member variables (public) -----------------------------------------------
+    PixelType       mPixelType;
+    BufferType      mBufferType;
+    DataType        mDataType;
+    BayerType       mBayerType;
+    int             mComponentsPerPixel;
+
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // ImageType
@@ -193,7 +200,7 @@ namespace ibc
       mDataType               = inDataType;
       mBayerType              = inBayerType;
       mFourCC                 = inFourCC;
-      if (mComponentsPerPixel == 0)
+      if (inComponentsPerPixel == 0)
         mComponentsPerPixel = coponentsPerPixel(inPixelType);
       else
         mComponentsPerPixel = inComponentsPerPixel;
@@ -222,34 +229,36 @@ namespace ibc
         return false;
       return true;
     }
-    // Member variables --------------------------------------------------------
-    PixelType       mPixelType;
-    BufferType      mBufferType;
-    DataType        mDataType;
-    BayerType       mBayerType;
+    // -------------------------------------------------------------------------
+    // isPlanar
+    // -------------------------------------------------------------------------
+    bool isPlanar()
+    {
+      return isPlannar(mBufferType);
+    }
+    // -------------------------------------------------------------------------
+    // isPacked
+    // -------------------------------------------------------------------------
+    bool isPacked()
+    {
+      return isPacked(mBufferType);
+    }
+    // -------------------------------------------------------------------------
+    // sizeOfData
+    // -------------------------------------------------------------------------
+    size_t  sizeOfData()
+    {
+      return sizeOfData(mDataType);
+    }
+    // -------------------------------------------------------------------------
+    // checkType
+    // -------------------------------------------------------------------------
+    bool checkType(PixelType inPixelType, BufferType inBufferType, DataType inDataType)
+    {
+      return checkType(this, inPixelType, inBufferType, inDataType);
+    }
 
     // Static Functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // retrieveNativeMonoFormat
-    // -------------------------------------------------------------------------
-    static ImageType  retrieveNativeMonoImageType()
-    {
-      return ImageType(PIXEL_TYPE_MONO, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
-    }
-    // -------------------------------------------------------------------------
-    // retrieveNativeColorImageType
-    // -------------------------------------------------------------------------
-    static ImageType  retrieveNativeColorImageType()
-    {
-      return ImageType(PIXEL_TYPE_BGR, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
-    }
-    // -------------------------------------------------------------------------
-    // retrieveNativeColorAlphaImageType
-    // -------------------------------------------------------------------------
-    static ImageType  retrieveNativeColorAlphaImageType()
-    {
-      return ImageType(PIXEL_TYPE_BGRA, BUFFER_TYPE_PIXEL_ALIGNED, DATA_TYPE_8BIT);
-    }
     // -------------------------------------------------------------------------
     // coponentsPerPixel
     // -------------------------------------------------------------------------
@@ -315,8 +324,30 @@ namespace ibc
       if (inBufferType == BUFFER_TYPE_PLANAR_ALIGNED ||
           inBufferType == BUFFER_TYPE_PLANAR_PACKED)
         return true;
-
       return false;
+    }
+    // -------------------------------------------------------------------------
+    // isPacked
+    // -------------------------------------------------------------------------
+    static bool isPacked(BufferType inBufferType)
+    {
+      if (inBufferType == BUFFER_TYPE_PIXEL_PACKED ||
+          inBufferType == BUFFER_TYPE_PLANAR_PACKED)
+        return true;
+      return false;
+    }
+    // -------------------------------------------------------------------------
+    // checkType
+    // -------------------------------------------------------------------------
+    static bool checkType(const ImageType &inType, PixelType inPixelType, BufferType inBufferType, DataType inDataType)
+    {
+      if (inPixelType != PIXEL_TYPE_ANY && inType.mPixelType != inPixelType)
+        return false;
+      if (inBufferType != BUFFER_TYPE_ANY && inType.mBufferType != inBufferType)
+        return false;
+      if (inDataType != DATA_TYPE_ANY && inType.mDataType != inDataType)
+        return false;
+      return true;
     }
   }
 
@@ -326,10 +357,23 @@ namespace ibc
   class  ImageFormat
   {
   public:
+    // Member variables --------------------------------------------------------
+    ImageType       mType;
+    uint32          mFourCC;
+    int             mWidth;
+    int             mHeight;
+    bool            mIsBottomUp;
+    size_t          mBufferSize;
+    size_t          mHeaderOffset;
+    size_t          mPixelStep;
+    size_t          mWidthStep;
+    size_t          mPlaneStep;
+    size_t          mPixelAreaSize;
+
     // -------------------------------------------------------------------------
     // ImageFormat
     // -------------------------------------------------------------------------
-    ImageFormat(ImageType inType,
+    ImageFormat(const ImageType &inType,
                 uint32 inWidth, uint32 inHeight,
                 bool inIsBottomUp = false,
                 size_t inBufferSize = 0;
@@ -341,13 +385,38 @@ namespace ibc
       mWidth          = inWidth;
       mHeight         = inHeight;
       mIsBottomUp     = inIsBottomUp;
-      mBufferSize     = inBufferSize;
       mHeaderOffset   = inHeaderOffset;
-      mPixelStep      = inPixelStep;
-      mWidthStep      = inWidthStep;
-      mPlaneStep      = inPlaneStep;
-      if (mBufferSize == 0)
-        mBufferSize = calculateBufferSize(this);
+      if (inPixelStep != 0)
+        mPixelStep = inPixelStep; // TODO: Add a sanity check here...
+      else
+      {
+        if (mType.isPacked())
+          mPixelStep = 0;
+        else
+          mPixelStep = mType.sizeOfData();
+      }
+      if (inWidthStep != 0)
+        mWidthStep = inWidthStep; // TODO: Add a sanity check here...
+      else
+      {
+        mWidthStep = mPixelStep * mWidth;
+        if (mType.isPlanar() == false)
+          mWidthStep *= mType.mComponentsPerPixel;
+      }
+      if (inPlaneStep != 0)
+        mPlaneStep = inPlaneStep  // TODO: Add a sanity check here...
+      else
+        mPlaneStep = mWidthStep * mHeight;
+      //
+      if (mType.isPlanar())
+        mPixelAreaSize = mPlaneStep * mType.mComponentsPerPixel;
+      else
+        mPixelAreaSize = mPlaneStep;
+      //
+      if (inBufferSize != 0)
+        mBufferSize = inBufferSize;
+      else
+        mBufferSize = mHeaderOffset + mPixelAreaSize;
     }
     // -------------------------------------------------------------------------
     // ~ImageFormat
@@ -355,58 +424,69 @@ namespace ibc
     virtual ~ImageFormat()
     {
     }
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getPlaneOffset
+    // -------------------------------------------------------------------------
+    size_t getPlaneOffset(unsigned int inPlaneIndex = 0)
+    {
+      calculatePlaneOffset(this, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getLineOffset
+    // -------------------------------------------------------------------------
+    size_t getLineOffset(unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    {
+      calculateLineOffset(this, inY, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getPixelOffset
+    // -------------------------------------------------------------------------
+    size_t getPixelOffset(unsigned int inX = 0, unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    {
+      calculatePixelOffset(this, inX, inY, inPlaneIndex);
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // calculateBufferSize
+    // calculatePlaneOffset
     // -------------------------------------------------------------------------
-    static size_t calculateBufferSize(ImageFormat inHeader)
+    static size_t calculatePlaneOffset(const ImageFormat &inFormat, unsigned int inPlaneIndex = 0)
     {
-      size_t  size;
-
-      if (mPlaneStep != 0)
-      {
-        size  = ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
-        size *= mPlaneStep;
-        size += mHeaderOffset;
-        return size;
-      }
-      if (mWidthStep != 0)
-      {
-        size  =  inHeader.mSize.mHeight * mWidthStep;
-        if (ImageType::isPlanar(inHeader.mFormat.mBufferType))
-          size  *= ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
-        size += mHeaderOffset;
-        return size;
-      }
-      if (mPixelStep != 0)
-      {
-        size  =  inHeader.mSize.mWidth * inHeader.mSize.mPixelStep;
-        size  *= inHeader.mSize.mHeight;
-        if (ImageType::isPlanar(inHeader.mFormat.mBufferType))
-          size  *= ImageType::coponentsPerPixel(inHeader.mFormat.mPixelType);
-        size += mHeaderOffset;
-        return size;
-      }
-      size =  ImageType::sizeOfData(inHeader.mFormat.mDataType);
-      size *= ImageType::coponentsPerPixel(mFormat.mPixelType);
-      size *= inHeader.mSize.mWidth;
-      size *= inHeader.mSize.mHeight;
-      return size;
+      if (inFormat.mType.isPlanar() == false)
+        return inFormat.mHeaderOffset;
+      if (inPlaneIndex >= inFormat.mType.mComponentsPerPixel)
+        inPlaneIndex = inFormat.mType.mComponentsPerPixel - 1;
+      return inFormat.mPlaneStep * inPlaneIdex + inFormat.mHeaderOffset;
     }
-
-    // Member variables --------------------------------------------------------
-    ImageType       mType;
-    uint32          mFourCC;
-    unsigned int    mComponentsPerPixel;
-    uint32          mWidth;
-    uint32          mHeight;
-    bool            mIsBottomUp;
-    size_t          mBufferSize;
-    size_t          mHeaderOffset;
-    size_t          mPixelStep;
-    size_t          mWidthStep;
-    size_t          mPlaneStep;
+    // -------------------------------------------------------------------------
+    // calculateLineOffset
+    // -------------------------------------------------------------------------
+    static size_t calculateLineOffset(const ImageFormat &inFormat, unsigned int inY = 0,
+                                      unsigned int inPlaneIndex = 0)
+    {
+      size_t  offset;
+      
+      if (inY >= inFormat.mHeight)
+        inY = inFormat.mHeight - 1;
+      offset = calculatePlaneOffset(inFormat, inPlaneIndex);
+      if (inY == 0)
+        return offset;
+      offset +=  inFormat.mWidthStep * inY;
+      return offset;
+    }
+    // -------------------------------------------------------------------------
+    // calculatePixelOffset
+    // -------------------------------------------------------------------------
+    static size_t calculatePixelOffset(const ImageFormat &inFormat, unsigned int inX  = 0,
+                                       unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    {
+      size_t  offset;
+      
+      offset = calculateLineOffset(inFormat, inY, inPlaneIndex);
+      offset +=  inFormat.mPixelStep * inX;
+      return offset;
+    }
   }
  };
 };
