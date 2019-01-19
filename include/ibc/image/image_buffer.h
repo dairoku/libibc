@@ -37,7 +37,7 @@
 #define IBC_IMAGE_IMAGE_BUFFER_H_
 
 // Includes --------------------------------------------------------------------
-#include <csring>
+#include <cstring>
 #include "ibc/image/image.h"
 #include "ibc/image/image_exception.h"
 
@@ -58,16 +58,19 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageBuffer()
     {
-      mAllocatedImageBufferPtr   = NULL;
-      mExternalImageBufferPtr    = NULL;
+      mImageFormatPtr           = NULL;
+      mAllocatedImageBufferPtr  = NULL;
+      mExternalImageBufferPtr   = NULL;
 
-      mIsImageModified        = false;
+      mIsImageModified          = false;
     }
     // -------------------------------------------------------------------------
     // ~ImageBuffer
     // -------------------------------------------------------------------------
     virtual ~ImageBuffer()
     {
+      if (mImageFormatPtr != NULL)
+        delete mImageFormatPtr;
       if (mAllocatedImageBufferPtr != NULL)
         delete mAllocatedImageBufferPtr;
     }
@@ -84,13 +87,13 @@ namespace ibc
         mAllocatedImageBufferPtr = NULL;
       }
 
-      mExternalImageBufferPtr = inImagePtr;
+      mExternalImageBufferPtr = (unsigned char *)inImagePtr;
       imageBufferModified();
     }
     // -------------------------------------------------------------------------
     // setImageBufferPtr
     // -------------------------------------------------------------------------
-    void  setImageBufferPtr(void *inImagePtr, const Image::ImageFormat &inFormat)
+    void  setImageBufferPtr(void *inImagePtr, const ImageFormat &inFormat)
     {
       if (mAllocatedImageBufferPtr != NULL)
       {
@@ -98,8 +101,11 @@ namespace ibc
         mAllocatedImageBufferPtr = NULL;
       }
 
-      mImageFormat = inFormat;
-      mExternalImageBufferPtr = inImagePtr;
+      if (mImageFormatPtr != NULL)
+        delete mImageFormatPtr;
+      mImageFormatPtr = new ImageFormat(inFormat);
+
+      mExternalImageBufferPtr = (unsigned char *)inImagePtr;
 
       parameterModified();
       imageBufferModified();
@@ -107,13 +113,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // allocateImageBuffer
     // -------------------------------------------------------------------------
-    void  allocateImageBuffer(const Image::ImageFormat &inFormat)
+    void  allocateImageBuffer(const ImageFormat &inFormat)
     {
-      if (mAllocatedImageBufferPtr != NULL)
+      if (mAllocatedImageBufferPtr != NULL && mImageFormatPtr != NULL)
       {
-        if (mImageFormat.mBufferSize == inFormat.mBufferSize)
+        if (mImageFormatPtr->mBufferSize == inFormat.mBufferSize)
         {
-          mImageFormat = inFormat;
+          delete mImageFormatPtr;
+          mImageFormatPtr = new ImageFormat(inFormat);
           return;
         }
 
@@ -121,15 +128,17 @@ namespace ibc
         mAllocatedImageBufferPtr = NULL;
       }
 
-      mImageFormat = inFormat;
+      if (mImageFormatPtr != NULL)
+        delete mImageFormatPtr;
+      mImageFormatPtr = new ImageFormat(inFormat);
+
       mExternalImageBufferPtr = NULL;
 
-      mAllocatedImageBufferPtr = new unsigned char[mImageFormat.mBufferSize];
+      mAllocatedImageBufferPtr = new unsigned char[mImageFormatPtr->mBufferSize];
       if (mAllocatedImageBufferPtr == NULL)
       {
-        if (mThrowsEx == false)
-          throw ImageException(Exception::MEMORY_ERROR,
-            "mAllocatedImageBufferPtr == NULL", BLEU_EXCEPTION_LOCATION_MACRO, 0);
+        throw ImageException(Exception::MEMORY_ERROR,
+          "mAllocatedImageBufferPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
       }
 
       parameterModified();
@@ -137,11 +146,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     // copyIntoImageBuffer
     // -------------------------------------------------------------------------
-    void  copyIntoImageBuffer(const void *inImagePtr, const Image::ImageFormat &inFormat)
+    void  copyIntoImageBuffer(const void *inImagePtr, const ImageFormat &inFormat)
     {
       allocateImageBuffer(inFormat);
 
-      ::std::memcpy(mAllocatedImageBufferPtr, inImagePtr, mImageFormat.mBufferSize);
+      ::std::memcpy(mAllocatedImageBufferPtr, inImagePtr, mImageFormatPtr->mBufferSize);
 
       imageBufferModified();
     }
@@ -155,14 +164,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // isImageModified
     // -------------------------------------------------------------------------
-    bool  isImageModified()
+    bool  isImageModified() const
     {
       return mIsImageModified;
     }
     // -------------------------------------------------------------------------
     // getImageBufferPtr
     // -------------------------------------------------------------------------
-    void  *getImageBufferPtr()
+    void  *getImageBufferPtr() const
     {
       if (mAllocatedImageBufferPtr == NULL)
         return mExternalImageBufferPtr;
@@ -171,7 +180,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // checkImageBuffer
     // -------------------------------------------------------------------------
-    bool  checkImageBufferPtr()
+    bool  checkImageBufferPtr() const
     {
       if (mAllocatedImageBufferPtr == NULL && mExternalImageBufferPtr == NULL)
         return false;
@@ -180,64 +189,67 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getImageBufferPlanePtr
     // -------------------------------------------------------------------------
-    void  *getImageBufferPlanePtr(unsigned int inPlaneIndex = 0)
+    void  *getImageBufferPlanePtr(unsigned int inPlaneIndex = 0) const
     {
-      void  *bufferPtr = getImageBufferPtr();
-      bufferPtr += mImageFormat.getPlaneOffset(inPlaneIndex);
+      unsigned char *bufferPtr = (unsigned char *)getImageBufferPtr();
+      bufferPtr += mImageFormatPtr->getPlaneOffset(inPlaneIndex);
       return bufferPtr;
     }
     // -------------------------------------------------------------------------
     // getImageBufferLinePtr
     // -------------------------------------------------------------------------
-    void  *getImageBufferLinePtr(unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    void  *getImageBufferLinePtr(unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      void  *bufferPtr = getImageBufferPtr();
-      bufferPtr += mImageFormat.getLineOffset(inY, inPlaneIndex);
+      unsigned char  *bufferPtr = (unsigned char *)getImageBufferPtr();
+      bufferPtr += mImageFormatPtr->getLineOffset(inY, inPlaneIndex);
       return bufferPtr;
     }
     // -------------------------------------------------------------------------
     // getImageBufferPixelPtr
     // -------------------------------------------------------------------------
-    void  *getImageBufferPixelPtr(unsigned int inX = 0, , unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    void  *getImageBufferPixelPtr(unsigned int inX = 0, unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      void  *bufferPtr = getImageBufferPtr();
-      bufferPtr += mImageFormat.getPixelOffset(inX, inY, inPlaneIndex);
+      unsigned char  *bufferPtr = (unsigned char *)getImageBufferPtr();
+      bufferPtr += mImageFormatPtr->getPixelOffset(inX, inY, inPlaneIndex);
       return bufferPtr;
     }
     // -------------------------------------------------------------------------
     // getImageFormat
     // -------------------------------------------------------------------------
-    ImageFormat  getImageFormat()
+    ImageFormat  getImageFormat() const
     {
-      return mImageFormat;
+      // TODO : We need to ckeck mImageFormatPtr
+      //  Since this pointer could be NULL
+      //
+      return *mImageFormatPtr;
     }
     // -------------------------------------------------------------------------
     // getPixelAreaSize
     // -------------------------------------------------------------------------
-    size_t  getImagePixelAreaSize()
+    size_t  getImagePixelAreaSize() const
     {
-      return mImageFormat.mPixelAreaSize;
+      return mImageFormatPtr->mPixelAreaSize;
     }
     // -------------------------------------------------------------------------
     // getWidth
     // -------------------------------------------------------------------------
-    int  getWidth()
+    int  getWidth() const
     {
-      return mImageFormat.mWidth;
+      return mImageFormatPtr->mWidth;
     }
     // -------------------------------------------------------------------------
     // getHeight
     // -------------------------------------------------------------------------
-    int  getHeight()
+    int  getHeight() const
     {
-      return mImageFormat.mHeight;
+      return mImageFormatPtr->mHeight;
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    ImageFormat     mImageFormat;
-    void *mAllocatedImageBufferPtr;
-    void *mExternalImageBufferPtr;
+    ImageFormat     *mImageFormatPtr;
+    unsigned char *mAllocatedImageBufferPtr;
+    unsigned char *mExternalImageBufferPtr;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -262,7 +274,7 @@ namespace ibc
 
   private:
     // Member variables --------------------------------------------------------
-    volatile bool    mIsImageModified;
+    bool  mIsImageModified;
   };
  };
 };

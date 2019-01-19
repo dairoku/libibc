@@ -39,9 +39,7 @@
 // Includes --------------------------------------------------------------------
 #include <cstring>
 #include <gtkmm.h>
-#include "ibc/image/display_buffer.h"
-#include "ibc/image/image_buffer.hpp"
-#include "ibc/image/display_interface.hpp"
+#include "ibc/image/image_buffer.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -74,24 +72,24 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual bool  updatePixbuf(bool inForceUpdate = false)
     {
-      if (inForceUpdate == false && mIsImageModified == false)
+      if (inForceUpdate == false && isImageModified() == false)
         return false;
 
-      if (checkImageBufferPtr() == false || mPixbuf == NULL)
+      if (checkImageBufferPtr() == false || !mPixbuf || mImageFormatPtr == NULL)
         return false;
 
-      if (mPixbuf->get_width() != mImageFormat.mWidth ||
-          mPixbuf->get_height() != mImageFormat.mHeight)
+      if (mPixbuf->get_width() != mImageFormatPtr->mWidth ||
+          mPixbuf->get_height() != mImageFormatPtr->mHeight)
         return false;
 
-      unsigned char *srcPtr = getImageBufferPixelPtr();
+      unsigned char *srcPtr = (unsigned char *)getImageBufferPixelPtr();
       unsigned char *dstPtr = mPixbuf->get_pixels();
-      if (mImageFormat.mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
-                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED &&
-                                        ibc::image::ImageType::DATA_TYPE_8BIT))
+      if (mImageFormatPtr->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
+                                            ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                            ibc::image::ImageType::DATA_TYPE_8BIT))
       {
         // ToDo check , width_step, pixel_step
-        std::memcpy(dstPtr, srcPtr, mImageFormat.mPixelAreaSize);
+        std::memcpy(dstPtr, srcPtr, mImageFormatPtr->mPixelAreaSize);
         clearIsImageModifiedFlag();
         return true;
       }
@@ -99,10 +97,10 @@ namespace ibc
       return false;
     }
 
-  protected:
     // Member variables --------------------------------------------------------
     Glib::RefPtr<Gdk::Pixbuf>  mPixbuf;
 
+  protected:
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // parameterModified
@@ -110,7 +108,7 @@ namespace ibc
     virtual void  parameterModified()
     {
       mPixbuf = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB , false, 8, // does not have alpha and 8bit
-                                    mImageFormat.mWidth, mImageFormat.mHeight);
+                                    mImageFormatPtr->mWidth, mImageFormatPtr->mHeight);
       markAsImageModified();
     }
   };

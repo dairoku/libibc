@@ -44,7 +44,8 @@
 #define IBC_EXCEPT_AT_STRINGIFY(x)     #x
 #define IBC_EXCEPT_AT_TOSTRING(x)      IBC_EXCEPT_AT_STRINGIFY(x)
 #define IBC_EXCEPTION_AT               __FILE__ ":" IBC_EXCEPT_AT_TOSTRING(__LINE__)
-#define IBC_EXCEPTION_LOCATION_MACRO  __FUNCTION__ "  (" IBC_EXCEPTION_AT ")"
+//#define IBC_EXCEPTION_LOCATION_MACRO  __FUNCTION__ "  (" IBC_EXCEPTION_AT ")"
+#define IBC_EXCEPTION_LOCATION_MACRO  __FUNCTION__
 
 // Namespace -------------------------------------------------------------------
 namespace ibc

@@ -40,6 +40,7 @@
 // Includes --------------------------------------------------------------------
 #include <gtkmm.h>
 #include "ibc/gtkmm/image_view_base.h"
+#include "ibc/gtkmm/image_data.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -60,7 +61,7 @@ namespace ibc
     void  on_widget_created();
     virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
 
-    Glib::RefPtr<Gdk::Pixbuf>  m_pixbuf;
+    ImageData mImageData;
   };
  };
 };

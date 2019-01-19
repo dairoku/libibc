@@ -53,18 +53,36 @@ ibc::gtkmm::ImageView::~ImageView()
 
 void ibc::gtkmm::ImageView::on_widget_created()
 {
-  try
+/*  try
   {
-    m_pixbuf = Gdk::Pixbuf::create_from_file("./output/test.jpg");
+    mPixbuf = Gdk::Pixbuf::create_from_file("./output/test.jpg");
   }
   catch(...)
   {
     Glib::exception_handlers_invoke();
     exit(1);
-  }
+  }*/
 
-  m_org_width   = m_pixbuf->get_width();
-  m_org_height  = m_pixbuf->get_height();
+  ibc::image::ImageType imageType(ibc::image::ImageType::PIXEL_TYPE_RGB,
+                                  ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                  ibc::image::ImageType::DATA_TYPE_8BIT);
+  ibc::image::ImageFormat imageFormat(imageType, 640, 480);
+  mImageData.allocateImageBuffer(imageFormat);
+  unsigned char *bufPtr = (unsigned char *)mImageData.getImageBufferPtr();
+  for (int y = 0; y < 480; y++)
+    for (int x = 0; x < 640; x++)
+    {
+      *bufPtr = (unsigned char)(x ^ y);
+      bufPtr++;
+      *bufPtr = (unsigned char)(x ^ y);
+      bufPtr++;
+      *bufPtr = (unsigned char)(x ^ y);
+      bufPtr++;
+    }
+  mImageData.markAsImageModified();
+
+  m_org_width   = mImageData.mPixbuf->get_width();
+  m_org_height  = mImageData.mPixbuf->get_height();
   m_width       = m_org_width;
   m_height      = m_org_height;
 
@@ -75,6 +93,8 @@ void ibc::gtkmm::ImageView::on_widget_created()
 bool ibc::gtkmm::ImageView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   double x = 0, y = 0;
+
+  mImageData.updatePixbuf();
 
   if (m_width <= m_window_width)
     x = (m_window_width  - m_width)  / 2;
@@ -90,13 +110,13 @@ bool ibc::gtkmm::ImageView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->set_identity_matrix();
     cr->translate(x, y);
     cr->scale(m_zoom, m_zoom);
-    Gdk::Cairo::set_source_pixbuf(cr, m_pixbuf, 0, 0);
+    Gdk::Cairo::set_source_pixbuf(cr, mImageData.mPixbuf, 0, 0);
     Cairo::SurfacePattern pattern(cr->get_source()->cobj());
     pattern.set_filter(Cairo::Filter::FILTER_NEAREST);
   }
   else
   {
-    Gdk::Cairo::set_source_pixbuf(cr, m_pixbuf->scale_simple(m_width, m_height, Gdk::INTERP_NEAREST), x, y);
+    Gdk::Cairo::set_source_pixbuf(cr, mImageData.mPixbuf->scale_simple(m_width, m_height, Gdk::INTERP_NEAREST), x, y);
   }
 
   cr->paint();

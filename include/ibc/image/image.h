@@ -106,7 +106,7 @@ namespace ibc
       DATA_TYPE_54BIT         = 56,
       DATA_TYPE_64BIT         = 64,
       DATA_TYPE_FLOAT         = 512,
-      DATA_TYPE_DOUBLE        = 1024
+      DATA_TYPE_DOUBLE        = 1024,
       DATA_TYPE_ANY           = 32765
     };
   
@@ -172,6 +172,7 @@ namespace ibc
     BufferType      mBufferType;
     DataType        mDataType;
     BayerType       mBayerType;
+    uint32          mFourCC;
     int             mComponentsPerPixel;
 
     // Constructors and Destructor ---------------------------------------------
@@ -215,7 +216,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // isValid
     // -------------------------------------------------------------------------
-    bool  isValid()
+    bool  isValid() const
     {
       if (mPixelType == PIXEL_TYPE_NOT_SPECIFIED)
         return false;
@@ -232,30 +233,30 @@ namespace ibc
     // -------------------------------------------------------------------------
     // isPlanar
     // -------------------------------------------------------------------------
-    bool isPlanar()
+    bool isPlanar() const
     {
-      return isPlannar(mBufferType);
+      return isPlanar(mBufferType);
     }
     // -------------------------------------------------------------------------
     // isPacked
     // -------------------------------------------------------------------------
-    bool isPacked()
+    bool isPacked() const
     {
       return isPacked(mBufferType);
     }
     // -------------------------------------------------------------------------
     // sizeOfData
     // -------------------------------------------------------------------------
-    size_t  sizeOfData()
+    size_t  sizeOfData() const
     {
       return sizeOfData(mDataType);
     }
     // -------------------------------------------------------------------------
     // checkType
     // -------------------------------------------------------------------------
-    bool checkType(PixelType inPixelType, BufferType inBufferType, DataType inDataType)
+    bool checkType(PixelType inPixelType, BufferType inBufferType, DataType inDataType) const
     {
-      return checkType(this, inPixelType, inBufferType, inDataType);
+      return checkType(*this, inPixelType, inBufferType, inDataType);
     }
 
     // Static Functions --------------------------------------------------------
@@ -349,7 +350,7 @@ namespace ibc
         return false;
       return true;
     }
-  }
+  };
 
   // ---------------------------------------------------------------------------
   // ImageFormat class
@@ -359,7 +360,6 @@ namespace ibc
   public:
     // Member variables --------------------------------------------------------
     ImageType       mType;
-    uint32          mFourCC;
     int             mWidth;
     int             mHeight;
     bool            mIsBottomUp;
@@ -376,9 +376,10 @@ namespace ibc
     ImageFormat(const ImageType &inType,
                 uint32 inWidth, uint32 inHeight,
                 bool inIsBottomUp = false,
-                size_t inBufferSize = 0;
+                size_t inBufferSize = 0,
                 size_t inHeaderOffset = 0,
-                size_t inPixelStep = 0,  size_t inWidthStep = 0,
+                size_t inPixelStep = 0,
+                size_t inWidthStep = 0,
                 size_t inPlaneStep = 0)
     {
       mType           = inType;
@@ -404,7 +405,7 @@ namespace ibc
           mWidthStep *= mType.mComponentsPerPixel;
       }
       if (inPlaneStep != 0)
-        mPlaneStep = inPlaneStep  // TODO: Add a sanity check here...
+        mPlaneStep = inPlaneStep;  // TODO: Add a sanity check here...
       else
         mPlaneStep = mWidthStep * mHeight;
       //
@@ -428,23 +429,23 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getPlaneOffset
     // -------------------------------------------------------------------------
-    size_t getPlaneOffset(unsigned int inPlaneIndex = 0)
+    size_t getPlaneOffset(unsigned int inPlaneIndex = 0) const
     {
-      calculatePlaneOffset(this, inPlaneIndex);
+      calculatePlaneOffset(*this, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getLineOffset
     // -------------------------------------------------------------------------
-    size_t getLineOffset(unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    size_t getLineOffset(unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      calculateLineOffset(this, inY, inPlaneIndex);
+      calculateLineOffset(*this, inY, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getPixelOffset
     // -------------------------------------------------------------------------
-    size_t getPixelOffset(unsigned int inX = 0, unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+    size_t getPixelOffset(unsigned int inX = 0, unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      calculatePixelOffset(this, inX, inY, inPlaneIndex);
+      calculatePixelOffset(*this, inX, inY, inPlaneIndex);
     }
 
     // Static Functions --------------------------------------------------------
@@ -457,7 +458,7 @@ namespace ibc
         return inFormat.mHeaderOffset;
       if (inPlaneIndex >= inFormat.mType.mComponentsPerPixel)
         inPlaneIndex = inFormat.mType.mComponentsPerPixel - 1;
-      return inFormat.mPlaneStep * inPlaneIdex + inFormat.mHeaderOffset;
+      return inFormat.mPlaneStep * inPlaneIndex + inFormat.mHeaderOffset;
     }
     // -------------------------------------------------------------------------
     // calculateLineOffset
@@ -479,7 +480,7 @@ namespace ibc
     // calculatePixelOffset
     // -------------------------------------------------------------------------
     static size_t calculatePixelOffset(const ImageFormat &inFormat, unsigned int inX  = 0,
-                                       unsigned int inY = 0, , unsigned int inPlaneIndex = 0)
+                                       unsigned int inY = 0, unsigned int inPlaneIndex = 0)
     {
       size_t  offset;
       
@@ -487,7 +488,7 @@ namespace ibc
       offset +=  inFormat.mPixelStep * inX;
       return offset;
     }
-  }
+  };
  };
 };
 
