@@ -38,8 +38,10 @@
 
 // Includes --------------------------------------------------------------------
 #include <cstring>
+#include <vector>
 #include <gtkmm.h>
 #include "ibc/image/image_buffer.h"
+#include "ibc/gtkmm/view_data_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -67,7 +69,16 @@ namespace ibc
     }
 
     // Member functions --------------------------------------------------------
+     // -------------------------------------------------------------------------
+    // checkImageBufferPtr
     // -------------------------------------------------------------------------
+    bool  checkImageData() const
+    {
+      if (checkImageBufferPtr() == false || !mPixbuf || mImageFormatPtr == NULL)
+        return false;
+      return true;
+    }
+   // -------------------------------------------------------------------------
     // updatePixbuf
     // -------------------------------------------------------------------------
     virtual bool  updatePixbuf(bool inForceUpdate = false)
@@ -75,7 +86,7 @@ namespace ibc
       if (inForceUpdate == false && isImageModified() == false)
         return false;
 
-      if (checkImageBufferPtr() == false || !mPixbuf || mImageFormatPtr == NULL)
+      if (checkImageData() == false)
         return false;
 
       if (mPixbuf->get_width() != mImageFormatPtr->mWidth ||
@@ -96,11 +107,47 @@ namespace ibc
 
       return false;
     }
+     // -------------------------------------------------------------------------
+    // addWidget
+    // -------------------------------------------------------------------------
+    void  addWidget(ViewDataInterface *inWidget)
+    {
+      mWidgetList.push_back(inWidget);
+    }
+     // -------------------------------------------------------------------------
+    // removeWidget
+    // -------------------------------------------------------------------------
+    void  removeWidget(ViewDataInterface *inWidget)
+    {
+      auto it = std::find(mWidgetList.begin(), mWidgetList.end(), inWidget);
+      if (it == mWidgetList.end())
+        return;
+      mWidgetList.erase(it);
+    }
+     // -------------------------------------------------------------------------
+    // queueRedrawAllWidgets
+    // -------------------------------------------------------------------------
+    void  queueRedrawAllWidgets()
+    {
+      for (auto it = mWidgetList.begin(); it != mWidgetList.end(); it++)
+        (*it)->queueRedrawWidget();
+    }
+     // -------------------------------------------------------------------------
+    // markAllWidgetsAsImageSizeChanged
+    // -------------------------------------------------------------------------
+    void  markAllWidgetsAsImageSizeChanged()
+    {
+      for (auto it = mWidgetList.begin(); it != mWidgetList.end(); it++)
+        (*it)->markAsImageSizeChanged();
+    }
 
     // Member variables --------------------------------------------------------
     Glib::RefPtr<Gdk::Pixbuf>  mPixbuf;
 
   protected:
+    // Member variables --------------------------------------------------------
+    std::vector<ViewDataInterface *>  mWidgetList;
+
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // parameterModified
@@ -110,6 +157,7 @@ namespace ibc
       mPixbuf = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB , false, 8, // does not have alpha and 8bit
                                     mImageFormatPtr->mWidth, mImageFormatPtr->mHeight);
       markAsImageModified();
+      markAllWidgetsAsImageSizeChanged();
     }
   };
  };

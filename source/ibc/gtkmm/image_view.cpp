@@ -41,60 +41,58 @@
 // =============================================================================
 // ImageView class
 // =============================================================================
-ibc::gtkmm::ImageView::ImageView()
-    : Glib::ObjectBase("ImageView")
+ibc::gtkmm::ImageView::ImageView() :
+    Glib::ObjectBase("ImageView")
 {
-  signal_realize().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageView::on_widget_created));
+  mImageDataPtr = NULL;
+  mIsImageSizeChanged = false;
+
+  //signal_realize().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageView::on_widget_created));
 }
 
 ibc::gtkmm::ImageView::~ImageView()
 {
 }
 
-void ibc::gtkmm::ImageView::on_widget_created()
+void ibc::gtkmm::ImageView::setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr)
 {
-/*  try
-  {
-    mPixbuf = Gdk::Pixbuf::create_from_file("./output/test.jpg");
-  }
-  catch(...)
-  {
-    Glib::exception_handlers_invoke();
-    exit(1);
-  }*/
+  mImageDataPtr = inImageDataPtr;
+  mImageDataPtr->addWidget(this);
+  markAsImageSizeChanged();
+}
 
-  ibc::image::ImageType imageType(ibc::image::ImageType::PIXEL_TYPE_RGB,
-                                  ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
-                                  ibc::image::ImageType::DATA_TYPE_8BIT);
-  ibc::image::ImageFormat imageFormat(imageType, 640, 480);
-  mImageData.allocateImageBuffer(imageFormat);
-  unsigned char *bufPtr = (unsigned char *)mImageData.getImageBufferPtr();
-  for (int y = 0; y < 480; y++)
-    for (int x = 0; x < 640; x++)
-    {
-      *bufPtr = (unsigned char)(x ^ y);
-      bufPtr++;
-      *bufPtr = (unsigned char)(x ^ y);
-      bufPtr++;
-      *bufPtr = (unsigned char)(x ^ y);
-      bufPtr++;
-    }
-  mImageData.markAsImageModified();
-
-  m_org_width   = mImageData.mPixbuf->get_width();
-  m_org_height  = mImageData.mPixbuf->get_height();
+bool ibc::gtkmm::ImageView::updateSizeUsingImageData()
+{
+  if (mImageDataPtr == NULL)
+    return false;
+  if (mImageDataPtr->checkImageBufferPtr() == false)  // dare to use this instead of checkImageData()
+    return false;
+ 
+  m_org_width   = mImageDataPtr->getWidth();
+  m_org_height  = mImageDataPtr->getHeight();
   m_width       = m_org_width;
   m_height      = m_org_height;
 
   configure_hadjustment();
   configure_vadjustment();
+  return true;
 }
 
 bool ibc::gtkmm::ImageView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
+  if (mImageDataPtr == NULL)
+    return false;
+  if (mImageDataPtr->checkImageData() == false)
+    return false;
+  if (mIsImageSizeChanged)
+  {
+    updateSizeUsingImageData();
+    mIsImageSizeChanged = false;
+  }
+
   double x = 0, y = 0;
 
-  mImageData.updatePixbuf();
+  mImageDataPtr->updatePixbuf();
 
   if (m_width <= m_window_width)
     x = (m_window_width  - m_width)  / 2;
@@ -110,13 +108,13 @@ bool ibc::gtkmm::ImageView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
     cr->set_identity_matrix();
     cr->translate(x, y);
     cr->scale(m_zoom, m_zoom);
-    Gdk::Cairo::set_source_pixbuf(cr, mImageData.mPixbuf, 0, 0);
+    Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf, 0, 0);
     Cairo::SurfacePattern pattern(cr->get_source()->cobj());
     pattern.set_filter(Cairo::Filter::FILTER_NEAREST);
   }
   else
   {
-    Gdk::Cairo::set_source_pixbuf(cr, mImageData.mPixbuf->scale_simple(m_width, m_height, Gdk::INTERP_NEAREST), x, y);
+    Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf->scale_simple(m_width, m_height, Gdk::INTERP_NEAREST), x, y);
   }
 
   cr->paint();

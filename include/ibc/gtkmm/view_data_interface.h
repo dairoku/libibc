@@ -1,5 +1,5 @@
 // =============================================================================
-//  image_view.h
+//  view_data_interface.h
 //
 //  MIT License
 //
@@ -23,25 +23,21 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
-
 /*!
-  \file     ibc/gtkmm/image_view.h
+  \file     ibc/gtkmm/view_data_interface.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/01/06
-  \brief    Header file for ImageView widget
+  \date     2019/01/19
+  \brief    Header file for handling the image buffer
 
-  This file defines the class for the image widget
+  This file defines the image buffer class for the IBC Library
 */
 
-#ifndef IBC_GTKMM_IMAGE_VIEW_H_
-#define IBC_GTKMM_IMAGE_VIEW_H_
+#ifndef IBC_GTKMM_VIEW_DATA_INTERFACE_H_
+#define IBC_GTKMM_VIEW_DATA_INTERFACE_H_
 
 // Includes --------------------------------------------------------------------
-#include <gtkmm.h>
-#include "ibc/gtkmm/image_view_base.h"
-#include "ibc/gtkmm/image_data.h"
-#include "ibc/gtkmm/view_data_interface.h"
+#include <cstring>
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -49,48 +45,16 @@ namespace ibc
  namespace gtkmm
  {
   // ---------------------------------------------------------------------------
-  // ImageView class
+  // ViewDataInterface interface class
   // ---------------------------------------------------------------------------
-  class ImageView : virtual public ImageViewBase, virtual public ViewDataInterface
+  class  ViewDataInterface
   {
   public:
-    // Constructors and Destructor ---------------------------------------------
-    ImageView();
-    virtual ~ImageView();
-
-    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr);
-
-    // -------------------------------------------------------------------------
-    // queueRedrawWidget
-    // -------------------------------------------------------------------------
-    virtual void  queueRedrawWidget()
-    {
-      queue_draw();
-    }
-    // -------------------------------------------------------------------------
-    // markAsImageSizeChanged
-    // -------------------------------------------------------------------------
-    virtual void  markAsImageSizeChanged()
-    {
-      mIsImageSizeChanged = true;
-      queue_draw();
-    }
-    // -------------------------------------------------------------------------
-    // isImageSizeChanged
-    // -------------------------------------------------------------------------
-    bool  isImageSizeChanged() const
-    {
-      return mIsImageSizeChanged;
-    }
-
-  protected:
-    bool  updateSizeUsingImageData();
-    virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-
-    ImageData *mImageDataPtr;
-    bool      mIsImageSizeChanged;
+    //  member functions
+    virtual void    queueRedrawWidget()   = 0;
+    virtual void    markAsImageSizeChanged()   = 0;
   };
  };
 };
 
-#endif  // #ifdef IBC_GTKMM_IMAGE_VIEW_H_
+#endif  // #ifdef IBC_GTKMM_VIEW_DATA_INTERFACE_H_

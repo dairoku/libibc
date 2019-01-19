@@ -178,7 +178,7 @@ namespace ibc
       return mAllocatedImageBufferPtr;
     }
     // -------------------------------------------------------------------------
-    // checkImageBuffer
+    // checkImageBufferPtr
     // -------------------------------------------------------------------------
     bool  checkImageBufferPtr() const
     {
