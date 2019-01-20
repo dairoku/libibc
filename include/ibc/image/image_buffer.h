@@ -3,7 +3,7 @@
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2018-2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -104,6 +104,11 @@ namespace ibc
       if (mImageFormatPtr != NULL)
         delete mImageFormatPtr;
       mImageFormatPtr = new ImageFormat(inFormat);
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::MEMORY_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
 
       mExternalImageBufferPtr = (unsigned char *)inImagePtr;
 
@@ -121,6 +126,11 @@ namespace ibc
         {
           delete mImageFormatPtr;
           mImageFormatPtr = new ImageFormat(inFormat);
+          if (mImageFormatPtr == NULL)
+          {
+            throw ImageException(Exception::MEMORY_ERROR,
+              "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+          }
           return;
         }
 
@@ -131,6 +141,11 @@ namespace ibc
       if (mImageFormatPtr != NULL)
         delete mImageFormatPtr;
       mImageFormatPtr = new ImageFormat(inFormat);
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::MEMORY_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
 
       mExternalImageBufferPtr = NULL;
 
@@ -150,7 +165,7 @@ namespace ibc
     {
       allocateImageBuffer(inFormat);
 
-      ::std::memcpy(mAllocatedImageBufferPtr, inImagePtr, mImageFormatPtr->mBufferSize);
+      std::memcpy(mAllocatedImageBufferPtr, inImagePtr, mImageFormatPtr->mBufferSize);
 
       imageBufferModified();
     }
@@ -182,7 +197,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     bool  checkImageBufferPtr() const
     {
-      if (mAllocatedImageBufferPtr == NULL && mExternalImageBufferPtr == NULL)
+      if (  (mAllocatedImageBufferPtr == NULL && mExternalImageBufferPtr == NULL) ||
+            mImageFormatPtr == NULL)
         return false;
       return true;
     }
@@ -191,6 +207,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  *getImageBufferPlanePtr(unsigned int inPlaneIndex = 0) const
     {
+      if (checkImageBufferPtr() == false)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "checkImageBufferPtr() == false", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       unsigned char *bufferPtr = (unsigned char *)getImageBufferPtr();
       bufferPtr += mImageFormatPtr->getPlaneOffset(inPlaneIndex);
       return bufferPtr;
@@ -200,6 +221,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  *getImageBufferLinePtr(unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
+      if (checkImageBufferPtr() == false)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "checkImageBufferPtr() == false", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       unsigned char  *bufferPtr = (unsigned char *)getImageBufferPtr();
       bufferPtr += mImageFormatPtr->getLineOffset(inY, inPlaneIndex);
       return bufferPtr;
@@ -209,6 +235,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  *getImageBufferPixelPtr(unsigned int inX = 0, unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
+      if (checkImageBufferPtr() == false)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "checkImageBufferPtr() == false", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       unsigned char  *bufferPtr = (unsigned char *)getImageBufferPtr();
       bufferPtr += mImageFormatPtr->getPixelOffset(inX, inY, inPlaneIndex);
       return bufferPtr;
@@ -218,16 +249,35 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageFormat  getImageFormat() const
     {
-      // TODO : We need to ckeck mImageFormatPtr
-      //  Since this pointer could be NULL
-      //
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       return *mImageFormatPtr;
+    }
+    // -------------------------------------------------------------------------
+    // getImageType
+    // -------------------------------------------------------------------------
+    ImageType  getImageType() const
+    {
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
+      return mImageFormatPtr->mType;
     }
     // -------------------------------------------------------------------------
     // getPixelAreaSize
     // -------------------------------------------------------------------------
     size_t  getImagePixelAreaSize() const
     {
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       return mImageFormatPtr->mPixelAreaSize;
     }
     // -------------------------------------------------------------------------
@@ -235,6 +285,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     int  getWidth() const
     {
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       return mImageFormatPtr->mWidth;
     }
     // -------------------------------------------------------------------------
@@ -242,7 +297,24 @@ namespace ibc
     // -------------------------------------------------------------------------
     int  getHeight() const
     {
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
       return mImageFormatPtr->mHeight;
+    }
+    // -------------------------------------------------------------------------
+    // getPixelAreaSize
+    // -------------------------------------------------------------------------
+    size_t  getPixelAreaSize() const
+    {
+      if (mImageFormatPtr == NULL)
+      {
+        throw ImageException(Exception::NULL_POINTER_ACCESS_ERROR,
+          "mImageFormatPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
+      return mImageFormatPtr->mPixelAreaSize;
     }
 
   protected:

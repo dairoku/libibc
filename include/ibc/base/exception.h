@@ -3,7 +3,7 @@
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2018-2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -43,9 +43,8 @@
 // Macros ----------------------------------------------------------------------
 #define IBC_EXCEPT_AT_STRINGIFY(x)     #x
 #define IBC_EXCEPT_AT_TOSTRING(x)      IBC_EXCEPT_AT_STRINGIFY(x)
-#define IBC_EXCEPTION_AT               __FILE__ ":" IBC_EXCEPT_AT_TOSTRING(__LINE__)
-//#define IBC_EXCEPTION_LOCATION_MACRO  __FUNCTION__ "  (" IBC_EXCEPTION_AT ")"
-#define IBC_EXCEPTION_LOCATION_MACRO  __FUNCTION__
+#define IBC_EXCEPTION_AT               IBC_EXCEPT_AT_TOSTRING(__FILE__) ":" IBC_EXCEPT_AT_TOSTRING(__LINE__)
+#define IBC_EXCEPTION_LOCATION_MACRO  IBC_EXCEPT_AT_TOSTRING(__FUNCTION__) "  (" IBC_EXCEPTION_AT ")"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -81,6 +80,7 @@ namespace ibc
       MEMORY_ERROR,
       PARAM_ERROR,
       INVALID_OPERATION_ERROR,
+      NULL_POINTER_ACCESS_ERROR,
       INTERNAL_ERROR,
 
       SUB_CLASS_ERROR   = 50000

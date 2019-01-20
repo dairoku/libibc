@@ -1,9 +1,9 @@
 // =============================================================================
-//  display_buffer.h
+//  image_data.h
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -24,10 +24,10 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/image/display_buffer.h
+  \file     ibc/image/image_data.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2018/03/10
+  \date     2019/01/14
   \brief    Header file for handling the image buffer
 
   This file defines the image buffer class for the IBC Library
