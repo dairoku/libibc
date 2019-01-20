@@ -40,8 +40,10 @@
 #include <cstring>
 #include <vector>
 #include <gtkmm.h>
-#include "ibc/image/image_buffer.h"
+#include "ibc/image/display_buffer.h"
 #include "ibc/gtkmm/view_data_interface.h"
+//
+#include "ibc/image/converter/rgb_to_rgb.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -51,7 +53,7 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // ImageData class
   // ---------------------------------------------------------------------------
-   class  ImageData : public ibc::image::ImageBuffer
+   class  ImageData : public ibc::image::DisplayBuffer
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -60,6 +62,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageData()
     {
+      addImageConverter(&mRGB_to_RGB);
     }
     // -------------------------------------------------------------------------
     // ~ImageData
@@ -89,25 +92,17 @@ namespace ibc
       if (checkImageData() == false)
         return false;
 
+      // Sanity check here
       if (mPixbuf->get_width() != mImageFormatPtr->mWidth ||
-          mPixbuf->get_height() != mImageFormatPtr->mHeight)
-        return false;
+          mPixbuf->get_height() != mImageFormatPtr->mHeight ||
+          mActiveConverter == NULL)
+        return false; // Should throw exception?
 
-      unsigned char *srcPtr = (unsigned char *)getImageBufferPixelPtr();
-      unsigned char *dstPtr = mPixbuf->get_pixels();
-      if (mImageFormatPtr->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
-                                            ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
-                                            ibc::image::ImageType::DATA_TYPE_8BIT))
-      {
-        // ToDo check , width_step, pixel_step
-        std::memcpy(dstPtr, srcPtr, mImageFormatPtr->mPixelAreaSize);
-        clearIsImageModifiedFlag();
-        return true;
-      }
-
-      return false;
+      mActiveConverter->convert(getImageBufferPixelPtr(), mPixbuf->get_pixels());
+      clearIsImageModifiedFlag();
+      return true;
     }
-     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // addWidget
     // -------------------------------------------------------------------------
     void  addWidget(ViewDataInterface *inWidget)
@@ -147,6 +142,8 @@ namespace ibc
   protected:
     // Member variables --------------------------------------------------------
     std::vector<ViewDataInterface *>  mWidgetList;
+    //
+    ibc::image::converter::RGB_to_RGB   mRGB_to_RGB;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -156,6 +153,13 @@ namespace ibc
     {
       mPixbuf = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB , false, 8, // does not have alpha and 8bit
                                     mImageFormatPtr->mWidth, mImageFormatPtr->mHeight);
+
+      ibc::image::ImageType   imageType(ibc::image::ImageType::PIXEL_TYPE_RGB,
+                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                        ibc::image::ImageType::DATA_TYPE_8BIT);
+      ibc::image::ImageFormat imageFormat(imageType, mImageFormatPtr->mWidth, mImageFormatPtr->mHeight);
+      selectConverter(mImageFormatPtr, &imageFormat);
+
       markAsImageModified();
       markAllWidgetsAsImageSizeChanged();
     }
