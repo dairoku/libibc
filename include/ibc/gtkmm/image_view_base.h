@@ -65,36 +65,32 @@ namespace ibc
     virtual bool  on_scroll_event(GdkEventScroll *event);
     virtual void  on_size_allocate(Gtk::Allocation& allocation);
 
-    void hadjustment_changed();
-    void vadjustment_changed();
+    void hAdjustmentChanged();
+    void vAdjustmentChanged();
 
-    virtual void configure_hadjustment();
-    virtual void configure_vadjustment();
-    virtual void adjustment_value_changed();
+    virtual void configureHAdjustment();
+    virtual void configureVAdjustment();
+    virtual void adjustmentValueChanged();
 
-    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> hadjustment_;
-    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> vadjustment_;
-    Glib::Property<Gtk::ScrollablePolicy> hscroll_policy_;
-    Glib::Property<Gtk::ScrollablePolicy> vscroll_policy_;
-    sigc::connection hadjustment_connection_;
-    sigc::connection vadjustment_connection_;
+    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> mHAdjustment;
+    Glib::Property<Glib::RefPtr<Gtk::Adjustment>> mVAdjustment;
+    Glib::Property<Gtk::ScrollablePolicy> mHScrollPolicy;
+    Glib::Property<Gtk::ScrollablePolicy> mVScrollPolicy;
+    sigc::connection mHAdjustmentConnection;
+    sigc::connection mVAdjustmentConnection;
 
-    double m_window_x, m_window_y, m_window_width, m_window_height;
-    double m_width, m_height;
-    double m_org_width, m_org_height;
+    double mWindowX, mWindowY, mWindowWidth, mWindowHeight;
+    double mWidth, mHeight;
+    double mOrgWidth, mOrgHeight;
     double m_mouse_x, m_mouse_y;
-    double m_offset_x, m_offset_y;
-    double m_offset_x_max, m_offset_y_max;
-    double m_offset_x_org, m_offset_y_org;
-    double  m_zoom;
-    bool  m_mouse_l_pressed;
-    bool  m_adjusments_modified;
+    double mOffsetX, mOffsetY;
+    double mOffsetXMax, mOffsetYMax;
+    double mOffsetXOrg, mOffsetYOrg;
+    double mZoom;
+    bool  mMouseLPressed;
+    bool  mAdjusmentsModified;
 
-    Glib::RefPtr<Gdk::Window> m_window;
-
-
-    Glib::RefPtr<Gdk::Pixbuf>  m_pixbuf;
-    Glib::RefPtr<Pango::Layout> m_layout;
+    Glib::RefPtr<Gdk::Window> mWindow;
   };
  };
 };

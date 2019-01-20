@@ -68,13 +68,13 @@ bool ibc::gtkmm::ImageView::updateSizeUsingImageData()
   if (mImageDataPtr->checkImageBufferPtr() == false)  // dare to use this instead of checkImageData()
     return false;
  
-  m_org_width   = mImageDataPtr->getWidth();
-  m_org_height  = mImageDataPtr->getHeight();
-  m_width       = m_org_width;
-  m_height      = m_org_height;
+  mOrgWidth   = mImageDataPtr->getWidth();
+  mOrgHeight  = mImageDataPtr->getHeight();
+  mWidth       = mOrgWidth;
+  mHeight      = mOrgHeight;
 
-  configure_hadjustment();
-  configure_vadjustment();
+  configureHAdjustment();
+  configureVAdjustment();
   return true;
 }
 
@@ -94,27 +94,27 @@ bool ibc::gtkmm::ImageView::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 
   mImageDataPtr->updatePixbuf();
 
-  if (m_width <= m_window_width)
-    x = (m_window_width  - m_width)  / 2;
+  if (mWidth <= mWindowWidth)
+    x = (mWindowWidth  - mWidth)  / 2;
   else
-    x = -1 * m_offset_x;
-  if (m_height <= m_window_height)
-    y = (m_window_height - m_height) / 2;
+    x = -1 * mOffsetX;
+  if (mHeight <= mWindowHeight)
+    y = (mWindowHeight - mHeight) / 2;
   else
-    y = -1 * m_offset_y;
+    y = -1 * mOffsetY;
 
-  if (m_zoom >= 1)
+  if (mZoom >= 1)
   {
     cr->set_identity_matrix();
     cr->translate(x, y);
-    cr->scale(m_zoom, m_zoom);
+    cr->scale(mZoom, mZoom);
     Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf, 0, 0);
     Cairo::SurfacePattern pattern(cr->get_source()->cobj());
     pattern.set_filter(Cairo::Filter::FILTER_NEAREST);
   }
   else
   {
-    Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf->scale_simple(m_width, m_height, Gdk::INTERP_NEAREST), x, y);
+    Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf->scale_simple(mWidth, mHeight, Gdk::INTERP_NEAREST), x, y);
   }
 
   cr->paint();

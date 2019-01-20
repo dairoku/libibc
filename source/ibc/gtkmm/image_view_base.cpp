@@ -43,28 +43,32 @@
 // =============================================================================
 ibc::gtkmm::ImageViewBase::ImageViewBase()
     : Glib::ObjectBase("ImageViewBase"),
-      hadjustment_(*this, "hadjustment"),
-      vadjustment_(*this, "vadjustment"),
-      hscroll_policy_(*this, "hscroll-policy", Gtk::SCROLL_NATURAL),
-      vscroll_policy_(*this, "vscroll-policy", Gtk::SCROLL_NATURAL)
+      mHAdjustment(*this, "hadjustment"),
+      mVAdjustment(*this, "vadjustment"),
+      mHScrollPolicy(*this, "hscroll-policy", Gtk::SCROLL_NATURAL),
+      mVScrollPolicy(*this, "vscroll-policy", Gtk::SCROLL_NATURAL)
 {
   set_has_window(true);
-  property_hadjustment().signal_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::hadjustment_changed));
-  property_vadjustment().signal_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::vadjustment_changed));
+  property_hadjustment().signal_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::hAdjustmentChanged));
+  property_vadjustment().signal_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::vAdjustmentChanged));
 
-  m_width = 0;
-  m_height = 0;
-  m_org_width = 0;
-  m_org_height = 0;
-  m_offset_x    = 0;
-  m_offset_y    = 0;
-  m_window_x    = 0;
-  m_window_y    = 0;
-  m_window_width  = 0;
-  m_window_height = 0;
-  m_zoom          = 1.0;
-  m_mouse_l_pressed = false;
-  m_adjusments_modified = false;
+  mWidth = 0;
+  mHeight = 0;
+  mOrgWidth = 0;
+  mOrgHeight = 0;
+  mOffsetX    = 0;
+  mOffsetY    = 0;
+  mOffsetXMax = 0;
+  mOffsetYMax = 0;
+  mOffsetXOrg = 0;
+  mOffsetYOrg = 0;
+  mWindowX    = 0;
+  mWindowY    = 0;
+  mWindowWidth  = 0;
+  mWindowHeight = 0;
+  mZoom          = 1.0;
+  mMouseLPressed = false;
+  mAdjusmentsModified = false;
 
   add_events(Gdk::SCROLL_MASK |
              Gdk::BUTTON_MOTION_MASK | Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
@@ -81,7 +85,7 @@ void ibc::gtkmm::ImageViewBase::on_realize()
   // It's intended only for widgets that set_has_window(false).
   set_realized();
 
-  if(!m_window)
+  if(!mWindow)
   {
     GdkWindowAttr attributes;
 
@@ -95,17 +99,17 @@ void ibc::gtkmm::ImageViewBase::on_realize()
     attributes.window_type = GDK_WINDOW_CHILD;
     attributes.wclass = GDK_INPUT_OUTPUT;
 
-    m_window = Gdk::Window::create(get_parent_window(), &attributes, Gdk::WA_X | Gdk::WA_Y);
-    set_window(m_window);
+    mWindow = Gdk::Window::create(get_parent_window(), &attributes, Gdk::WA_X | Gdk::WA_Y);
+    set_window(mWindow);
 
     //make the widget receive expose events
-    m_window->set_user_data(Gtk::Widget::gobj());
+    mWindow->set_user_data(Gtk::Widget::gobj());
   }
 }
 
 void ibc::gtkmm::ImageViewBase::on_unrealize()
 {
-  m_window.reset();
+  mWindow.reset();
 
   //Call base class:
   Gtk::Widget::on_unrealize();
@@ -113,49 +117,49 @@ void ibc::gtkmm::ImageViewBase::on_unrealize()
 
 bool ibc::gtkmm::ImageViewBase::on_button_press_event(GdkEventButton* button_event)
 {
-  m_mouse_l_pressed = true;
+  mMouseLPressed = true;
   m_mouse_x = button_event->x;
   m_mouse_y = button_event->y;
-  m_offset_x_org= m_offset_x;
-  m_offset_y_org = m_offset_y;
+  mOffsetXOrg= mOffsetX;
+  mOffsetYOrg = mOffsetY;
 }
 
 bool ibc::gtkmm::ImageViewBase::on_motion_notify_event(GdkEventMotion* motion_event)
 {
-  if (m_mouse_l_pressed == false)
+  if (mMouseLPressed == false)
     return false;
 
-  if (m_width > m_window_width)
+  if (mWidth > mWindowWidth)
   {
-    double d = m_offset_x_org + (m_mouse_x - motion_event->x);
-    if (d > m_offset_x_max)
-      d = m_offset_x_max;
+    double d = mOffsetXOrg + (m_mouse_x - motion_event->x);
+    if (d > mOffsetXMax)
+      d = mOffsetXMax;
     if (d < 0)
       d = 0;
-    if (d != m_offset_x)
+    if (d != mOffsetX)
     {
-      m_offset_x = d;
+      mOffsetX = d;
       const auto v = property_hadjustment().get_value();
       v->freeze_notify();
-      v->set_value(m_offset_x);
-      m_adjusments_modified = true;
+      v->set_value(mOffsetX);
+      mAdjusmentsModified = true;
       v->thaw_notify();
     }
   }
-  if (m_height > m_window_height)
+  if (mHeight > mWindowHeight)
   {
-    double d = m_offset_y_org + (m_mouse_y - motion_event->y);
-    if (d > m_offset_y_max)
-      d = m_offset_y_max;
+    double d = mOffsetYOrg + (m_mouse_y - motion_event->y);
+    if (d > mOffsetYMax)
+      d = mOffsetYMax;
     if (d < 0)
       d = 0;
-    if (d != m_offset_y)
+    if (d != mOffsetY)
     {
-      m_offset_y = d;
+      mOffsetY = d;
       const auto v = property_vadjustment().get_value();
       v->freeze_notify();
-      v->set_value(m_offset_y);
-      m_adjusments_modified = true;
+      v->set_value(mOffsetY);
+      mAdjusmentsModified = true;
       v->thaw_notify();
     }
   }
@@ -164,7 +168,7 @@ bool ibc::gtkmm::ImageViewBase::on_motion_notify_event(GdkEventMotion* motion_ev
 
 bool ibc::gtkmm::ImageViewBase::on_button_release_event(GdkEventButton* release_event)
 {
-  m_mouse_l_pressed = false;
+  mMouseLPressed = false;
   return true;
 }
 
@@ -180,64 +184,64 @@ bool ibc::gtkmm::ImageViewBase::on_scroll_event(GdkEventScroll *event)
   //          << "delta_y = " << event->delta_y << std::endl;
 
   double v;
-  double prev_zoom = m_zoom;
+  double prev_zoom = mZoom;
 
   if (event->direction == 0)
     v = 0.02;
   else
     v = -0.02;
-  v = log10(m_zoom) + v;
-  m_zoom = pow(10, v);
-  if (fabs(m_zoom - 1.0) <= 0.01)
-    m_zoom = 1.0;
-  if (m_zoom <= 0.01)
-    m_zoom = 0.01;
+  v = log10(mZoom) + v;
+  mZoom = pow(10, v);
+  if (fabs(mZoom - 1.0) <= 0.01)
+    mZoom = 1.0;
+  if (mZoom <= 0.01)
+    mZoom = 0.01;
 
-  double prev_width = m_width;
-  double prev_height = m_height;
-  v = m_org_width * m_zoom;
-  m_width = v;
-  v = m_org_height * m_zoom;
-  m_height = v;
+  double prev_width = mWidth;
+  double prev_height = mHeight;
+  v = mOrgWidth * mZoom;
+  mWidth = v;
+  v = mOrgHeight * mZoom;
+  mHeight = v;
 
-  if (m_width <= m_window_width)
-    m_offset_x = 0;
+  if (mWidth <= mWindowWidth)
+    mOffsetX = 0;
   else
   {
-    if (prev_width <= m_window_width)
-      v = -1 * (m_window_width - prev_width) / 2.0;
+    if (prev_width <= mWindowWidth)
+      v = -1 * (mWindowWidth - prev_width) / 2.0;
     else
       v = 0;
-    v = v + (m_offset_x + event->x) / prev_zoom;
-    v = v * m_zoom - event->x;
-    m_offset_x = v;
-    m_offset_x_max = m_width - m_window_width;
-    if (m_offset_x > m_offset_x_max)
-      m_offset_x = m_offset_x_max;
-    if (m_offset_x < 0)
-      m_offset_x = 0;
+    v = v + (mOffsetX + event->x) / prev_zoom;
+    v = v * mZoom - event->x;
+    mOffsetX = v;
+    mOffsetXMax = mWidth - mWindowWidth;
+    if (mOffsetX > mOffsetXMax)
+      mOffsetX = mOffsetXMax;
+    if (mOffsetX < 0)
+      mOffsetX = 0;
   }
 
-  if (m_height <= m_window_height)
-    m_offset_y = 0;
+  if (mHeight <= mWindowHeight)
+    mOffsetY = 0;
   else
   {
-    if (prev_height <= m_window_height)
-      v = -1 * (m_window_height - prev_height) / 2.0;
+    if (prev_height <= mWindowHeight)
+      v = -1 * (mWindowHeight - prev_height) / 2.0;
     else
       v = 0;
-    v = (m_offset_y + event->y) / prev_zoom;
-    v = v * m_zoom - event->y;
-    m_offset_y = v;
-    m_offset_y_max = m_height - m_window_height;
-    if (m_offset_y > m_offset_y_max)
-      m_offset_y = m_offset_y_max;
-    if (m_offset_y < 0)
-      m_offset_y = 0;
+    v = (mOffsetY + event->y) / prev_zoom;
+    v = v * mZoom - event->y;
+    mOffsetY = v;
+    mOffsetYMax = mHeight - mWindowHeight;
+    if (mOffsetY > mOffsetYMax)
+      mOffsetY = mOffsetYMax;
+    if (mOffsetY < 0)
+      mOffsetY = 0;
   }
 
-  configure_hadjustment();
-  configure_vadjustment();
+  configureHAdjustment();
+  configureVAdjustment();
   queue_draw();
 
   return true;
@@ -251,48 +255,48 @@ void ibc::gtkmm::ImageViewBase::on_size_allocate(Gtk::Allocation& allocation)
   
   //Use the offered allocation for this container:
   set_allocation(allocation);
-  m_window_x = allocation.get_x();
-  m_window_y = allocation.get_y();
-  m_window_width = allocation.get_width();
-  m_window_height = allocation.get_height();
+  mWindowX = allocation.get_x();
+  mWindowY = allocation.get_y();
+  mWindowWidth = allocation.get_width();
+  mWindowHeight = allocation.get_height();
 
-  if(m_window)
+  if(mWindow)
   {
-    m_window->move_resize(m_window_x, m_window_y, m_window_width, m_window_height);
-    configure_hadjustment();
-    configure_vadjustment();
+    mWindow->move_resize(mWindowX, mWindowY, mWindowWidth, mWindowHeight);
+    configureHAdjustment();
+    configureVAdjustment();
   }
 }
 
-void ibc::gtkmm::ImageViewBase::hadjustment_changed()
+void ibc::gtkmm::ImageViewBase::hAdjustmentChanged()
 {
   const auto v = property_hadjustment().get_value();
   if (!v)
     return;
-  hadjustment_connection_.disconnect();
-  hadjustment_connection_ = v->signal_value_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::adjustment_value_changed));
-  configure_hadjustment();
+  mHAdjustmentConnection.disconnect();
+  mHAdjustmentConnection = v->signal_value_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::adjustmentValueChanged));
+  configureHAdjustment();
 }
 
-void ibc::gtkmm::ImageViewBase::vadjustment_changed()
+void ibc::gtkmm::ImageViewBase::vAdjustmentChanged()
 {
   const auto v = property_vadjustment().get_value();
   if (!v)
     return;
-  vadjustment_connection_.disconnect();
-  vadjustment_connection_ = v->signal_value_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::adjustment_value_changed));
-  configure_vadjustment();
+  mVAdjustmentConnection.disconnect();
+  mVAdjustmentConnection = v->signal_value_changed().connect(sigc::mem_fun(*this, &ibc::gtkmm::ImageViewBase::adjustmentValueChanged));
+  configureVAdjustment();
 }
 
-void ibc::gtkmm::ImageViewBase::configure_hadjustment()
+void ibc::gtkmm::ImageViewBase::configureHAdjustment()
 {
   const auto v = property_hadjustment().get_value();
-  if (!v || m_window_width == 0)
+  if (!v || mWindowWidth == 0)
     return;
   v->freeze_notify();
-  if (m_width <= m_window_width)
+  if (mWidth <= mWindowWidth)
   {
-    m_offset_x = 0;
+    mOffsetX = 0;
     v->set_value(0);
     v->set_upper(0);
     v->set_step_increment(0);
@@ -300,27 +304,27 @@ void ibc::gtkmm::ImageViewBase::configure_hadjustment()
   }
   else
   {
-    m_offset_x_max = m_width - m_window_width;
-    if (m_offset_x > m_offset_x_max)
-      m_offset_x = m_offset_x_max;
-    v->set_upper(m_offset_x_max);
-    v->set_value(m_offset_x);
+    mOffsetXMax = mWidth - mWindowWidth;
+    if (mOffsetX > mOffsetXMax)
+      mOffsetX = mOffsetXMax;
+    v->set_upper(mOffsetXMax);
+    v->set_value(mOffsetX);
     v->set_step_increment(1);
     v->set_page_size(10);
-    m_adjusments_modified = true;
+    mAdjusmentsModified = true;
   }
   v->thaw_notify();
 }
 
-void ibc::gtkmm::ImageViewBase::configure_vadjustment()
+void ibc::gtkmm::ImageViewBase::configureVAdjustment()
 {
   const auto v = property_vadjustment().get_value();
-  if (!v || m_window_height == 0)
+  if (!v || mWindowHeight == 0)
     return;
   v->freeze_notify();
-  if (m_height <= m_window_height)
+  if (mHeight <= mWindowHeight)
   {
-    m_offset_y = 0;
+    mOffsetY = 0;
     v->set_value(0);
     v->set_upper(0);
     v->set_step_increment(0);
@@ -328,30 +332,30 @@ void ibc::gtkmm::ImageViewBase::configure_vadjustment()
   }
   else
   {
-    m_offset_y_max = m_height - m_window_height;
-    if (m_offset_y > m_offset_y_max)
-      m_offset_y = m_offset_y_max;
-    v->set_upper(m_offset_y_max);
-    v->set_value(m_offset_y);
+    mOffsetYMax = mHeight - mWindowHeight;
+    if (mOffsetY > mOffsetYMax)
+      mOffsetY = mOffsetYMax;
+    v->set_upper(mOffsetYMax);
+    v->set_value(mOffsetY);
     v->set_step_increment(1);
     v->set_page_size(10);
-    m_adjusments_modified = true;
+    mAdjusmentsModified = true;
   }
   v->thaw_notify();
 }
 
-void ibc::gtkmm::ImageViewBase::adjustment_value_changed()
+void ibc::gtkmm::ImageViewBase::adjustmentValueChanged()
 {
-  if (m_width > m_window_width && m_adjusments_modified == false)
+  if (mWidth > mWindowWidth && mAdjusmentsModified == false)
   {
     const auto v = property_hadjustment().get_value();
-    m_offset_x = v->get_value();
+    mOffsetX = v->get_value();
   }
-  if (m_height > m_window_height && m_adjusments_modified == false)
+  if (mHeight > mWindowHeight && mAdjusmentsModified == false)
   {
     const auto v = property_vadjustment().get_value();
-    m_offset_y = v->get_value();
+    mOffsetY = v->get_value();
   }
-  m_adjusments_modified = false;
+  mAdjusmentsModified = false;
   queue_draw();
 }
