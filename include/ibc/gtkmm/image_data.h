@@ -44,6 +44,7 @@
 #include "ibc/gtkmm/view_data_interface.h"
 //
 #include "ibc/image/converter/rgb_to_rgb.h"
+#include "ibc/image/converter/mono_to_rgb.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -63,6 +64,7 @@ namespace ibc
     ImageData()
     {
       addImageConverter(&mRGB_to_RGB);
+      addImageConverter(&mMono_to_RGB);
     }
     // -------------------------------------------------------------------------
     // ~ImageData
@@ -144,6 +146,7 @@ namespace ibc
     std::vector<ViewDataInterface *>  mWidgetList;
     //
     ibc::image::converter::RGB_to_RGB   mRGB_to_RGB;
+    ibc::image::converter::Mono_to_RGB   mMono_to_RGB;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
