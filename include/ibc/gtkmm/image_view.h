@@ -38,6 +38,8 @@
 #define IBC_GTKMM_IMAGE_VIEW_H_
 
 // Includes --------------------------------------------------------------------
+#include <math.h>
+#include <cstring>
 #include <gtkmm.h>
 #include "ibc/gtkmm/image_view_base.h"
 #include "ibc/gtkmm/image_data.h"
@@ -55,11 +57,31 @@ namespace ibc
   {
   public:
     // Constructors and Destructor ---------------------------------------------
-    ImageView();
-    virtual ~ImageView();
+    // -------------------------------------------------------------------------
+    // ImageView
+    // -------------------------------------------------------------------------
+    ImageView() :
+      Glib::ObjectBase("ImageView")
+    {
+      mImageDataPtr = NULL;
+      mIsImageSizeChanged = false;
+    }
+    // -------------------------------------------------------------------------
+    // ~ImageView
+    // -------------------------------------------------------------------------
+    virtual ~ImageView()
+    {
+    }
 
-    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr);
-
+    // -------------------------------------------------------------------------
+    // setImageDataPtr
+    // -------------------------------------------------------------------------
+    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr)
+    {
+      mImageDataPtr = inImageDataPtr;
+      mImageDataPtr->addWidget(this);
+      markAsImageSizeChanged();
+    }
     // -------------------------------------------------------------------------
     // queueRedrawWidget
     // -------------------------------------------------------------------------
@@ -84,9 +106,73 @@ namespace ibc
     }
 
   protected:
-    bool  updateSizeUsingImageData();
-    virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+    // -------------------------------------------------------------------------
+    // updateSizeUsingImageData
+    // -------------------------------------------------------------------------
+    bool  updateSizeUsingImageData()
+    {
+      if (mImageDataPtr == NULL)
+        return false;
+      if (mImageDataPtr->checkImageBufferPtr() == false)  // dare to use this instead of checkImageData()
+        return false;
+     
+      mOrgWidth   = mImageDataPtr->getWidth();
+      mOrgHeight  = mImageDataPtr->getHeight();
+      mWidth       = mOrgWidth;
+      mHeight      = mOrgHeight;
+    
+      configureHAdjustment();
+      configureVAdjustment();
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // on_draw
+    // -------------------------------------------------------------------------
+    virtual bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+    {
+      if (mImageDataPtr == NULL)
+        return false;
+      if (mImageDataPtr->checkImageData() == false)
+        return false;
+      if (mIsImageSizeChanged)
+      {
+        updateSizeUsingImageData();
+        mIsImageSizeChanged = false;
+      }
+    
+      double x = 0, y = 0;
+    
+      mImageDataPtr->updatePixbuf();
+    
+      if (mWidth <= mWindowWidth)
+        x = (mWindowWidth  - mWidth)  / 2;
+      else
+        x = -1 * mOffsetX;
+      if (mHeight <= mWindowHeight)
+        y = (mWindowHeight - mHeight) / 2;
+      else
+        y = -1 * mOffsetY;
+    
+      if (mZoom >= 1)
+      {
+        cr->set_identity_matrix();
+        cr->translate(x, y);
+        cr->scale(mZoom, mZoom);
+        Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf, 0, 0);
+        Cairo::SurfacePattern pattern(cr->get_source()->cobj());
+        pattern.set_filter(Cairo::Filter::FILTER_NEAREST);
+      }
+      else
+      {
+        Gdk::Cairo::set_source_pixbuf(cr, mImageDataPtr->mPixbuf->scale_simple(mWidth, mHeight, Gdk::INTERP_NEAREST), x, y);
+      }
+    
+      cr->paint();
+    
+      return true;
+    }
 
+    // Member variables --------------------------------------------------------
     ImageData *mImageDataPtr;
     bool      mIsImageSizeChanged;
   };
