@@ -55,6 +55,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     RGB_to_RGB()
     {
+      mConvertFunc = NULL;
     }
     // -------------------------------------------------------------------------
     // ~RGB_to_RGB
@@ -69,10 +70,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool    isSupported(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat) const
     {
-      if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
-                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
-                                        ibc::image::ImageType::DATA_TYPE_8BIT))
-        return true;
+      if (findConvertFunction(inSrcFormat, inDstFormat) == NULL)
+        return false;
+      return true;
     }
     // -------------------------------------------------------------------------
     // init
@@ -80,13 +80,17 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     virtual void    init(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat)
     {
       mPixelAreaSize = inSrcFormat->mPixelAreaSize;
+      mConvertFunc = findConvertFunction(inSrcFormat, inDstFormat);
     }
     // -------------------------------------------------------------------------
     // convert
     // -------------------------------------------------------------------------
     virtual void    convert(const void *inImage, void *outImage)
     {
-      std::memcpy(outImage, inImage, mPixelAreaSize);
+      if (mConvertFunc == NULL)
+        return;
+
+      mConvertFunc(this, inImage, outImage);
     }
     // -------------------------------------------------------------------------
     // dispose
@@ -95,8 +99,30 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       // Do nothing at this moment...
     }
+
   protected:
     size_t  mPixelAreaSize;
+    void  (*mConvertFunc)(RGB_to_RGB *, const void *, void *);
+
+    // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // findConvertFunction
+    // -------------------------------------------------------------------------
+    static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat))(RGB_to_RGB *, const void *, void *)
+    {
+      if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
+                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                        ibc::image::ImageType::DATA_TYPE_8BIT))
+        return convertRGB8;
+      return NULL;
+    }
+    // -------------------------------------------------------------------------
+    // convertRGB8
+    // -------------------------------------------------------------------------
+    static void  convertRGB8(RGB_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      std::memcpy(outImage, inImage, inObj->mPixelAreaSize);
+    }
   };
 };
 

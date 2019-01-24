@@ -55,6 +55,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     Mono_to_RGB()
     {
+      mConvertFunc = NULL;
     }
     // -------------------------------------------------------------------------
     // ~RGB_to_RGB
@@ -69,10 +70,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool    isSupported(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat) const
     {
-      if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_MONO,
-                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
-                                        ibc::image::ImageType::DATA_TYPE_8BIT))
-        return true;
+      if (findConvertFunction(inSrcFormat, inDstFormat) == NULL)
+        return false;
+      return true;
     }
     // -------------------------------------------------------------------------
     // init
@@ -81,17 +81,52 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       mWidth = inSrcFormat->mWidth;
       mHeight = inSrcFormat->mHeight;
+      mConvertFunc = findConvertFunction(inSrcFormat, inDstFormat);
     }
     // -------------------------------------------------------------------------
     // convert
     // -------------------------------------------------------------------------
     virtual void    convert(const void *inImage, void *outImage)
     {
+      if (mConvertFunc == NULL)
+        return;
+
+      mConvertFunc(this, inImage, outImage);
+    }
+    // -------------------------------------------------------------------------
+    // dispose
+    // -------------------------------------------------------------------------
+    virtual void    dispose()
+    {
+      // Do nothing at this moment...
+    }
+
+  protected:
+    int  mWidth, mHeight;
+    void  (*mConvertFunc)(Mono_to_RGB *, const void *, void *);
+
+    // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // findConvertFunction
+    // -------------------------------------------------------------------------
+    static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat))(Mono_to_RGB *, const void *, void *)
+    {
+      if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_MONO,
+                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                        ibc::image::ImageType::DATA_TYPE_8BIT))
+        return convertMono8;
+      return NULL;
+    }
+    // -------------------------------------------------------------------------
+    // convertMono8
+    // -------------------------------------------------------------------------
+    static void  convertMono8(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
       const unsigned char *srcPtr = (unsigned char *)inImage;
       unsigned char *dstPtr = (unsigned char *)outImage;
 
-      for (int i = 0; i < mHeight; i++)
-        for (int j = 0; j < mWidth; j++)
+      for (int i = 0; i < inObj->mHeight; i++)
+        for (int j = 0; j < inObj->mWidth; j++)
         {
           *dstPtr = *srcPtr;
           dstPtr++;
@@ -102,15 +137,6 @@ namespace ibc::image::converter // <- nested namespace (C++17)
           srcPtr++;
         }
     }
-    // -------------------------------------------------------------------------
-    // dispose
-    // -------------------------------------------------------------------------
-    virtual void    dispose()
-    {
-      // Do nothing at this moment...
-    }
-  protected:
-    int  mWidth, mHeight;
   };
 };
 
