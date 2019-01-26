@@ -38,7 +38,10 @@
 
 // Includes ------------------------------------------------------ --------------
 #include <cstring>
+#include <arpa/inet.h>  // <- for byte swapping
+#include "ibc/image/image.h"
 #include "ibc/image/image_converter_interface.h"
+#include "ibc/image/image_exception.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::image::converter // <- nested namespace (C++17)
@@ -51,17 +54,31 @@ namespace ibc::image::converter // <- nested namespace (C++17)
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // RGB_to_RGB
+    // Mono_to_RGB
     // -------------------------------------------------------------------------
     Mono_to_RGB()
     {
-      mConvertFunc = NULL;
+      mSrcFormat      = NULL;
+      mDstFormat      = NULL;
+      mConvertFunc    = NULL;
+      mColorMapIndex  = ColorMap::CMIndex_NOT_SPECIFIED;
+      mColorMapPtr    = NULL;
+      mIsColorMapModified = false;
     }
     // -------------------------------------------------------------------------
-    // ~RGB_to_RGB
+    // ~Mono_to_RGB
     // -------------------------------------------------------------------------
     virtual ~Mono_to_RGB()
     {
+      if (mSrcFormat != NULL)
+        delete mSrcFormat;
+      if (mDstFormat != NULL)
+        delete mDstFormat;
+      if (mColorMapPtr != NULL)
+        delete mColorMapPtr;
+      mSrcFormat = NULL;
+      mDstFormat = NULL;
+      mColorMapPtr = NULL;
     }
 
     // Member functions --------------------------------------------------------
@@ -70,7 +87,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool    isSupported(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat) const
     {
-      if (findConvertFunction(inSrcFormat, inDstFormat) == NULL)
+      if (findConvertFunction(inSrcFormat, inDstFormat, mColorMapIndex) == NULL)
         return false;
       return true;
     }
@@ -79,9 +96,21 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual void    init(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat)
     {
+      if (mSrcFormat != NULL)
+        delete mSrcFormat;
+      if (mDstFormat != NULL)
+        delete mDstFormat;
+      mSrcFormat = new ImageFormat(*inSrcFormat);
+      mDstFormat = new ImageFormat(*inDstFormat);
+      if (mSrcFormat == NULL || mDstFormat == NULL)
+      {
+        throw ImageException(Exception::MEMORY_ERROR,
+          "mSrcFormat == NULL || mDstFormat == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
+
       mWidth = inSrcFormat->mWidth;
       mHeight = inSrcFormat->mHeight;
-      mConvertFunc = findConvertFunction(inSrcFormat, inDstFormat);
+      mConvertFunc = findConvertFunction(mSrcFormat, mDstFormat, mColorMapIndex);
     }
     // -------------------------------------------------------------------------
     // convert
@@ -90,6 +119,14 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       if (mConvertFunc == NULL)
         return;
+      if (mSrcFormat == NULL || mDstFormat == NULL)
+      {
+        throw ImageException(Exception::INVALID_OPERATION_ERROR,
+          "mSrcFormat == NULL || mDstFormat == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
+
+      if (mIsColorMapModified)
+        mConvertFunc = findConvertFunction(mSrcFormat, mDstFormat, mColorMapIndex);
 
       mConvertFunc(this, inImage, outImage);
     }
@@ -98,44 +135,304 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual void    dispose()
     {
-      // Do nothing at this moment...
+      if (mSrcFormat != NULL)
+        delete mSrcFormat;
+      if (mDstFormat != NULL)
+        delete mDstFormat;
+      if (mColorMapPtr != NULL)
+        delete mColorMapPtr;
+      mSrcFormat = NULL;
+      mDstFormat = NULL;
+      mColorMapPtr = NULL;
+    }
+    // -------------------------------------------------------------------------
+    // isColorMapSupported
+    // -------------------------------------------------------------------------
+    virtual bool  isColorMapSupported()
+    {
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapIndex
+    // -------------------------------------------------------------------------
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex)
+    {
+      mColorMapIndex = inIndex;
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapIndex
+    // -------------------------------------------------------------------------
+    virtual ColorMap::ColorMapIndex getColorMapIndex()
+    {
+      return mColorMapIndex;
     }
 
   protected:
+    ImageFormat *mSrcFormat, *mDstFormat;
     int  mWidth, mHeight;
+    ColorMap::ColorMapIndex mColorMapIndex;
+    unsigned char *mColorMapPtr;
+    bool  mIsColorMapModified;
     void  (*mConvertFunc)(Mono_to_RGB *, const void *, void *);
+
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // updateImageBufferPtr
+    // -------------------------------------------------------------------------
+    bool  updateColorMap(bool inForceUpdate = false)
+    {
+      if (inForceUpdate == false && mIsColorMapModified == false)
+        return false;
+
+      if (mColorMapPtr != NULL)
+      {
+        delete mColorMapPtr;
+        mColorMapPtr = NULL;
+      }
+
+      if (mColorMapIndex == ColorMap::CMIndex_NOT_SPECIFIED)
+        return false;
+
+      int colorNum = 0;
+      if (mSrcFormat->mType.mDataType == ImageType::DATA_TYPE_8BIT)
+      {
+        colorNum = 256;
+        mColorMapPtr = new unsigned char[colorNum];
+      }
+      if (mSrcFormat->mType.mDataType == ImageType::DATA_TYPE_16BIT)
+      {
+        colorNum = 65536*3;
+        mColorMapPtr = new unsigned char[colorNum];
+      }
+      if (mColorMapPtr == NULL)
+      {
+        throw ImageException(Exception::MEMORY_ERROR,
+          "mColorMapPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
+      }
+
+      ColorMap::getColorMap(mColorMapIndex, colorNum, mColorMapPtr);
+      mIsColorMapModified = false;
+      return true;
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // findConvertFunction
     // -------------------------------------------------------------------------
-    static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat))(Mono_to_RGB *, const void *, void *)
+    static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat, ColorMap::ColorMapIndex inIndex))(Mono_to_RGB *, const void *, void *)
     {
-      if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_MONO,
-                                        ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
-                                        ibc::image::ImageType::DATA_TYPE_8BIT))
-        return convertMono8;
+      if (inSrcFormat->mType.checkType( ImageType::PIXEL_TYPE_MONO,
+                                        ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                        ImageType::DATA_TYPE_8BIT))
+      {
+        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED)
+          return convertMono8;
+        return convertMono8_ColorMap;
+      }
+      if (inSrcFormat->mType.checkType( ImageType::PIXEL_TYPE_MONO,
+                                        ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
+                                        ImageType::DATA_TYPE_16BIT))
+      {
+        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED)
+        {
+          if (inSrcFormat->mType.mEndian == ImageType::ENDIAN_LITTLE)
+            return convertMono16;
+          return convertMono16_BigEndian;
+        }
+        if (inSrcFormat->mType.mEndian == ImageType::ENDIAN_LITTLE)
+          return convertMono16_ColorMap;
+        return convertMono16_ColorMap_BigEndian;
+      }
       return NULL;
     }
+    // Convert functions
     // -------------------------------------------------------------------------
     // convertMono8
     // -------------------------------------------------------------------------
     static void  convertMono8(Mono_to_RGB *inObj, const void *inImage, void *outImage)
     {
-      const unsigned char *srcPtr = (unsigned char *)inImage;
-      unsigned char *dstPtr = (unsigned char *)outImage;
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
 
       for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
         for (int j = 0; j < inObj->mWidth; j++)
         {
-          *dstPtr = *srcPtr;
+          unsigned char v = *srcPtr;
+          srcPtr+=srcPixStep;
+          //
+          *dstPtr = v;
           dstPtr++;
-          *dstPtr = *srcPtr;
+          *dstPtr = v;
           dstPtr++;
-          *dstPtr = *srcPtr;
+          *dstPtr = v;
           dstPtr++;
-          srcPtr++;
         }
+      }
+    }
+    // -------------------------------------------------------------------------
+    // convertMono8_ColorMap
+    // -------------------------------------------------------------------------
+    static void  convertMono8_ColorMap(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
+
+      for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
+        for (int j = 0; j < inObj->mWidth; j++)
+        {
+          unsigned char v = *srcPtr;
+          srcPtr+=srcPixStep;
+          //
+          unsigned char *mapPtr = &(inObj->mColorMapPtr[v * 3]);
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+        }
+      }
+    }
+    // -------------------------------------------------------------------------
+    // convertMono16 (_LittleEndian)
+    // -------------------------------------------------------------------------
+    static void  convertMono16(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
+
+      for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
+        srcPtr++; // in the case of the little endian and to get the MSB byte)
+        for (int j = 0; j < inObj->mWidth; j++)
+        {
+          unsigned char v = *srcPtr;
+          srcPtr+=srcPixStep;
+          //
+          *dstPtr = v;
+          dstPtr++;
+          *dstPtr = v;
+          dstPtr++;
+          *dstPtr = v;
+          dstPtr++;
+        }
+      }
+    }
+    // -------------------------------------------------------------------------
+    // convertMono16_BigEndian
+    // -------------------------------------------------------------------------
+    static void  convertMono16_BigEndian(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
+
+      inObj->updateColorMap();
+
+      for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
+        for (int j = 0; j < inObj->mWidth; j++)
+        {
+          unsigned char v = *srcPtr;
+          srcPtr+=srcPixStep;
+          //
+          *dstPtr = v;
+          dstPtr++;
+          *dstPtr = v;
+          dstPtr++;
+          *dstPtr = v;
+          dstPtr++;
+        }
+      }
+    }
+    // -------------------------------------------------------------------------
+    // convertMono16_ColorMap (_LittleEndian)
+    // -------------------------------------------------------------------------
+    static void  convertMono16_ColorMap(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
+
+      inObj->updateColorMap();
+
+      for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
+        for (int j = 0; j < inObj->mWidth; j++)
+        {
+          unsigned short v = CONV_FROM_LITTLE_ENDIAN(*((const unsigned short *)srcPtr));
+          srcPtr+=srcPixStep;
+          //
+          unsigned char *mapPtr = &(inObj->mColorMapPtr[v * 3]);
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+        }
+      }
+    }
+    // -------------------------------------------------------------------------
+    // convertMono16_ColorMap_BigEndian
+    // -------------------------------------------------------------------------
+    static void  convertMono16_ColorMap_BigEndian(Mono_to_RGB *inObj, const void *inImage, void *outImage)
+    {
+      size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
+
+      inObj->updateColorMap();
+
+      for (int i = 0; i < inObj->mHeight; i++)
+      {
+        const unsigned char *srcPtr =
+          (const unsigned char *)inObj->mSrcFormat->getLinePtr(inImage, i);
+        unsigned char *dstPtr =
+          (unsigned char *)inObj->mDstFormat->getLinePtr(outImage, i);
+
+        for (int j = 0; j < inObj->mWidth; j++)
+        {
+          unsigned short v = CONV_FROM_BIG_ENDIAN(*((const unsigned short *)srcPtr));
+          srcPtr+=srcPixStep;
+          //
+          unsigned char *mapPtr = &(inObj->mColorMapPtr[v * 3]);
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+          *dstPtr = *mapPtr;
+          dstPtr++;
+          mapPtr++;
+        }
+      }
     }
   };
 };

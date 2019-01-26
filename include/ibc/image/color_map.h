@@ -37,7 +37,6 @@
 #define IBC_IMAGE_COLOR_MAP_H_
 
 // Includes --------------------------------------------------------------------
-#include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -61,6 +60,8 @@ namespace ibc
     // Constatns ---------------------------------------------------------------
     enum ColorMapIndex
     {
+      CMIndex_NOT_SPECIFIED  = 0,
+
       // Linear
       CMIndex_GrayScale   = 1,
       CMIndex_Jet,
@@ -77,6 +78,8 @@ namespace ibc
       CMIndex_GreenPurple,
       CMIndex_BlueDarkYellow,
       CMIndex_GreenRed,
+
+      CMIndex_ANY            = 32765,
 
       // For Internal use only
       CMIndex_End         = -1
@@ -586,7 +589,6 @@ namespace ibc
       
       return colorMapData;
     }
-
   };
  };
 };

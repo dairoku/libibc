@@ -99,6 +99,28 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       // Do nothing at this moment...
     }
+    // -------------------------------------------------------------------------
+    // isColorMapSupported
+    // -------------------------------------------------------------------------
+    virtual bool  isColorMapSupported()
+    {
+      return false;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapIndex
+    // -------------------------------------------------------------------------
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex)
+    {
+      // Do nothing (This class does not have the color map function)
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapIndex
+    // -------------------------------------------------------------------------
+    virtual ColorMap::ColorMapIndex getColorMapIndex()
+    {
+      // Do nothing (This class does not have the color map function)
+      return ColorMap::CMIndex_NOT_SPECIFIED;
+    }
 
   protected:
     size_t  mPixelAreaSize;

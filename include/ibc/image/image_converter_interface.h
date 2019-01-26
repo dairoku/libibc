@@ -38,6 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "ibc/image/image.h"
+#include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -55,7 +56,10 @@ namespace ibc
     virtual void    init(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat)   = 0;
     virtual void    convert(const void *inImage, void *outImage) = 0;
     virtual void    dispose() = 0;
-    
+    virtual bool  isColorMapSupported() = 0;
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex) = 0;
+    virtual ColorMap::ColorMapIndex getColorMapIndex() = 0;
+
     // ToDo
     // isIndex
     // setColorMap (IndexOnly)

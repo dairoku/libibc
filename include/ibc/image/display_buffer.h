@@ -66,8 +66,6 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~DisplayBuffer()
     {
-      if (mActiveConverter != NULL)
-        mActiveConverter->dispose();
     }
 
     // Member functions --------------------------------------------------------

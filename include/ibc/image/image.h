@@ -38,6 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "ibc/base/types.h"
+#include "ibc/base/endian.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -110,6 +111,15 @@ namespace ibc
       DATA_TYPE_ANY           = 32765
     };
   
+    enum  EndianType
+    {
+      ENDIAN_TYPE_NOT_SPECIFIED = 0,
+      ENDIAN_LITTLE,
+      ENDIAN_BIG,
+      ENDIAN_TYPE_HOST          = 32764,
+      ENDIAN_TYPE_ANY           = 32765
+    };
+
     enum  BayerType
     {
       BAYER_TYPE_NOT_SPECIFIED  = 0,
@@ -171,6 +181,7 @@ namespace ibc
     PixelType       mPixelType;
     BufferType      mBufferType;
     DataType        mDataType;
+    EndianType      mEndian;
     BayerType       mBayerType;
     uint32          mFourCC;
     int             mComponentsPerPixel;
@@ -184,6 +195,7 @@ namespace ibc
       mPixelType              = PIXEL_TYPE_NOT_SPECIFIED;
       mBufferType             = BUFFER_TYPE_NOT_SPECIFIED;
       mDataType               = DATA_TYPE_NOT_SPECIFIED;
+      mEndian                 = ENDIAN_TYPE_NOT_SPECIFIED;
       mBayerType              = BAYER_TYPE_NOT_SPECIFIED;
       mFourCC                 = 0;
       mComponentsPerPixel     = 0;
@@ -193,6 +205,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageType(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
                 BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
+                EndianType inEndian = ENDIAN_TYPE_HOST,
                 uint32 inFourCC = 0,
                 int inComponentsPerPixel = 0)
     {
@@ -201,10 +214,14 @@ namespace ibc
       mDataType               = inDataType;
       mBayerType              = inBayerType;
       mFourCC                 = inFourCC;
-      if (inComponentsPerPixel == 0)
-        mComponentsPerPixel = coponentsPerPixel(inPixelType);
+      if (inEndian == ENDIAN_TYPE_HOST)
+        mEndian               = getHostEndian();
       else
-        mComponentsPerPixel = inComponentsPerPixel;
+        mEndian               = inEndian;
+      if (inComponentsPerPixel == 0)
+        mComponentsPerPixel   = coponentsPerPixel(inPixelType);
+      else
+        mComponentsPerPixel   = inComponentsPerPixel;
     }
     // -------------------------------------------------------------------------
     // ~ImageType
@@ -350,6 +367,17 @@ namespace ibc
         return false;
       return true;
     }
+    // -------------------------------------------------------------------------
+    // getHostEndian
+    // -------------------------------------------------------------------------
+    static EndianType getHostEndian()
+    {
+#ifdef __LITTLE_ENDIAN__
+        return ENDIAN_LITTLE;
+#else
+        return ENDIAN_BIG;
+#endif
+    }
   };
 
   // ---------------------------------------------------------------------------
@@ -434,11 +462,39 @@ namespace ibc
       calculatePlaneOffset(*this, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
+    // getPlanePtr
+    // -------------------------------------------------------------------------
+    void *getPlanePtr(void *inBufferPtr, unsigned int inPlaneIndex = 0) const
+    {
+      return ((unsigned char *)inBufferPtr) + calculatePlaneOffset(*this, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getPlanePtr
+    // -------------------------------------------------------------------------
+    const void *getPlanePtr(const void *inBufferPtr, unsigned int inPlaneIndex = 0) const
+    {
+      return ((const unsigned char *)inBufferPtr) + calculatePlaneOffset(*this, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
     // getLineOffset
     // -------------------------------------------------------------------------
     size_t getLineOffset(unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
       calculateLineOffset(*this, inY, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getLinePtr
+    // -------------------------------------------------------------------------
+    void *getLinePtr(void *inBufferPtr, unsigned int inY, unsigned int inPlaneIndex = 0) const
+    {
+      return ((unsigned char *)inBufferPtr) + calculateLineOffset(*this, inY, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getLinePtr
+    // -------------------------------------------------------------------------
+    const void *getLinePtr(const void *inBufferPtr, unsigned int inY, unsigned int inPlaneIndex = 0) const
+    {
+      return ((const unsigned char *)inBufferPtr) + calculateLineOffset(*this, inY, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getPixelOffset
@@ -447,8 +503,54 @@ namespace ibc
     {
       calculatePixelOffset(*this, inX, inY, inPlaneIndex);
     }
+    // -------------------------------------------------------------------------
+    // getPixelPtr
+    // -------------------------------------------------------------------------
+    void *getPixelPtr(void *inBufferPtr, unsigned int inX, unsigned int inY, unsigned int inPlaneIndex = 0) const
+    {
+      return ((unsigned char *)inBufferPtr) + calculatePixelOffset(*this, inX, inY, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getPixelPtr
+    // -------------------------------------------------------------------------
+    const void *getPixelPtr(const void *inBufferPtr, unsigned int inX, unsigned int inY, unsigned int inPlaneIndex = 0) const
+    {
+      return ((const unsigned char *)inBufferPtr) + calculatePixelOffset(*this, inX, inY, inPlaneIndex);
+    }
+    // -------------------------------------------------------------------------
+    // getPixelPtr
+    // -------------------------------------------------------------------------
+    void *getPixelPtr(void *inBufferPtr) const
+    {
+      return getPixelPtr(*this, inBufferPtr);
+    }
+    // -------------------------------------------------------------------------
+    // getPixelOffset
+    // -------------------------------------------------------------------------
+    const void *getPixelPtr(const void *inBufferPtr) const
+    {
+      return getPixelPtr(*this, inBufferPtr);
+    }
 
     // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getPixelPtr
+    // -------------------------------------------------------------------------
+    static void *getPixelPtr(const ImageFormat &inFormat, void *inBufferPtr)
+    {
+      unsigned char *pixelPtr = (unsigned char *)inBufferPtr;
+      pixelPtr += inFormat.mHeaderOffset;
+      return pixelPtr;
+    }
+    // -------------------------------------------------------------------------
+    // getPixelPtr
+    // -------------------------------------------------------------------------
+    static const void *getPixelPtr(const ImageFormat &inFormat, const void *inBufferPtr)
+    {
+      unsigned char *pixelPtr = (unsigned char *)inBufferPtr;
+      pixelPtr += inFormat.mHeaderOffset;
+      return pixelPtr;
+    }
     // -------------------------------------------------------------------------
     // calculatePlaneOffset
     // -------------------------------------------------------------------------
@@ -467,7 +569,7 @@ namespace ibc
                                       unsigned int inPlaneIndex = 0)
     {
       size_t  offset;
-      
+
       if (inY >= inFormat.mHeight)
         inY = inFormat.mHeight - 1;
       offset = calculatePlaneOffset(inFormat, inPlaneIndex);
@@ -483,7 +585,9 @@ namespace ibc
                                        unsigned int inY = 0, unsigned int inPlaneIndex = 0)
     {
       size_t  offset;
-      
+
+      if (inY >= inFormat.mWidth)
+        inY = inFormat.mWidth - 1;
       offset = calculateLineOffset(inFormat, inY, inPlaneIndex);
       offset +=  inFormat.mPixelStep * inX;
       return offset;
