@@ -94,21 +94,24 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getColorMap
     // -------------------------------------------------------------------------
-    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap)
+    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap,
+                             double inGain = 1.0, int inOffset = 0)
     {
-      int  i, num, total;
+      int  i, num, total, offset, numAll;
       const ColorMapData    *colorMapData;
-      double  prevRatio;
-      const unsigned char    *rgb1, *rgb2;
+      double  ratio0, ratio1, offsetRatio, prevRatio;
+      const unsigned char    *rgb0, *rgb1;
       
       colorMapData = getColorMapData(inIndex);
       if (colorMapData == NULL)
         return;
       
       total = 0;
-      if (colorMapData[0].ratio != 0)
+      offsetRatio = (double )inOffset / (double )inColorNum;
+      ratio0 = colorMapData[0].ratio / inGain - offsetRatio;
+      if (ratio0 > 0)
       {
-        num = (int )((double )inColorNum * colorMapData[0].ratio);
+        num = (int )((double )inColorNum * ratio0);
         for (i = 0; i < num; i++)
         {
           outColorMap[0] = colorMapData[0].rgb.R;
@@ -121,36 +124,45 @@ namespace ibc
 
       while (colorMapData[1].index == inIndex)
       {
-        rgb1 = (const unsigned char *)&(colorMapData[0].rgb);
-        rgb2 = (const unsigned char *)&(colorMapData[1].rgb);
-        if (colorMapData[1].ratio == 1.0)
+        ratio1 = colorMapData[1].ratio / inGain - offsetRatio;
+        rgb0 = (const unsigned char *)&(colorMapData[0].rgb);
+        rgb1 = (const unsigned char *)&(colorMapData[1].rgb);
+        if (ratio1 > 0)
         {
-          num = inColorNum - total;
+          numAll = (ratio1 - ratio0) * inColorNum;
+          if (ratio0 < 0.0)
+          {
+            num = inColorNum * ratio1;
+            offset = (int )((0.0 - ratio0) * inColorNum);
+          }
+          else
+          {
+            num = (int)((double)inColorNum * (ratio1 - ratio0);
+            offset = 0;
+          }
+          if (num > inColorNum - total)
+            num = inColorNum - total;
+          switch (colorMapData[0].type)
+          {
+            case CMType_Linear:
+              calcLinearColorMap(rgb0, rgb1, offset, numAll, num, mapOffset, outColorMap);
+              break;
+            case CMType_Diverging:
+              calcDivergingColorMap(rgb0, rgb1, offset, numAll, num, mapOffset, outColorMap);
+              break;
+          }
         }
-        else
-        {
-          num = (int)((double)inColorNum *
-            (colorMapData[1].ratio - colorMapData[0].ratio));
-        }
-
-        switch (colorMapData[0].type)
-        {
-          case CMType_Linear:
-            calcLinearColorMap(rgb1, rgb2, num, outColorMap);
-            break;
-          case CMType_Diverging:
-            calcDivergingColorMap(rgb1, rgb2, num, outColorMap);
-            break;
-        }
-        
+        ratio0 = ratio1;
         outColorMap += num * 3;
         total += num;
         colorMapData++;
+        if (total == inColorNum)
+          break;
       }
 
-      if (colorMapData[0].ratio != 1.0)
+      if (ratio1 < 1.0)
       {
-        num = (int )((double )inColorNum * (1.0 - colorMapData[0].ratio));
+        num = (int )((double )inColorNum * (1.0 -ratio1));
         for (i = 0; i < num; i++)
         {
           outColorMap[0] = colorMapData[0].rgb.R;
@@ -179,18 +191,19 @@ namespace ibc
     // -------------------------------------------------------------------------
     // calcLinearColorMap
     // -------------------------------------------------------------------------
-    static void  calcLinearColorMap(const unsigned char *inRgb1, const unsigned char *inRgb2,
-                     int inColorNum, unsigned char *outColorMap)
+    static void  calcLinearColorMap(const unsigned char *inRgb0, const unsigned char *inRgb1,
+                      int inOffset, int inColorNumAll,
+                      int inMapNum, unsigned char *outColorMap)
     {
       double  interp, k, v;
       
-      k = 1.0 / (double )(inColorNum - 1.0);
-      for (int i = 0; i < inColorNum; i++)
+      k = 1.0 / (double )(inColorNumAll - 1.0);
+      for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double )i * k;
+        interp = (double )(i + inOffset) * k;
         for (int j = 0; j < 3; j++)
         {
-          v = (1.0 - interp) * inRgb1[j] + interp * inRgb2[j];
+          v = (1.0 - interp) * inRgb0[j] + interp * inRgb1[j];
           if (v > 255)
             v = 255;
           outColorMap[i * 3 + j] = (unsigned char)v;
@@ -200,60 +213,61 @@ namespace ibc
     // -------------------------------------------------------------------------
     // calcDivergingColorMap
     // -------------------------------------------------------------------------
-    static void  calcDivergingColorMap(const unsigned char *inRgb1, const unsigned char *inRgb2,
-                     int inColorNum, unsigned char *outColorMap)
+    static void  calcDivergingColorMap(const unsigned char *inRgb0, const unsigned char *inRgb1,
+                      int inOffset, int inColorNumAll,
+                      int inMapNum, unsigned char *outColorMap)
     {
       double  interp, k;
       
-      k = 1.0 / (double )(inColorNum - 1.0);
-      for (int i = 0; i < inColorNum; i++)
+      k = 1.0 / (double )(inColorNumAll - 1.0);
+      for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double )i * k;
-        interpolateColor(inRgb1, inRgb2, interp, &(outColorMap[i * 3]));
+        interp = (double ))(i + inOffset) * k;
+        interpolateColor(inRgb0, inRgb1, interp, &(outColorMap[i * 3]));
       }
     }
     // -------------------------------------------------------------------------
     // interpolateColor
     // -------------------------------------------------------------------------
-    static void  interpolateColor(const unsigned char *inRgb1, const unsigned char *inRgb2,
+    static void  interpolateColor(const unsigned char *inRgb0, const unsigned char *inRgb1,
                      double inInterp, unsigned char *outRgb)
     {
-      double  msh1[3], msh2[3], msh[3], m;
+      double  msh0[3], msh1[3], msh[3], m;
       
+      convRgbToMsh(inRgb0, msh0);
       convRgbToMsh(inRgb1, msh1);
-      convRgbToMsh(inRgb2, msh2);
       
-      if ((msh1[1] > 0.05 && msh2[1] > 0.05) && fabs(msh1[2] - msh2[2]) > 1.0472)
+      if ((msh0[1] > 0.05 && msh1[1] > 0.05) && fabs(msh0[2] - msh1[2]) > 1.0472)
       {
-        if (msh1[0] > msh2[0])
-          m = msh1[0];
+        if (msh0[0] > msh1[0])
+          m = msh0[0];
         else
-          m = msh2[0];
+          m = msh1[0];
         if (m < 88)
           m = 88;
         if (inInterp < 0.5)
         {
-          msh2[0] = m;
-          msh2[1] = 0;
-          msh2[2] = 0;
+          msh1[0] = m;
+          msh1[1] = 0;
+          msh1[2] = 0;
           inInterp = 2 * inInterp;
         }
         else
         {
-          msh1[0] = m;
-          msh1[1] = 0;
-          msh1[2] = 0;
+          msh0[0] = m;
+          msh0[1] = 0;
+          msh0[2] = 0;
           inInterp = 2 * inInterp - 1;
         }
       }
       
-      if (msh1[1] < 0.05 && msh2[1] > 0.05)
-        msh1[2] =  adjustHue(msh2, msh1[0]);
-      else if (msh1[1] > 0.05 && msh2[1] < 0.05)
-        msh2[2] =  adjustHue(msh1, msh2[0]);
+      if (msh0[1] < 0.05 && msh1[1] > 0.05)
+        msh0[2] =  adjustHue(msh1, msh0[0]);
+      else if (msh0[1] > 0.05 && msh1[1] < 0.05)
+        msh1[2] =  adjustHue(msh0, msh1[0]);
       
       for (int i = 0; i < 3; i++)
-        msh[i] = (1 - inInterp) * msh1[i] + inInterp * msh2[i];
+        msh[i] = (1 - inInterp) * msh0[i] + inInterp * msh1[i];
       
       convMshToRgb(msh, outRgb);
     }
@@ -466,6 +480,14 @@ namespace ibc
     } ColorMapData;
     
     // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // calcRatio
+    // -------------------------------------------------------------------------
+    static double calcRatio(double inGain, double inOffset, double inGamma)
+    {
+      static const double  sD50WhitePoint[3] = {0.9642, 1.0, 0.8249};
+      return sD50WhitePoint;
+    }
     // -------------------------------------------------------------------------
     // getD50WhitePointInXyz
     // -------------------------------------------------------------------------

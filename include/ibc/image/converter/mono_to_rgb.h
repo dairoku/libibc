@@ -63,6 +63,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       mConvertFunc    = NULL;
       mColorMapIndex  = ColorMap::CMIndex_NOT_SPECIFIED;
       mColorMapPtr    = NULL;
+      mGain = 1.0;
+      mOffset = 0.0;
+      mGamma = 1.0;
       mIsColorMapModified = false;
     }
     // -------------------------------------------------------------------------
@@ -167,6 +170,83 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       return mColorMapIndex;
     }
+    // -------------------------------------------------------------------------
+    // setGain
+    // -------------------------------------------------------------------------
+    virtual void  setGain(double inGain)
+    {
+      mGain = inGain;
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getGain
+    // -------------------------------------------------------------------------
+    virtual double  getGain()
+    {
+      return mGain;
+    }
+    // -------------------------------------------------------------------------
+    // setChGains
+    // -------------------------------------------------------------------------
+    virtual void  setChGains(const std::vector<double> &inGain)
+    {
+      //
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getChGains
+    // -------------------------------------------------------------------------
+    std::vector<double> getChGaings()
+    {
+      std::vector<double> offsets = {mOffset};
+      return offsets;
+    }
+    // -------------------------------------------------------------------------
+    // setOffset
+    // -------------------------------------------------------------------------
+    virtual void  setOffset(double inOffset)
+    {
+      mOffset = inOffset;
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getOffset
+    // -------------------------------------------------------------------------
+    virtual double  setOffset(double inGain)inOffset
+    {
+      return mOffset;
+    }
+    // -------------------------------------------------------------------------
+    // setChOffsets
+    // -------------------------------------------------------------------------
+    virtual void  setChOffsets(const std::vector<double> &inGain)
+    {
+      //
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getChOffsets
+    // -------------------------------------------------------------------------
+    std::vector<double> getChOffsets()
+    {
+      std::vector<double> offsets = {mOffset};
+      return offsets;
+    }
+    // -------------------------------------------------------------------------
+    // setGamma
+    // -------------------------------------------------------------------------
+    virtual void  setGamma(double inGamma)
+    {
+      mGamma = inGamma;
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getGamma
+    // -------------------------------------------------------------------------
+    virtual double  getGamma()
+    {
+      return mGamma;
+    }
 
   protected:
     ImageFormat *mSrcFormat, *mDstFormat;
@@ -174,6 +254,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     ColorMap::ColorMapIndex mColorMapIndex;
     unsigned char *mColorMapPtr;
     bool  mIsColorMapModified;
+    double  mGain, mOffset, mGamma;
     void  (*mConvertFunc)(Mono_to_RGB *, const void *, void *);
 
     // Member functions --------------------------------------------------------
