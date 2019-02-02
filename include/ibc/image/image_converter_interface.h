@@ -57,8 +57,19 @@ namespace ibc
     virtual void    convert(const void *inImage, void *outImage) = 0;
     virtual void    dispose() = 0;
     virtual bool  isColorMapSupported() = 0;
-    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex) = 0;
-    virtual ColorMap::ColorMapIndex getColorMapIndex() = 0;
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex, int inMultiNum = 1) = 0;
+    virtual ColorMap::ColorMapIndex getColorMapIndex() const = 0;
+    virtual int getColorMapMultiNum() const = 0;
+    virtual void  setGain(double inGain) = 0;
+    virtual double  getGain() const = 0;
+    virtual void  setChGains(const std::vector<double> &inGain) = 0;
+    virtual std::vector<double> getChGaings() const = 0;
+    virtual void  setOffset(double inOffset) = 0;
+    virtual double  getOffset() const = 0;
+    virtual void  setChOffsets(const std::vector<double> &inGain) = 0;
+    virtual std::vector<double> getChOffsets() const = 0;
+    virtual void  setGamma(double inGamma) = 0;
+    virtual double  getGamma() const = 0;
 
     // ToDo
     // isIndex

@@ -63,6 +63,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       mConvertFunc    = NULL;
       mColorMapIndex  = ColorMap::CMIndex_NOT_SPECIFIED;
       mColorMapPtr    = NULL;
+      mColorMapMultiNum = 1;
       mGain = 1.0;
       mOffset = 0.0;
       mGamma = 1.0;
@@ -158,17 +159,27 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setColorMapIndex
     // -------------------------------------------------------------------------
-    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex)
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex, int inMultiNum = 1)
     {
       mColorMapIndex = inIndex;
+      mColorMapMultiNum = inMultiNum;
+      if (mColorMapMultiNum < 1)
+        mColorMapMultiNum = 1;
       mIsColorMapModified = true;
     }
     // -------------------------------------------------------------------------
     // getColorMapIndex
     // -------------------------------------------------------------------------
-    virtual ColorMap::ColorMapIndex getColorMapIndex()
+    virtual ColorMap::ColorMapIndex getColorMapIndex() const
     {
       return mColorMapIndex;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapMultiNum
+    // -------------------------------------------------------------------------
+    virtual int getColorMapMultiNum() const
+    {
+      return mColorMapMultiNum;
     }
     // -------------------------------------------------------------------------
     // setGain
@@ -181,7 +192,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // getGain
     // -------------------------------------------------------------------------
-    virtual double  getGain()
+    virtual double  getGain() const
     {
       return mGain;
     }
@@ -196,7 +207,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // getChGains
     // -------------------------------------------------------------------------
-    std::vector<double> getChGaings()
+    virtual std::vector<double> getChGaings() const
     {
       std::vector<double> offsets = {mOffset};
       return offsets;
@@ -212,7 +223,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // getOffset
     // -------------------------------------------------------------------------
-    virtual double  setOffset(double inGain)inOffset
+    virtual double  getOffset() const
     {
       return mOffset;
     }
@@ -227,7 +238,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // getChOffsets
     // -------------------------------------------------------------------------
-    std::vector<double> getChOffsets()
+    virtual std::vector<double> getChOffsets() const
     {
       std::vector<double> offsets = {mOffset};
       return offsets;
@@ -243,7 +254,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // getGamma
     // -------------------------------------------------------------------------
-    virtual double  getGamma()
+    virtual double  getGamma() const
     {
       return mGamma;
     }
@@ -252,6 +263,7 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     ImageFormat *mSrcFormat, *mDstFormat;
     int  mWidth, mHeight;
     ColorMap::ColorMapIndex mColorMapIndex;
+    int mColorMapMultiNum;
     unsigned char *mColorMapPtr;
     bool  mIsColorMapModified;
     double  mGain, mOffset, mGamma;
@@ -279,12 +291,12 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       if (mSrcFormat->mType.mDataType == ImageType::DATA_TYPE_8BIT)
       {
         colorNum = 256;
-        mColorMapPtr = new unsigned char[colorNum];
+        mColorMapPtr = new unsigned char[colorNum*3];
       }
       if (mSrcFormat->mType.mDataType == ImageType::DATA_TYPE_16BIT)
       {
-        colorNum = 65536*3;
-        mColorMapPtr = new unsigned char[colorNum];
+        colorNum = 65536;
+        mColorMapPtr = new unsigned char[colorNum*3];
       }
       if (mColorMapPtr == NULL)
       {
@@ -292,7 +304,10 @@ namespace ibc::image::converter // <- nested namespace (C++17)
           "mColorMapPtr == NULL", IBC_EXCEPTION_LOCATION_MACRO, 0);
       }
 
-      ColorMap::getColorMap(mColorMapIndex, colorNum, mColorMapPtr);
+      if (mColorMapIndex == ColorMap::CMIndex_GrayScale && mGamma != 1.0)
+        ColorMap::getMonoMap(colorNum, mColorMapPtr, mGamma, mGain, (int )mOffset);
+      else
+        ColorMap::getColorMap(mColorMapIndex, colorNum, mColorMapPtr, mColorMapMultiNum, mGain, (int )mOffset);
       mIsColorMapModified = false;
       return true;
     }
@@ -363,6 +378,8 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     {
       size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
 
+      inObj->updateColorMap();
+
       for (int i = 0; i < inObj->mHeight; i++)
       {
         const unsigned char *srcPtr =
@@ -423,8 +440,6 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     static void  convertMono16_BigEndian(Mono_to_RGB *inObj, const void *inImage, void *outImage)
     {
       size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
-
-      inObj->updateColorMap();
 
       for (int i = 0; i < inObj->mHeight; i++)
       {

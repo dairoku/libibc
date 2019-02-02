@@ -40,6 +40,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cstring>
+#include <vector>
 #include "ibc/image/image_exception.h"
 
 // Macros ----------------------------------------------------------------------
@@ -95,98 +97,133 @@ namespace ibc
     // getColorMap
     // -------------------------------------------------------------------------
     static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap,
+                             int inMultiNum = 1,
                              double inGain = 1.0, int inOffset = 0)
     {
-      int  i, num, total, offset, numAll;
-      const ColorMapData    *colorMapData;
+      int  i, index, num, total, offset, numAll;
+      std::vector<ColorMapData> colorMapData;
       double  ratio0, ratio1, offsetRatio, prevRatio;
       const unsigned char    *rgb0, *rgb1;
-      
-      colorMapData = getColorMapData(inIndex);
-      if (colorMapData == NULL)
+
+      getMultiColorMapData(inIndex, inMultiNum, colorMapData);
+      if (colorMapData.size() < 2 || inGain <= 0.0 || inColorNum == 0)
+      {
+        clearColorMap(inColorNum, outColorMap);
         return;
-      
+      }
+
       total = 0;
+      index = 0;
       offsetRatio = (double )inOffset / (double )inColorNum;
-      ratio0 = colorMapData[0].ratio / inGain - offsetRatio;
+      ratio0 = colorMapData[index].ratio / inGain - offsetRatio;
       if (ratio0 > 0)
       {
         num = (int )((double )inColorNum * ratio0);
         for (i = 0; i < num; i++)
         {
-          outColorMap[0] = colorMapData[0].rgb.R;
-          outColorMap[1] = colorMapData[0].rgb.G;
-          outColorMap[2] = colorMapData[0].rgb.B;
+          outColorMap[0] = colorMapData[index].rgb.R;
+          outColorMap[1] = colorMapData[index].rgb.G;
+          outColorMap[2] = colorMapData[index].rgb.B;
           outColorMap += 3;
           total++;
         }
       }
 
-      while (colorMapData[1].index == inIndex)
+      while (index + 1 < colorMapData.size())
       {
-        ratio1 = colorMapData[1].ratio / inGain - offsetRatio;
-        rgb0 = (const unsigned char *)&(colorMapData[0].rgb);
-        rgb1 = (const unsigned char *)&(colorMapData[1].rgb);
+        ratio1 = colorMapData[index+1].ratio / inGain - offsetRatio;
+        rgb0 = (const unsigned char *)&(colorMapData[index].rgb);
+        rgb1 = (const unsigned char *)&(colorMapData[index+1].rgb);
         if (ratio1 > 0)
         {
-          numAll = (ratio1 - ratio0) * inColorNum;
+          if (ratio1 == 1.0)  // <- this is to absorb calculation error
+            numAll = inColorNum - total;
+          else
+            numAll = (ratio1 - ratio0) * inColorNum;
           if (ratio0 < 0.0)
           {
-            num = inColorNum * ratio1;
-            offset = (int )((0.0 - ratio0) * inColorNum);
+            if (ratio1 < 1.0)
+              num = inColorNum * ratio1;
+            else
+              num = inColorNum;
+            offset = (int )((0.0 - ratio0) * (double)inColorNum);
           }
           else
           {
-            num = (int)((double)inColorNum * (ratio1 - ratio0);
+            num = numAll;
             offset = 0;
           }
           if (num > inColorNum - total)
             num = inColorNum - total;
-          switch (colorMapData[0].type)
+          switch (colorMapData[index].type)
           {
             case CMType_Linear:
-              calcLinearColorMap(rgb0, rgb1, offset, numAll, num, mapOffset, outColorMap);
+              calcLinearColorMap(rgb0, rgb1, offset, numAll, num, outColorMap);
               break;
             case CMType_Diverging:
-              calcDivergingColorMap(rgb0, rgb1, offset, numAll, num, mapOffset, outColorMap);
+              calcDivergingColorMap(rgb0, rgb1, offset, numAll, num, outColorMap);
               break;
           }
         }
         ratio0 = ratio1;
         outColorMap += num * 3;
         total += num;
-        colorMapData++;
+        index++;
         if (total == inColorNum)
           break;
       }
 
-      if (ratio1 < 1.0)
+      if (total < inColorNum)
       {
-        num = (int )((double )inColorNum * (1.0 -ratio1));
+        num = inColorNum - total;
         for (i = 0; i < num; i++)
         {
-          outColorMap[0] = colorMapData[0].rgb.R;
-          outColorMap[1] = colorMapData[0].rgb.G;
-          outColorMap[2] = colorMapData[0].rgb.B;
+          outColorMap[0] = rgb1[0];
+          outColorMap[1] = rgb1[1];
+          outColorMap[2] = rgb1[2];
           outColorMap += 3;
         }
       }
     }
     // -------------------------------------------------------------------------
-    // getMultiColorMap
+    // getMonoMap
     // -------------------------------------------------------------------------
-    static void  getMultiColorMap(ColorMapIndex inIndex, int inColorNum, int inMultiNum, unsigned char *outColorMap)
+    static void  getMonoMap(int inColorNum,  unsigned char *outColorMap, double inGamma = 1.0,
+                            double inGain = 1.0, int inOffset = 0.0)
     {
-      int  unit = inColorNum / inMultiNum;
-      
-      inMultiNum--;
-      for (int i = 0; i < inMultiNum; i++)
+      if (inGamma <= 0.0 || inColorNum == 0 || inGain <= 0.0)
       {
-        getColorMap(inIndex, unit, outColorMap);
-        outColorMap += (unit * 3);
-        inColorNum -= unit;
+        clearColorMap(inColorNum, outColorMap);
+        return;
       }
-      getColorMap(inIndex, inColorNum, outColorMap);
+
+      double pitch = 1.0 / (double )(inColorNum - 1.0);
+      inGamma = 1.0 / inGamma;
+      for (int i = 0; i < inColorNum; i++)
+      {
+        double v = pitch * (i - inOffset) * inGain;
+        if (v < 0.0)
+          v = 0.0;
+        if (v > 1.0)
+          v = 1.0;
+        v = pow(v, inGamma);
+        v = v * 255.0;
+        if (v >= 255)
+          v = 255;
+        outColorMap[0] = (unsigned char)v;
+        outColorMap[1] = (unsigned char)v;
+        outColorMap[2] = (unsigned char)v;
+        outColorMap += 3;
+      }
+    }
+    // -------------------------------------------------------------------------
+    // clearColorMap
+    // -------------------------------------------------------------------------
+    static void  clearColorMap(int inColorNum,  unsigned char *outColorMap)
+    {
+      if (inColorNum == 0)
+        return;
+      std::memset(outColorMap, 0, inColorNum * 3);
     }
     // -------------------------------------------------------------------------
     // calcLinearColorMap
@@ -200,7 +237,10 @@ namespace ibc
       k = 1.0 / (double )(inColorNumAll - 1.0);
       for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double )(i + inOffset) * k;
+        int t = i + inOffset;
+        if (t >= inColorNumAll) // Sannity check
+          t = inColorNumAll - 1;
+        interp = (double )t * k;
         for (int j = 0; j < 3; j++)
         {
           v = (1.0 - interp) * inRgb0[j] + interp * inRgb1[j];
@@ -222,7 +262,10 @@ namespace ibc
       k = 1.0 / (double )(inColorNumAll - 1.0);
       for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double ))(i + inOffset) * k;
+        int t = i + inOffset;
+        if (t >= inColorNumAll) // Sannity check
+          t = inColorNumAll - 1;
+        interp = (double )t * k;
         interpolateColor(inRgb0, inRgb1, interp, &(outColorMap[i * 3]));
       }
     }
@@ -481,14 +524,6 @@ namespace ibc
     
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // calcRatio
-    // -------------------------------------------------------------------------
-    static double calcRatio(double inGain, double inOffset, double inGamma)
-    {
-      static const double  sD50WhitePoint[3] = {0.9642, 1.0, 0.8249};
-      return sD50WhitePoint;
-    }
-    // -------------------------------------------------------------------------
     // getD50WhitePointInXyz
     // -------------------------------------------------------------------------
     static const double  *getD50WhitePointInXyz()
@@ -521,6 +556,34 @@ namespace ibc
       if (inT > 0.20689)
         return pow(inT, 3);
       return (inT - 16.0 / 116.0) / 7.78703;
+    }
+    // -------------------------------------------------------------------------
+    // getMultiColorMapData
+    // -------------------------------------------------------------------------
+    static void getMultiColorMapData(ColorMapIndex inIndex, int inMultiNum, std::vector<ColorMapData> &outData)
+    {
+      const ColorMapData  *colorMapData;
+      int i, j, dataNum;
+      double singleRatio;
+
+      colorMapData = getColorMapData(inIndex);
+      if (colorMapData == NULL)
+        return;
+
+      dataNum = 0;
+      while (colorMapData[dataNum].index == inIndex)
+        dataNum++;
+      singleRatio = 1.0 / (double )inMultiNum;
+
+      outData.clear();
+      for (i = 0; i < inMultiNum; i++)
+      {
+        for (j = 0; j < dataNum; j++)
+        {
+          outData.push_back(colorMapData[j]);
+          outData.back().ratio = colorMapData[j].ratio * singleRatio + singleRatio * i;
+        }
+      }
     }
     // -------------------------------------------------------------------------
     // getColorMapData

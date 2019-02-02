@@ -56,6 +56,10 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     RGB_to_RGB()
     {
       mConvertFunc = NULL;
+      mGain = 1.0;
+      mOffset = 0.0;
+      mGamma = 1.0;
+      mIsParameterModified = false;
     }
     // -------------------------------------------------------------------------
     // ~RGB_to_RGB
@@ -109,21 +113,107 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setColorMapIndex
     // -------------------------------------------------------------------------
-    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex)
+    virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex, int inMultiNum = 1)
     {
       // Do nothing (This class does not have the color map function)
     }
     // -------------------------------------------------------------------------
     // getColorMapIndex
     // -------------------------------------------------------------------------
-    virtual ColorMap::ColorMapIndex getColorMapIndex()
+    virtual ColorMap::ColorMapIndex getColorMapIndex() const
     {
       // Do nothing (This class does not have the color map function)
       return ColorMap::CMIndex_NOT_SPECIFIED;
     }
+    // -------------------------------------------------------------------------
+    // getColorMapMultiNum
+    // -------------------------------------------------------------------------
+    virtual int getColorMapMultiNum() const
+    {
+      return 1;
+    }
+    // -------------------------------------------------------------------------
+    // setGain
+    // -------------------------------------------------------------------------
+    virtual void  setGain(double inGain)
+    {
+      mGain = inGain;
+      mIsParameterModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getGain
+    // -------------------------------------------------------------------------
+    virtual double  getGain() const
+    {
+      return mGain;
+    }
+    // -------------------------------------------------------------------------
+    // setChGains
+    // -------------------------------------------------------------------------
+    virtual void  setChGains(const std::vector<double> &inGain)
+    {
+      //
+      mIsParameterModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getChGains
+    // -------------------------------------------------------------------------
+    virtual std::vector<double> getChGaings() const
+    {
+      std::vector<double> offsets = {mOffset};
+      return offsets;
+    }
+    // -------------------------------------------------------------------------
+    // setOffset
+    // -------------------------------------------------------------------------
+    virtual void  setOffset(double inOffset)
+    {
+      mOffset = inOffset;
+      mIsParameterModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getOffset
+    // -------------------------------------------------------------------------
+    virtual double  getOffset() const
+    {
+      return mOffset;
+    }
+    // -------------------------------------------------------------------------
+    // setChOffsets
+    // -------------------------------------------------------------------------
+    virtual void  setChOffsets(const std::vector<double> &inGain)
+    {
+      //
+      mIsParameterModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getChOffsets
+    // -------------------------------------------------------------------------
+    virtual std::vector<double> getChOffsets() const
+    {
+      std::vector<double> offsets = {mOffset};
+      return offsets;
+    }
+    // -------------------------------------------------------------------------
+    // setGamma
+    // -------------------------------------------------------------------------
+    virtual void  setGamma(double inGamma)
+    {
+      mGamma = inGamma;
+      mIsParameterModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getGamma
+    // -------------------------------------------------------------------------
+    virtual double  getGamma() const
+    {
+      return mGamma;
+    }
 
   protected:
     size_t  mPixelAreaSize;
+    double  mGain, mOffset, mGamma;
+    bool  mIsParameterModified;
     void  (*mConvertFunc)(RGB_to_RGB *, const void *, void *);
 
     // Static Functions --------------------------------------------------------
