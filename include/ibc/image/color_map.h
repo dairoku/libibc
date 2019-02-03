@@ -139,14 +139,14 @@ namespace ibc
           if (ratio1 == 1.0)  // <- this is to absorb calculation error
             numAll = inColorNum - total;
           else
-            numAll = (ratio1 - ratio0) * inColorNum;
+            numAll = (int )(ratio1 * inColorNum)- (int )(ratio0 * inColorNum);  // Do not use (ratio1 - ratio0) * inColorNum
           if (ratio0 < 0.0)
           {
             if (ratio1 < 1.0)
               num = inColorNum * ratio1;
             else
               num = inColorNum;
-            offset = (int )((0.0 - ratio0) * (double)inColorNum);
+            offset = (int )((0.0 - ratio0) * (double )inColorNum);
           }
           else
           {
@@ -201,7 +201,7 @@ namespace ibc
       inGamma = 1.0 / inGamma;
       for (int i = 0; i < inColorNum; i++)
       {
-        double v = pitch * (i - inOffset) * inGain;
+        double v = pitch * (i + inOffset) * inGain;
         if (v < 0.0)
           v = 0.0;
         if (v > 1.0)
