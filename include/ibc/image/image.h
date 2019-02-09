@@ -37,6 +37,7 @@
 #define IBC_IMAGE_IMAGE_H_
 
 // Includes --------------------------------------------------------------------
+#include <string.h>
 #include "ibc/base/types.h"
 #include "ibc/base/endian.h"
 
@@ -377,6 +378,108 @@ namespace ibc
 #else
         return ENDIAN_BIG;
 #endif
+    }
+    // -------------------------------------------------------------------------
+    // stringToPixelType
+    // -------------------------------------------------------------------------
+    static PixelType stringToPixelType(const char *inString, PixelType inDefault = PIXEL_TYPE_NOT_SPECIFIED)
+    {
+      const PixelTypeTable  *tablePtr = getPixelTypeTable();
+      while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
+      {
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
+    // -------------------------------------------------------------------------
+    // stringToDataType
+    // -------------------------------------------------------------------------
+    static DataType stringToDataType(const char *inString, DataType inDefault = DATA_TYPE_NOT_SPECIFIED)
+    {
+      const DataTypeTable  *tablePtr = getDataTypeTable();
+      while (tablePtr->type != DATA_TYPE_NOT_SPECIFIED)
+      {
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
+
+  private:
+    // Typedefs  ---------------------------------------------------------------
+    typedef struct
+    {
+      PixelType type;
+      const char  *str;
+    } PixelTypeTable;
+    typedef struct
+    {
+      DataType type;
+      const char  *str;
+    } DataTypeTable;
+
+    // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getPixelTypeTable
+    // -------------------------------------------------------------------------
+    static const PixelTypeTable *getPixelTypeTable()
+    {
+      const static PixelTypeTable  table[] =
+      {
+        {PIXEL_TYPE_RAW, "RAW"},
+        {PIXEL_TYPE_MONO, "MONO"},
+        {PIXEL_TYPE_BAYER, "BAYER"},
+        {PIXEL_TYPE_RGB, "RGB"},
+        {PIXEL_TYPE_RGBA, "RGBA"},
+        {PIXEL_TYPE_BGR, "BGR"},
+        {PIXEL_TYPE_BGRA, "BGRA"},
+        {PIXEL_TYPE_CMY, "CMY"},
+        {PIXEL_TYPE_CMYK, "CMYK"},
+        {PIXEL_TYPE_HSL, "HSL"},
+        {PIXEL_TYPE_HSB, "HSB"},
+        {PIXEL_TYPE_LUV, "LUV"},
+        {PIXEL_TYPE_LAB, "LAB"},
+        {PIXEL_TYPE_YUV410, "YUV410"},
+        {PIXEL_TYPE_YUV411, "YUV411"},
+        {PIXEL_TYPE_YUV420, "YUV420"},
+        {PIXEL_TYPE_YUV422, "YUV422"},
+        {PIXEL_TYPE_FOURCC, "FORCC"},
+        {PIXEL_TYPE_MULTI_CH, "MULTI_CH"},
+        {PIXEL_TYPE_JPEG, "JPEG"},
+        {PIXEL_TYPE_ANY, "ANY"},
+        {PIXEL_TYPE_NOT_SPECIFIED, ""},
+      };
+      return table;
+    }
+    // -------------------------------------------------------------------------
+    // getDataTypeTable
+    // -------------------------------------------------------------------------
+    static const DataTypeTable *getDataTypeTable()
+    {
+      const static DataTypeTable  table[] =
+      {
+        {DATA_TYPE_1BIT, "1BIT"},
+        {DATA_TYPE_4BIT, "4BIT"},
+        {DATA_TYPE_8BIT, "8BIT"},
+        {DATA_TYPE_10BIT, "10BIT"},
+        {DATA_TYPE_12BIT, "12BIT"},
+        {DATA_TYPE_14BIT, "14BIT"},
+        {DATA_TYPE_16BIT, "16BIT"},
+        {DATA_TYPE_24BIT, "24BIT"},
+        {DATA_TYPE_32BIT, "32BIT"},
+        {DATA_TYPE_40BIT, "40BIT"},
+        {DATA_TYPE_48BIT, "48BIT"},
+        {DATA_TYPE_54BIT, "54BIT"},
+        {DATA_TYPE_64BIT, "64BIT"},
+        {DATA_TYPE_FLOAT, "FLOAT"},
+        {DATA_TYPE_DOUBLE, "DOUBLE"},
+        {DATA_TYPE_ANY, "ANY"},
+        {DATA_TYPE_NOT_SPECIFIED, ""}
+      };
+      return table;
     }
   };
 

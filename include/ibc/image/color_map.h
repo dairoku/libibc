@@ -505,6 +505,20 @@ namespace ibc
         outRgb[i] = (unsigned char)value;
       }
     }
+    // -------------------------------------------------------------------------
+    // stringToColorMapIndex
+    // -------------------------------------------------------------------------
+    static ColorMapIndex stringToColorMapIndex(const char *inString, ColorMapIndex inDefault = CMIndex_NOT_SPECIFIED)
+    {
+      const ColorMapIndexTable  *tablePtr = getColorMapIndexTable();
+      while (tablePtr->index != CMIndex_NOT_SPECIFIED)
+      {
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+          return tablePtr->index;
+        tablePtr++;
+      }
+      return tablePtr->index;
+    }
 
   private:
     // Typedefs ----------------------------------------------------------------
@@ -521,6 +535,11 @@ namespace ibc
       ColorMapType  type;
       ColorMapRGB    rgb;
     } ColorMapData;
+    typedef struct
+    {
+      ColorMapIndex index;
+      const char  *str;
+    } ColorMapIndexTable;
     
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -673,6 +692,31 @@ namespace ibc
       }
       
       return colorMapData;
+    }
+    // -------------------------------------------------------------------------
+    // stringToColorMapIndex
+    // -------------------------------------------------------------------------
+    static const ColorMapIndexTable *getColorMapIndexTable()
+    {
+      const static ColorMapIndexTable  table[] =
+      {
+        {CMIndex_GrayScale, "GrayScale"},
+        {CMIndex_Jet, "Jet"},
+        {CMIndex_Rainbow, "Rainbow"},
+        {CMIndex_RainbowWide, "RainbowWide"},
+        {CMIndex_Spectrum, "Spectrum"},
+        {CMIndex_SpectrumWide, "SpectrumWide"},
+        {CMIndex_Thermal, "Thermal"},
+        {CMIndex_ThermalWide, "ThermalWide"},
+        {CMIndex_CoolWarm, "CoolWarm"},
+        {CMIndex_PurpleOrange, "PurpleOrange"},
+        {CMIndex_GreenPurple, "GreenPurple"},
+        {CMIndex_BlueDarkYellow, "BlueDarkYellow"},
+        {CMIndex_GreenRed, "GreenRed"},
+        {CMIndex_ANY, "ANY"},
+        {CMIndex_NOT_SPECIFIED, ""}
+      };
+      return table;
     }
   };
  };
