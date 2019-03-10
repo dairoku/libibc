@@ -1,5 +1,5 @@
 // =============================================================================
-//  vector.h
+//  quaternion.h
 //
 //  MIT License
 //
@@ -24,20 +24,22 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/vector.h
+  \file     ibc/gl/quaternion.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/02/24
+  \date     2019/03/10
   \brief    Header file for handling the image
 
   This file defines the quaternion class for the IBC Library
 */
 
-#ifndef IBC_VECTOR_H_
-#define IBC_VECTOR_H_
+#ifndef IBC_QUATERNION_H_
+#define IBC_QUATERNION_H_
 
 // Includes --------------------------------------------------------------------
 #include <iostream>
+#include "ibc/gl/vector.h"
+#include "ibc/gl/matrix.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -45,177 +47,186 @@ namespace ibc
  namespace gl
  {
   // ---------------------------------------------------------------------------
-  // VectorBase class
+  // QuaternionBase class
   // ---------------------------------------------------------------------------
-  template <typename VectorType> class  VectorBase
+  template <typename QuaternionType> class  QuaternionBase
   {
   public:
+    // Constants ---------------------------------------------------------------
+    // Quaternion Vector Index
+    //  Please note that this is a just one way to assign components of quaternion
+    //  (The following might be the most common assignment?)
+    static const int Qx   = 0;
+    static const int Qy   = 1;
+    static const int Qz   = 2;
+    static const int Qw   = 3;
+
     // Member variables (public) -----------------------------------------------
-    VectorType  mVec[3];
+    QuaternionType  mQ[4];
 
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // VectorBase
+    // QuaternionBase
     // -------------------------------------------------------------------------
-    VectorBase()
+    QuaternionBase()
     {
-      setZero(mVec);
+      setZero(mQ);
     }
     // -------------------------------------------------------------------------
-    // VectorBase
+    // QuaternionBase
     // -------------------------------------------------------------------------
-    VectorBase(VectorType inX, VectorType inY, VectorType inZ)
+    QuaternionBase(QuaternionType inX, QuaternionType inY, QuaternionType inZ, QuaternionType inW)
     {
-      set(inX, inY, inZ);
+      set(inX, inY, inZ, inW);
     }
     // -------------------------------------------------------------------------
-    // VectorBase
+    // QuaternionBase
     // -------------------------------------------------------------------------
-    VectorBase(const VectorType inVec[])
+    QuaternionBase(const QuaternionType inQ[])
     {
-      set(inVec);
+      set(inQ);
     }
     // -------------------------------------------------------------------------
-    // VectorBase (copy constructor)
+    // QuaternionBase (copy constructor)
     // -------------------------------------------------------------------------
-    VectorBase(const VectorBase<VectorType> &inVector)
+    QuaternionBase(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      set(inVector);
+      set(inQuaternion);
     }
     // -------------------------------------------------------------------------
-    // ~VectorBase
+    // ~QuaternionBase
     // -------------------------------------------------------------------------
-    virtual ~VectorBase()
+    virtual ~QuaternionBase()
     {
     }
     // Operator overloading ----------------------------------------------------
     // -------------------------------------------------------------------------
     // =
     // -------------------------------------------------------------------------
-    /*VectorBase<VectorType> &operator=(const VectorBase<VectorType> &inVector)
+    /*QuaternionBase<QuaternionType> &operator=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      return set(inVector);
+      return set(inQuaternion);
     }*/
     // -------------------------------------------------------------------------
     // []
     // -------------------------------------------------------------------------
-    VectorType operator[](size_t inIndex) const
+    QuaternionType operator[](size_t inIndex)
     {
-      if (inIndex > 2)
-        inIndex = 2;
-      return mVec[inIndex];
+      if (inIndex > 3)
+        inIndex = 3;
+      return mQ[inIndex];
     }
     // -------------------------------------------------------------------------
     // []
     // -------------------------------------------------------------------------
-    VectorType &operator[](size_t inIndex)
+    QuaternionType &operator[](size_t inIndex) const
     {
-      if (inIndex > 2)
-        inIndex = 2;
-      return mVec[inIndex];
+      if (inIndex > 3)
+        inIndex = 3;
+      return mQ[inIndex];
     }
     // -------------------------------------------------------------------------
     // +
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator+(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> operator+(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType> vector(*this);
-      return vector.add(inVector);
+      QuaternionBase<QuaternionType> vector(*this);
+      return vector.add(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // +
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator+(const VectorType inOffset) const
+    QuaternionBase<QuaternionType> operator+(const QuaternionType inOffset) const
     {
-      VectorBase<VectorType> vector(*this);
+      QuaternionBase<QuaternionType> vector(*this);
       return vector.add(inOffset);
     }
     // -------------------------------------------------------------------------
     // +=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator+=(const VectorType inOffset)
+    QuaternionBase<QuaternionType> &operator+=(const QuaternionType inOffset)
     {
       return add(inOffset);
     }
     // -------------------------------------------------------------------------
     // +=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator+=(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &operator+=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      return add(inVector);
+      return add(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // -
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator-(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> operator-(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType> vector(*this);
-      return vector.sub(inVector);
+      QuaternionBase<QuaternionType> vector(*this);
+      return vector.sub(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // -
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator-(const VectorType inOffset) const
+    QuaternionBase<QuaternionType> operator-(const QuaternionType inOffset) const
     {
-      VectorBase<VectorType> vector(*this);
+      QuaternionBase<QuaternionType> vector(*this);
       return vector.sub(inOffset);
     }
     // -------------------------------------------------------------------------
     // -=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator-=(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &operator-=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      return sub(inVector);
+      return sub(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // -=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator-=(const VectorType inOffset)
+    QuaternionBase<QuaternionType> &operator-=(const QuaternionType inOffset)
     {
       return sub(inOffset);
     }
     // -------------------------------------------------------------------------
     // *
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator*(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> operator*(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType> vector(*this);
-      return vector.cross(inVector);
+      QuaternionBase<QuaternionType> vector(*this);
+      return vector.cross(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // *
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator*(const VectorType inScale) const
+    QuaternionBase<QuaternionType> operator*(const QuaternionType inScale) const
     {
-      VectorBase<VectorType> vector(*this);
+      QuaternionBase<QuaternionType> vector(*this);
       return vector.scale(inScale);
     }
     // -------------------------------------------------------------------------
     // *=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator*=(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &operator*=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      return cross(inVector);
+      return cross(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // *=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator*=(const VectorType inScale)
+    QuaternionBase<QuaternionType> &operator*=(const QuaternionType inScale)
     {
       return scale(inScale);
     }
     // -------------------------------------------------------------------------
     // /
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> operator/(const VectorType inDiv) const
+    QuaternionBase<QuaternionType> operator/(const QuaternionType inDiv) const
     {
-      VectorBase<VectorType> vector(*this);
+      QuaternionBase<QuaternionType> vector(*this);
       return vector.div(inDiv);
     }
     // -------------------------------------------------------------------------
     // /=
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &operator/=(const VectorType inDiv)
+    QuaternionBase<QuaternionType> &operator/=(const QuaternionType inDiv)
     {
       return div(inDiv);
     }
@@ -224,279 +235,373 @@ namespace ibc
     // -------------------------------------------------------------------------
     // set
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &set(VectorType inX, VectorType inY, VectorType inZ)
+    QuaternionBase<QuaternionType> &set(
+                    QuaternionType inX, QuaternionType inY,
+                    QuaternionType inZ, QuaternionType inW)
     {
-      VectorBase<VectorType>::set(mVec, inX, inY, inZ);
+      QuaternionBase<QuaternionType>::set(mQ, inX, inY, inZ, inW);
       return *this;
     }
     // -------------------------------------------------------------------------
     // set
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &set(const VectorType inVec[])
+    QuaternionBase<QuaternionType> &set(const QuaternionType inQ[])
     {
-      VectorBase<VectorType>::set(mVec, inVec);
+      QuaternionBase<QuaternionType>::set(mQ, inQ);
       return *this;
     }
     // -------------------------------------------------------------------------
     // set
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &set(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &set(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      mVec[0] = inVector.mVec[0];
-      mVec[1] = inVector.mVec[1];
-      mVec[2] = inVector.mVec[2];
+      mQ[0] = inQuaternion.mQ[0];
+      mQ[1] = inQuaternion.mQ[1];
+      mQ[2] = inQuaternion.mQ[2];
+      mQ[3] = inQuaternion.mQ[3];
       return *this;
     }
     // -------------------------------------------------------------------------
     // setZero
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &setZero()
+    QuaternionBase<QuaternionType> &setZero()
     {
-      VectorBase<VectorType>::setZero(mVec);
+      QuaternionBase<QuaternionType>::setZero(mQ);
       return *this;
     }
     // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &add(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &add(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType>::add(mVec, mVec, inVector.mVec);
+      QuaternionBase<QuaternionType>::add(mQ, mQ, inQuaternion.mQ);
       return *this;
     }
     // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &add(VectorType inOffset)
+    QuaternionBase<QuaternionType> &add(QuaternionType inOffset)
     {
-      VectorBase<VectorType>::add(mVec, mVec, inOffset);
+      QuaternionBase<QuaternionType>::add(mQ, mQ, inOffset);
       return *this;
     }
     // -------------------------------------------------------------------------
     // sub
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &sub(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &sub(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType>::sub(mVec, mVec, inVector.mVec);
+      QuaternionBase<QuaternionType>::sub(mQ, mQ, inQuaternion.mQ);
       return *this;
     }
     // -------------------------------------------------------------------------
     // sub
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &sub(VectorType inOffset)
+    QuaternionBase<QuaternionType> &sub(QuaternionType inOffset)
     {
-      VectorBase<VectorType>::sub(mVec, mVec, inOffset);
+      QuaternionBase<QuaternionType>::sub(mQ, mQ, inOffset);
       return *this;
     }
     // -------------------------------------------------------------------------
     // cross
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &cross(const VectorBase<VectorType> &inVector)
+    QuaternionBase<QuaternionType> &cross(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      VectorBase<VectorType> vector0(*this);
-      if (this == &inVector)
+      QuaternionBase<QuaternionType> vector0(*this);
+      if (this == &inQuaternion)
       {
-        VectorBase<VectorType> vector1(inVector);
-        VectorBase<VectorType>::cross(mVec, vector0.mVec, vector1.mVec);
+        QuaternionBase<QuaternionType> vector1(inQuaternion);
+        QuaternionBase<QuaternionType>::cross(mQ, vector0.mQ, vector1.mQ);
       }
       else
       {
-        VectorBase<VectorType>::cross(mVec, vector0.mVec, inVector.mVec);
+        QuaternionBase<QuaternionType>::cross(mQ, vector0.mQ, inQuaternion.mQ);
       }
       return *this;
     }
     // -------------------------------------------------------------------------
     // scale
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &scale(VectorType inScale)
+    QuaternionBase<QuaternionType> &scale(QuaternionType inScale)
     {
-      VectorBase<VectorType>::scale(mVec, inScale);
+      QuaternionBase<QuaternionType>::scale(mQ, inScale);
       return *this;
     }
     // -------------------------------------------------------------------------
     // div
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &div(VectorType inScale)
+    QuaternionBase<QuaternionType> &div(QuaternionType inScale)
     {
-      VectorBase<VectorType>::div(mVec, inScale);
+      QuaternionBase<QuaternionType>::div(mQ, inScale);
       return *this;
     }
     // -------------------------------------------------------------------------
     // length
     // -------------------------------------------------------------------------
-    VectorType length() const
+    QuaternionType length() const
     {
-      return VectorBase<VectorType>::length(mVec);
+      return QuaternionBase<QuaternionType>::length(mQ);
     }
     // -------------------------------------------------------------------------
     // dot
     // -------------------------------------------------------------------------
-    VectorType dot(const VectorBase<VectorType> &inVector) const
+    QuaternionType dot(const QuaternionBase<QuaternionType> &inQuaternion) const
     {
-      return VectorBase<VectorType>::dot(mVec);
+      return QuaternionBase<QuaternionType>::dot(mQ);
     }
     // -------------------------------------------------------------------------
     // normalize
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> &normalize()
+    QuaternionBase<QuaternionType> &normalize()
     {
-      VectorBase<VectorType>::normalize(mVec);
+      QuaternionBase<QuaternionType>::normalize(mQ);
       return *this;
     }
     // -------------------------------------------------------------------------
-    // getNormalizedVector
+    // normalizedQuaternion
     // -------------------------------------------------------------------------
-    VectorBase<VectorType> getNormalizedVector() const
+    QuaternionBase<QuaternionType> normalizedQuaternion() const
     {
-      VectorBase<VectorType> vector(*this);
-      return vector.normalize();
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.normalize();
+    }
+    // -------------------------------------------------------------------------
+    // rotationMatrix
+    // -------------------------------------------------------------------------
+    MatrixBase<QuaternionType> rotationMatrix() const
+    {
+      MatrixBase<QuaternionType> matrix;
+      QuaternionBase<QuaternionType>::getRotationMatrix(matrix.mMat, mQ);
+      return matrix;
+    }
+    // -------------------------------------------------------------------------
+    // get_glRotationMatrix
+    // -------------------------------------------------------------------------
+    void get_glRotationMatrix(QuaternionType outMat[4][4]) const
+    {
+      QuaternionBase<QuaternionType>::glRotationMatrix(outMat, mQ);
+      return matrix;
     }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // set
     // -------------------------------------------------------------------------
-    static void  set(VectorType outDst[], VectorType inX, VectorType inY, VectorType inZ)
+    static void  set(QuaternionType outDst[],
+                     QuaternionType inX, QuaternionType inY,
+                     QuaternionType inZ, QuaternionType inW)
     {
-      outDst[0] = inX;
-      outDst[1] = inY;
-      outDst[2] = inZ;
+      outDst[Qx] = inX;
+      outDst[Qy] = inY;
+      outDst[Qz] = inZ;
+      outDst[Qw] = inW;
     }
     // -------------------------------------------------------------------------
     // set
     // -------------------------------------------------------------------------
-    static void  set(VectorType outDst[], const VectorType inSrc[])
+    static void  set(QuaternionType outDst[], const QuaternionType inSrc[])
     {
       outDst[0] = inSrc[0];
       outDst[1] = inSrc[1];
       outDst[2] = inSrc[2];
+      outDst[3] = inSrc[3];
     }
     // -------------------------------------------------------------------------
     // setZero
     // -------------------------------------------------------------------------
-    static void  setZero(VectorType outDst[])
+    static void  setZero(QuaternionType outDst[])
     {
       set(outDst,
-          (VectorType )0.0,
-          (VectorType )0.0,
-          (VectorType )0.0);
+          (QuaternionType )0.0,
+          (QuaternionType )0.0,
+          (QuaternionType )0.0,
+          (QuaternionType )0.0);
+    }
+    // -------------------------------------------------------------------------
+    // setIdentity
+    // -------------------------------------------------------------------------
+    static void  setIdentity(QuaternionType outDst[])
+    {
+      set(outDst,
+          (QuaternionType )0.0,
+          (QuaternionType )0.0,
+          (QuaternionType )0.0,
+          (QuaternionType )1.0);
+    }
+    // -------------------------------------------------------------------------
+    // setAngle
+    // -------------------------------------------------------------------------
+    static void  setAngle(QuaternionType outDst[], QuaternionType inAngle, const QuaternionType inAxis[])
+    {
+      QuaternionType  v[3];
+      VectorBase<QuaternionType>::set(v, inAxis);
+      VectorBase<QuaternionType>::normalize(v);
+      VectorBase<QuaternionType>::scale(v, (QuaternionType )sin(inAngle /2.0));
+      set(outDst,
+          v[0], v[1], v[2],
+          (QuaternionType )cos(inAngle / 2.0));
     }
     // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
-    static void  add(VectorType outDst[], const VectorType inSrc0[], const VectorType inSrc1[])
+    static void  add(QuaternionType outDst[], const QuaternionType inSrc0[], const QuaternionType inSrc1[])
     {
       outDst[0] = inSrc0[0] + inSrc1[0];
       outDst[1] = inSrc0[1] + inSrc1[1];
       outDst[2] = inSrc0[2] + inSrc1[2];
+      outDst[3] = inSrc0[3] + inSrc1[3];
     }
     // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
-    static void  add(VectorType outDst[], const VectorType inSrc[], VectorType inOffset)
+    static void  add(QuaternionType outDst[], const QuaternionType inSrc[], QuaternionType inOffset)
     {
       outDst[0] = inSrc[0] + inOffset;
       outDst[1] = inSrc[1] + inOffset;
       outDst[2] = inSrc[2] + inOffset;
+      outDst[3] = inSrc[3] + inOffset;
     }
     // -------------------------------------------------------------------------
     // sub
     // -------------------------------------------------------------------------
-    static void  sub(VectorType outDst[], const VectorType inSrc0[], const VectorType inSrc1[])
+    static void  sub(QuaternionType outDst[], const QuaternionType inSrc0[], const QuaternionType inSrc1[])
     {
       outDst[0] = inSrc0[0] - inSrc1[0];
       outDst[1] = inSrc0[1] - inSrc1[1];
       outDst[2] = inSrc0[2] - inSrc1[2];
+      outDst[3] = inSrc0[3] - inSrc1[3];
     }
     // -------------------------------------------------------------------------
     // sub
     // -------------------------------------------------------------------------
-    static void  sub(VectorType outDst[], const VectorType inSrc[], VectorType inOffset)
+    static void  sub(QuaternionType outDst[], const QuaternionType inSrc[], QuaternionType inOffset)
     {
       outDst[0] = inSrc[0] - inOffset;
       outDst[1] = inSrc[1] - inOffset;
       outDst[2] = inSrc[2] - inOffset;
+      outDst[3] = inSrc[3] - inOffset;
     }
     // -------------------------------------------------------------------------
-    // cross
+    // multi (A = B * C)
     // -------------------------------------------------------------------------
-    static void  cross(VectorType outDst[], const VectorType inSrc0[], const VectorType inSrc1[])
+    static void  multi(QuaternionType outA[], const QuaternionType inB[], const QuaternionType inC[])
     {
-      outDst[0] = inSrc0[1] * inSrc1[2] - inSrc0[2] * inSrc1[1];
-      outDst[1] = inSrc0[2] * inSrc1[0] - inSrc0[0] * inSrc1[2];
-      outDst[2] = inSrc0[0] * inSrc1[1] - inSrc0[1] * inSrc1[0];
+      outA[Qx] = inB[Qw] * inC[Qx] + inB[Qx] * inC[Qw] + inB[Qy] * inC[Qz] - inB[Qz] * inC[Qy];
+      outA[Qy] = inB[Qw] * inC[Qy] - inB[Qx] * inC[Qz] + inB[Qy] * inC[Qw] + inB[Qz] * inC[Qx];
+      outA[Qz] = inB[Qw] * inC[Qz] + inB[Qx] * inC[Qy] - inB[Qy] * inC[Qx] + inB[Qz] * inC[Qw];
+      outA[Qw] = inB[Qw] * inC[Qw] - inB[Qx] * inC[Qx] - inB[Qy] * inC[Qy] - inB[Qz] * inC[Qz];
     }
     // -------------------------------------------------------------------------
     // scale
     // -------------------------------------------------------------------------
-    static void scale(VectorType ioVec[], VectorType inScale)
+    static void scale(QuaternionType ioQ[], QuaternionType inScale)
     {
-      ioVec[0] *= inScale;
-      ioVec[1] *= inScale;
-      ioVec[2] *= inScale;
+      ioQ[0] *= inScale;
+      ioQ[1] *= inScale;
+      ioQ[2] *= inScale;
+      ioQ[3] *= inScale;
     }
     // -------------------------------------------------------------------------
     // div
     // -------------------------------------------------------------------------
-    static void div(VectorType ioVec[], VectorType inDiv)
+    static void div(QuaternionType ioQ[], QuaternionType inDiv)
     {
-      ioVec[0] /= inDiv;
-      ioVec[1] /= inDiv;
-      ioVec[2] /= inDiv;
+      ioQ[0] /= inDiv;
+      ioQ[1] /= inDiv;
+      ioQ[2] /= inDiv;
+      ioQ[3] /= inDiv;
     }
     // -------------------------------------------------------------------------
     // length
     // -------------------------------------------------------------------------
-    static VectorType  length(const VectorType inSrc[])
+    static QuaternionType  length(const QuaternionType inSrc[])
     {
-      return (VectorType )sqrt((VectorType )(
+      return (QuaternionType )sqrt((QuaternionType )(
             inSrc[0] * inSrc[0] +
             inSrc[1] * inSrc[1] +
-            inSrc[2] * inSrc[2]));
+            inSrc[2] * inSrc[2] +
+            inSrc[3] * inSrc[3]));
     }
     // -------------------------------------------------------------------------
     // dot
     // -------------------------------------------------------------------------
-    static VectorType dot(const VectorType inVec0[], const VectorType inVec1[])
+    static QuaternionType dot(const QuaternionType inSrc0[], const QuaternionType inSrc1[])
     {
-      return (inVec0[0] * inVec1[0] +
-              inVec0[1] * inVec1[1] +
-              inVec0[2] * inVec1[2]);
+      return (inSrc0[0] * inSrc1[0] +
+              inSrc0[1] * inSrc1[1] +
+              inSrc0[2] * inSrc1[2] +
+              inSrc0[3] * inSrc1[3]);
     }
     // -------------------------------------------------------------------------
     // normalize
     // -------------------------------------------------------------------------
-    static bool normalize(VectorType ioVec[])
+    static bool normalize(QuaternionType ioQ[])
     {
-      VectorType  l = length(ioVec);
+      QuaternionType  l = length(ioQ);
       if (l == 0)
         return false;
-      div(ioVec, l);
+      div(ioQ, l);
       return true;
+    }
+    // -------------------------------------------------------------------------
+    // rotationMatrix
+    // -------------------------------------------------------------------------
+    static void rotationMatrix(QuaternionType outMat[], QuaternionType inQ[])
+    {
+      QuaternionType glMat[4][4];
+
+      getGLRotationMatrix(glMat, inQ);
+      MatrixBase<QuaternionType>::setTransposedMatrix(outMat, glMat);
+    }
+    // -------------------------------------------------------------------------
+    // glRotationMatrix
+    // -------------------------------------------------------------------------
+    static void glRotationMatrix(QuaternionType outMat[4][4], QuaternionType inQ[])
+    {
+      outMat[0][0] = 1.0 - 2.0 * (inQ[Qy] * inQ[Qy] + inQ[Qz] * inQ[Qz]);
+      outMat[0][1] =       2.0 * (inQ[Qx] * inQ[Qy] - inQ[Qz] * inQ[Qw]);
+      outMat[0][2] =       2.0 * (inQ[Qz] * inQ[Qx] + inQ[Qy] * inQ[Qw]);
+      outMat[0][3] = 0.0;
+
+      outMat[1][0] =       2.0 * (inQ[Qx] * inQ[Qy] + inQ[Qz] * inQ[Qw]);
+      outMat[1][1] = 1.0 - 2.0 * (inQ[Qz] * inQ[Qz] + inQ[Qx] * inQ[Qx]);
+      outMat[1][2] =       2.0 * (inQ[Qy] * inQ[Qz] - inQ[Qx] * inQ[Qw]);
+      outMat[1][3] = 0.0;
+
+      outMat[2][0] =       2.0 * (inQ[Qz] * inQ[Qx] - inQ[Qy] * inQ[Qw]);
+      outMat[2][1] =       2.0 * (inQ[Qy] * inQ[Qz] + inQ[Qx] * inQ[Qw]);
+      outMat[2][2] = 1.0 - 2.0 * (inQ[Qy] * inQ[Qy] + inQ[Qx] * inQ[Qx]);
+      outMat[2][3] = 0.0f;
+
+      outMat[3][0] = 0.0;
+      outMat[3][1] = 0.0;
+      outMat[3][2] = 0.0;
+      outMat[3][3] = 1.0;
     }
   };
 
   // Operator overloading (for other types) ------------------------------------
   // ex) a = 2 + b
-  template <typename T0, typename T1> VectorBase<T1> operator+(T0 inOffset, const VectorBase<T1> &inVector)
+  template <typename T0, typename T1> QuaternionBase<T1> operator+(T0 inOffset, const QuaternionBase<T1> &inQuaternion)
   {
-    return inVector + (T1 )inOffset;
+    return inQuaternion + (T1 )inOffset;
   }
   // ex) a = 2 - b (this might be misleading...)
-  template <typename T0, typename T1> VectorBase<T1> operator-(T0 inOffset, const VectorBase<T1> &inVector)
+  template <typename T0, typename T1> QuaternionBase<T1> operator-(T0 inOffset, const QuaternionBase<T1> &inQuaternion)
   {
-    return -1 * inVector + (T1 )inOffset;
+    return -1 * inQuaternion + (T1 )inOffset;
   }
   // ex) a = 2 * b
-  template <typename T0, typename T1> VectorBase<T1> operator*(T0 inScale, const VectorBase<T1> &inVector)
+  template <typename T0, typename T1> QuaternionBase<T1> operator*(T0 inScale, const QuaternionBase<T1> &inQuaternion)
   {
-    return inVector * (T1 )inScale;
+    return inQuaternion * (T1 )inScale;
   }
-  template <typename T0> std::ostream& operator<<(std::ostream &os, const VectorBase<T0> &inVector)
+  template <typename T0> std::ostream& operator<<(std::ostream &os, const QuaternionBase<T0> &inQuaternion)
   {
     os << "{";
-    os << inVector.mVec[0] << ", ";
-    os << inVector.mVec[1] << ", ";
-    os << inVector.mVec[2];
+    os << "x = " << inQuaternion.mQ[Qx] << ", ";
+    os << "y = " << inQuaternion.mQ[Qy] << ", ";
+    os << "z = " << inQuaternion.mQ[Qz] << ", ";
+    os << "w = " << inQuaternion.mQ[Qw];
     os << "}";
     return os;
   }
@@ -504,11 +609,11 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // Typedefs
   // ---------------------------------------------------------------------------
-  typedef VectorBase<double>  Vector;
-  typedef VectorBase<float>  VectorF;
-  typedef VectorBase<int>  VectorI;
+  typedef QuaternionBase<double>  Quaternion;
+  typedef QuaternionBase<float>  QuaternionF;
+//typedef QuaternionBase<int>  QuaternionI; // < We don't need this type
  };
 };
 
-#endif  // #ifdef IBC_VECTOR_H_
+#endif  // #ifdef IBC_QUATERNION_H_
 

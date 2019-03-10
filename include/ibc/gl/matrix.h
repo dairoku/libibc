@@ -124,6 +124,15 @@ namespace ibc
       return mMat[inRow];
     }
     // -------------------------------------------------------------------------
+    // []
+    // -------------------------------------------------------------------------
+    const MatrixType *operator[](size_t inRow) const
+    {
+      if (inRow >= MATRIX_ROW_SIZE)
+        inRow = MATRIX_ROW_SIZE - 1;
+      return mMat[inRow];
+    }
+    // -------------------------------------------------------------------------
     // +
     // -------------------------------------------------------------------------
     MatrixBase<MatrixType> operator+(const MatrixBase<MatrixType> &inMatrix)
