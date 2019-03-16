@@ -38,6 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <iostream>
+#include <math.h>
 #include "ibc/gl/vector.h"
 #include "ibc/gl/matrix.h"
 
@@ -130,16 +131,16 @@ namespace ibc
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator+(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.add(inQuaternion);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.add(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // +
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator+(const QuaternionType inOffset) const
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.add(inOffset);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.add(inOffset);
     }
     // -------------------------------------------------------------------------
     // +=
@@ -160,16 +161,16 @@ namespace ibc
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator-(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.sub(inQuaternion);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.sub(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // -
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator-(const QuaternionType inOffset) const
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.sub(inOffset);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.sub(inOffset);
     }
     // -------------------------------------------------------------------------
     // -=
@@ -190,23 +191,23 @@ namespace ibc
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator*(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.cross(inQuaternion);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.multi(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // *
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator*(const QuaternionType inScale) const
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.scale(inScale);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.scale(inScale);
     }
     // -------------------------------------------------------------------------
     // *=
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> &operator*=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      return cross(inQuaternion);
+      return multi(inQuaternion);
     }
     // -------------------------------------------------------------------------
     // *=
@@ -220,8 +221,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> operator/(const QuaternionType inDiv) const
     {
-      QuaternionBase<QuaternionType> vector(*this);
-      return vector.div(inDiv);
+      QuaternionBase<QuaternionType> quaternion(*this);
+      return quaternion.div(inDiv);
     }
     // -------------------------------------------------------------------------
     // /=
@@ -270,6 +271,23 @@ namespace ibc
       return *this;
     }
     // -------------------------------------------------------------------------
+    // setIdentity
+    // -------------------------------------------------------------------------
+    QuaternionBase<QuaternionType> &setIdentity()
+    {
+      QuaternionBase<QuaternionType>::setIdentity(mQ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setAngle
+    // -------------------------------------------------------------------------
+    QuaternionBase<QuaternionType> &setAngle(
+        QuaternionType inAngle, const VectorBase<QuaternionType> &inAxis)
+    {
+      QuaternionBase<QuaternionType>::setAngle(mQ, inAngle, inAxis.mVec);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
     QuaternionBase<QuaternionType> &add(const QuaternionBase<QuaternionType> &inQuaternion)
@@ -302,19 +320,19 @@ namespace ibc
       return *this;
     }
     // -------------------------------------------------------------------------
-    // cross
+    // multi
     // -------------------------------------------------------------------------
-    QuaternionBase<QuaternionType> &cross(const QuaternionBase<QuaternionType> &inQuaternion)
+    QuaternionBase<QuaternionType> &multi(const QuaternionBase<QuaternionType> &inQuaternion)
     {
-      QuaternionBase<QuaternionType> vector0(*this);
+      QuaternionBase<QuaternionType> q0(*this);
       if (this == &inQuaternion)
       {
-        QuaternionBase<QuaternionType> vector1(inQuaternion);
-        QuaternionBase<QuaternionType>::cross(mQ, vector0.mQ, vector1.mQ);
+        QuaternionBase<QuaternionType> q1(inQuaternion);
+        QuaternionBase<QuaternionType>::multi(mQ, q0.mQ, q1.mQ);
       }
       else
       {
-        QuaternionBase<QuaternionType>::cross(mQ, vector0.mQ, inQuaternion.mQ);
+        QuaternionBase<QuaternionType>::multi(mQ, q0.mQ, inQuaternion.mQ);
       }
       return *this;
     }
@@ -370,7 +388,7 @@ namespace ibc
     MatrixBase<QuaternionType> rotationMatrix() const
     {
       MatrixBase<QuaternionType> matrix;
-      QuaternionBase<QuaternionType>::getRotationMatrix(matrix.mMat, mQ);
+      QuaternionBase<QuaternionType>::rotationMatrix(matrix.mMat, mQ);
       return matrix;
     }
     // -------------------------------------------------------------------------
@@ -379,7 +397,6 @@ namespace ibc
     void get_glRotationMatrix(QuaternionType outMat[4][4]) const
     {
       QuaternionBase<QuaternionType>::glRotationMatrix(outMat, mQ);
-      return matrix;
     }
 
     // Static Functions --------------------------------------------------------
@@ -570,7 +587,7 @@ namespace ibc
       outMat[2][0] =       2.0 * (inQ[Qz] * inQ[Qx] - inQ[Qy] * inQ[Qw]);
       outMat[2][1] =       2.0 * (inQ[Qy] * inQ[Qz] + inQ[Qx] * inQ[Qw]);
       outMat[2][2] = 1.0 - 2.0 * (inQ[Qy] * inQ[Qy] + inQ[Qx] * inQ[Qx]);
-      outMat[2][3] = 0.0f;
+      outMat[2][3] = 0.0;
 
       outMat[3][0] = 0.0;
       outMat[3][1] = 0.0;
@@ -598,10 +615,10 @@ namespace ibc
   template <typename T0> std::ostream& operator<<(std::ostream &os, const QuaternionBase<T0> &inQuaternion)
   {
     os << "{";
-    os << "x = " << inQuaternion.mQ[Qx] << ", ";
-    os << "y = " << inQuaternion.mQ[Qy] << ", ";
-    os << "z = " << inQuaternion.mQ[Qz] << ", ";
-    os << "w = " << inQuaternion.mQ[Qw];
+    os << "x = " << inQuaternion.mQ[QuaternionBase<T0>::Qx] << ", ";
+    os << "y = " << inQuaternion.mQ[QuaternionBase<T0>::Qy] << ", ";
+    os << "z = " << inQuaternion.mQ[QuaternionBase<T0>::Qz] << ", ";
+    os << "w = " << inQuaternion.mQ[QuaternionBase<T0>::Qw];
     os << "}";
     return os;
   }
