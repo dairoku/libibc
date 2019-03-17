@@ -280,7 +280,6 @@ namespace ibc
     void getTransposedMatrix(MatrixType outMat[]) const
     {
       MatrixBase<MatrixType>::setTransposedMatrix(outMat, (MatrixType *)mMat);
-      return *this;
     }
     // -------------------------------------------------------------------------
     // setZero
@@ -288,6 +287,14 @@ namespace ibc
     MatrixBase<MatrixType> &setZero()
     {
       MatrixBase<MatrixType>::setZero((MatrixType *)mMat);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setIdentity
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setIdentity()
+    {
+      MatrixBase<MatrixType>::setIdentity((MatrixType *)mMat);
       return *this;
     }
     // -------------------------------------------------------------------------
@@ -383,6 +390,15 @@ namespace ibc
         outDst[i] = 0.0;
     }
     // -------------------------------------------------------------------------
+    // setIdentity
+    // -------------------------------------------------------------------------
+    static void  setIdentity(MatrixType outDst[])
+    {
+      setZero(outDst);
+      for (int i = 0; i < MATRIX_ROW_SIZE; i++)
+        outDst[i*MATRIX_ROW_SIZE+i] = 1.0;
+    }
+    // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
     static void  add(MatrixType outDst[], const MatrixType inSrc0[], const MatrixType inSrc1[])
@@ -449,7 +465,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     static const int  *getTransposedMatrixIndex()
     {
-      const int index[] = {
+      static const int index[] = {
         0, 4, 8,  12,
         1, 5, 9,  13,
         2, 6, 10, 14,
