@@ -38,6 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <iostream>
+#include <math.h>
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -332,7 +333,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     VectorType dot(const VectorBase<VectorType> &inVector) const
     {
-      return VectorBase<VectorType>::dot(mVec);
+      return VectorBase<VectorType>::dot(mVec, inVector.mVec);
+    }
+    // -------------------------------------------------------------------------
+    // angle
+    // -------------------------------------------------------------------------
+    VectorType angle(const VectorBase<VectorType> &inVector) const
+    {
+      return VectorBase<VectorType>::angle(mVec, inVector.mVec);
     }
     // -------------------------------------------------------------------------
     // normalize
@@ -461,6 +469,23 @@ namespace ibc
       return (inVec0[0] * inVec1[0] +
               inVec0[1] * inVec1[1] +
               inVec0[2] * inVec1[2]);
+    }
+    // -------------------------------------------------------------------------
+    // angle
+    // -------------------------------------------------------------------------
+    static VectorType angle(const VectorType inVec0[], const VectorType inVec1[])
+    {
+      VectorType  v, d, cosTheta;
+      //
+      v = length(inVec0) * length(inVec1);
+      if (v == 0.0)
+        return 0.0;
+      cosTheta = dot(inVec0, inVec1) / v;
+      if (cosTheta >= 1.0)
+        return 0.0;
+      if (cosTheta <= -1.0)
+        return M_PI;
+      return (VectorType )::acos(cosTheta);
     }
     // -------------------------------------------------------------------------
     // normalize

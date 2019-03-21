@@ -37,8 +37,8 @@
 #define IBC_TRACKBALL_H_
 
 // Includes --------------------------------------------------------------------
+#include <math.h>
 #include "ibc/gl/quaternion.h"
-#include "ibc/gl/utils.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -55,10 +55,11 @@ namespace ibc
     // -------------------------------------------------------------------------
     // TrackballBase
     // -------------------------------------------------------------------------
-    TrackballBase()
+    TrackballBase(TrackballType inRotationSensitivity = 1.0)
     {
       mQuat.setIdentity();
       mIsMouseButtonDown = false;
+      mRotationSensitivity = inRotationSensitivity;
     }
     // -------------------------------------------------------------------------
     // ~TrackballBase
@@ -68,12 +69,26 @@ namespace ibc
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
+    // setRotationSensitivity
+    // -------------------------------------------------------------------------
+    void setRotationSensitivity(TrackballType inRotationSensitivity)
+    {
+      mRotationSensitivity = inRotationSensitivity;
+    }
+    // -------------------------------------------------------------------------
+    // getRotationSensitivity
+    // -------------------------------------------------------------------------
+    TrackballType getRotationSensitivity()
+    {
+      return mRotationSensitivity;
+    }
+    // -------------------------------------------------------------------------
     // startTrackingMouse
     // -------------------------------------------------------------------------
     // call this function at onMouseBottunDown event
     //
-    void startTrackingMouse(int inMouseX, int  inMouseY,
-                            int inClientWidth, int inClientHeight)
+    void startTrackingMouse(TrackballType inMouseX, TrackballType  inMouseY,
+                            TrackballType inClientWidth, TrackballType inClientHeight)
     {
       mIsMouseButtonDown = true;
       mPrevMouseX = inMouseX;
@@ -96,14 +111,14 @@ namespace ibc
     // trackMouse
     // -------------------------------------------------------------------------
     //
-    MatrixBase<TrackballType> trackMouse(int inMouseX, int  inMouseY)
+    MatrixBase<TrackballType> trackMouse(TrackballType inMouseX, TrackballType  inMouseY)
     {
       if (mIsMouseButtonDown == false)
         return mQuat.rotationMatrix();
 
       QuaternionBase<TrackballType> quat;
       quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
-                         mClientWidth, mClientHeight);
+                         mClientWidth, mClientHeight, mRotationSensitivity);
       mPrevMouseX = inMouseX;
       mPrevMouseY = inMouseY;
 
@@ -114,8 +129,10 @@ namespace ibc
 
     // Static Functions --------------------------------------------------------
     static  QuaternionBase<TrackballType>  getRotation(
-                          int inX0, int inY0, int inX1, int inY1,
-                          int inWidth, int inHeight)
+                          TrackballType inX0, TrackballType inY0,
+                          TrackballType inX1, TrackballType inY1,
+                          TrackballType inWidth, TrackballType inHeight,
+                          TrackballType inSensitivity)
     {
       QuaternionBase<TrackballType> quat;
       VectorBase<TrackballType> v0, v1, diff, axis;
@@ -129,9 +146,10 @@ namespace ibc
 
       v0 = pointToVec(inX0, inY0, inWidth, inHeight);
       v1 = pointToVec(inX1, inY1, inWidth, inHeight);
-      axis = v0 * v1;
+      axis = v1 * v0;
       diff = v1 - v0;
-      angle = ((-GL_UTILS_PI / 2.0) * diff.length()); // <- TODO
+      //angle = ((M_PI / 2.0) * diff.length()) * inSensitivity / 1.5;   // This approximation works fairly well
+      angle = inSensitivity * v0.angle(v1);
       quat.setAngle(angle, axis);
 
       return quat;
@@ -139,8 +157,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     // pointToVec
     // -------------------------------------------------------------------------
-    static VectorBase<TrackballType>  pointToVec(int inX, int inY,
-                                                int inWidth, int inHeight)
+    static VectorBase<TrackballType>  pointToVec(TrackballType inX, TrackballType inY,
+                                                  TrackballType inWidth, TrackballType inHeight)
     {
       VectorBase<TrackballType> vec;
       TrackballType d;
@@ -151,7 +169,7 @@ namespace ibc
       d = vec.length();
       if (d > 1.0)
         d = 1.0;
-      vec[2] = (TrackballType )::cos((GL_UTILS_PI / 2.0) * d);
+      vec[2] = (TrackballType )::cos((M_PI / 2.0) * d);
       vec.normalize();
       return vec;
     }
@@ -160,7 +178,8 @@ namespace ibc
     // Member variables (protected) --------------------------------------------
     QuaternionBase<TrackballType> mQuat;
     bool  mIsMouseButtonDown;
-    int mPrevMouseX, mPrevMouseY, mClientWidth, mClientHeight;
+    TrackballType mPrevMouseX, mPrevMouseY, mClientWidth, mClientHeight;
+    TrackballType mRotationSensitivity;
   };
 
   // ---------------------------------------------------------------------------

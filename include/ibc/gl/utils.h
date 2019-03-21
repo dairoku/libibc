@@ -40,9 +40,6 @@
 #include <math.h>
 #include "ibc/gl/matrix.h"
 
-// Macros ----------------------------------------------------------------------
-#define GL_UTILS_PI           3.141524
-
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
@@ -63,7 +60,7 @@ namespace ibc
     {
       UtilsType width, height;
 
-      height = tan(inFovY / 360.0 * GL_UTILS_PI) * inNear;
+      height = tan(inFovY / 360.0 * M_PI) * inNear;
       width = height * inAspect;
       return frustum(-width, width, -height, height, inNear, inFar);
     }
