@@ -388,7 +388,7 @@ namespace ibc
     MatrixBase<QuaternionType> rotationMatrix() const
     {
       MatrixBase<QuaternionType> matrix;
-      QuaternionBase<QuaternionType>::rotationMatrix(matrix.mMat, mQ);
+      QuaternionBase<QuaternionType>::rotationMatrix((QuaternionType *)matrix.mMat, mQ);
       return matrix;
     }
     // -------------------------------------------------------------------------
@@ -562,17 +562,17 @@ namespace ibc
     // -------------------------------------------------------------------------
     // rotationMatrix
     // -------------------------------------------------------------------------
-    static void rotationMatrix(QuaternionType outMat[], QuaternionType inQ[])
+    static void rotationMatrix(QuaternionType outMat[], const QuaternionType inQ[])
     {
       QuaternionType glMat[4][4];
 
-      getGLRotationMatrix(glMat, inQ);
-      MatrixBase<QuaternionType>::setTransposedMatrix(outMat, glMat);
+      glRotationMatrix(glMat, inQ);
+      MatrixBase<QuaternionType>::setTransposedMatrix(outMat, (QuaternionType *)glMat);
     }
     // -------------------------------------------------------------------------
     // glRotationMatrix
     // -------------------------------------------------------------------------
-    static void glRotationMatrix(QuaternionType outMat[4][4], QuaternionType inQ[])
+    static void glRotationMatrix(QuaternionType outMat[4][4], const QuaternionType inQ[])
     {
       outMat[0][0] = 1.0 - 2.0 * (inQ[Qy] * inQ[Qy] + inQ[Qz] * inQ[Qz]);
       outMat[0][1] =       2.0 * (inQ[Qx] * inQ[Qy] - inQ[Qz] * inQ[Qw]);

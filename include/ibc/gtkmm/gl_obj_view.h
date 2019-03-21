@@ -42,6 +42,8 @@
 #include <cstring>
 #include <gtkmm.h>
 #include "ibc/gl/matrix.h"
+#include "ibc/gl/utils.h"
+#include "ibc/gl/trackball.h"
 #include "ibc/gtkmm/gl_view.h"
 
 // Namespace -------------------------------------------------------------------
@@ -62,7 +64,10 @@ namespace ibc
     GLObjView() :
       Glib::ObjectBase("GLObjView")
     {
-      mRotation.setIdentity();
+      mModelView.setIdentity();
+      mProjection.setIdentity();
+
+      mCameraFoV = 30.0;
 
       add_events(Gdk::SCROLL_MASK |
                  Gdk::BUTTON_MOTION_MASK | Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
@@ -85,23 +90,12 @@ namespace ibc
       GLfloat position[3];
       GLfloat color[3];
     };
-
     // -------------------------------------------------------------------------
     // on_button_press_event
     // -------------------------------------------------------------------------
     virtual bool  on_button_press_event(GdkEventButton* button_event)
     {
-      mMouseLPressed = true;
-      mMouseX = button_event->x;
-      mMouseY = button_event->y;
-    }
-    // -------------------------------------------------------------------------
-    // on_button_press_event
-    // -------------------------------------------------------------------------
-    virtual bool  on_motion_notify_event(GdkEventMotion* motion_event)
-    {
-      if (mMouseLPressed == false)
-        return false;
+      mTrackball.startTrackingMouse(button_event->x, button_event->y, mWidth, mHeight);
       return true;
     }
     // -------------------------------------------------------------------------
@@ -109,7 +103,16 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual bool  on_button_release_event(GdkEventButton* release_event)
     {
-      mMouseLPressed = false;
+      mTrackball.stopTrackingMouse();
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // on_motion_notify_event
+    // -------------------------------------------------------------------------
+    virtual bool  on_motion_notify_event(GdkEventMotion* motion_event)
+    {
+      mModelView = mTrackball.trackMouse(motion_event->x, motion_event->y);
+      queue_render();
       return true;
     }
     // -------------------------------------------------------------------------
@@ -125,27 +128,59 @@ namespace ibc
       //          << "direction = " << event->direction << std::endl
       //          << "delta_x = " << event->delta_x << std::endl
       //          << "delta_y = " << event->delta_y << std::endl;
+
+      if (event->direction == 0)
+        mCameraFoV -= 1;
+      else
+        mCameraFoV += 1;
+
+      glUpdaetProjection();
+      queue_render();
+
       return true;
     }
+    // -------------------------------------------------------------------------
+    // glResize
+    // -------------------------------------------------------------------------
+    virtual void  glResize(int inWidth, int inHeight)
+    {
+      make_current();
 
+      mWidth = inWidth;
+      mHeight = inHeight;
+      glViewport(0, 0, mWidth, mHeight);
+
+      glUpdaetProjection();
+    }
+    // -------------------------------------------------------------------------
+    // glUpdaetProjection
+    // -------------------------------------------------------------------------
+    virtual void  glUpdaetProjection()
+    {
+      mProjection = ibc::gl::Utils<GLfloat>::perspective(mCameraFoV, mWidth / (GLfloat )mHeight, 1.0, 100);
+      ibc::gl::MatrixBase<GLfloat>  translate;
+      translate.setTranslationMatrix(0.0, 0.0, -5.0);
+      mProjection *= translate;
+    }
     // -------------------------------------------------------------------------
     // glDisplay
     // -------------------------------------------------------------------------
     virtual void  glDisplay()
     {
-      GLfloat mvp[16];
+      GLfloat glMat[16];
 
       make_current();
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUseProgram(mShaderProgram);
-      mRotation.getTransposedMatrix(mvp);
-      glUniformMatrix4fv(mvp_location, 1, GL_FALSE, &(mvp[0]));
+      mModelView.getTransposedMatrix(glMat);
+      glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(glMat[0]));
+      mProjection.getTransposedMatrix(glMat);
+      glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(glMat[0]));
       glBindVertexArray(mVertexArrayObject);
       glDrawArrays(GL_TRIANGLES, 0, 3);
       glFlush();
     }
-
     // -------------------------------------------------------------------------
     // getVertexDataSize
     // -------------------------------------------------------------------------
@@ -171,26 +206,29 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void enableVertexDataAttributes()
     {
-      // get the location of the "mvp" uniform
-      mvp_location = glGetUniformLocation (mShaderProgram, "mvp");
+      // get the location of the "modelview" uniform
+      mModelViewLocation = glGetUniformLocation (mShaderProgram, "modelview");
+
+      // get the location of the "projection" uniform
+      mProjectionLocation = glGetUniformLocation (mShaderProgram, "projection");
 
       // get the location of the "position" and "color" attributes
-      guint position_location = glGetAttribLocation (mShaderProgram, "position");
-      guint color_location = glGetAttribLocation (mShaderProgram, "color");
+      guint positionLocation = glGetAttribLocation (mShaderProgram, "position");
+      guint colorLocation = glGetAttribLocation (mShaderProgram, "color");
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
       // enable and set the position attribute
-      glEnableVertexAttribArray (position_location);
-      glVertexAttribPointer (position_location, 3, GL_FLOAT, GL_FALSE,
+      glEnableVertexAttribArray (positionLocation);
+      glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
                              (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, position)));
-    
+
       // enable and set the color attribute
-      glEnableVertexAttribArray (color_location);
-      glVertexAttribPointer (color_location, 3, GL_FLOAT, GL_FALSE,
+      glEnableVertexAttribArray (colorLocation);
+      glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
                              (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
     }
@@ -202,10 +240,11 @@ namespace ibc
       const char *vertexShaderStr = "#version 130\n"
                                     "in vec3 position;"
                                     "in vec3 color;"
-                                    "uniform mat4 mvp;"
+                                    "uniform mat4 modelview;"
+                                    "uniform mat4 projection;"
                                     "smooth out vec4 vertexColor;"
                                     "void main() {"
-                                    "  gl_Position = mvp * vec4(position, 1.0);"
+                                    "  gl_Position = projection * modelview * vec4(position, 1.0);"
                                     "  vertexColor = vec4(color, 1.0);"
                                     "}";
       return vertexShaderStr;
@@ -225,14 +264,17 @@ namespace ibc
     }
 
     // Member variables --------------------------------------------------------
-    double mMouseX, mMouseY;
-    double mZoom;
-    bool  mMouseLPressed;
+    GLfloat mZoom;
+    GLfloat mWidth, mHeight;
 
-    ibc::gl::MatrixF mRotation;
+    GLfloat mCameraFoV;
 
-    guint mvp_location;
-    //GLfloat mvp[16];
+    ibc::gl::TrackballBase<GLfloat> mTrackball;
+    ibc::gl::MatrixBase<GLfloat> mModelView;
+    ibc::gl::MatrixBase<GLfloat> mProjection;
+
+    guint mModelViewLocation;
+    guint mProjectionLocation;
   };
  };
 };

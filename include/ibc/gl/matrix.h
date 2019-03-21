@@ -38,6 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <iostream>
+#include "ibc/gl/vector.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -143,6 +144,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // +
     // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> operator+(const VectorBase<MatrixType> &inVector)
+    {
+      MatrixBase<MatrixType> matrix(*this);
+      return matrix.translate(inVector);
+    }
+    // -------------------------------------------------------------------------
+    // +
+    // -------------------------------------------------------------------------
     MatrixBase<MatrixType> operator+(const MatrixType inOffset) const
     {
       MatrixBase<MatrixType> matrix(*this);
@@ -154,6 +163,13 @@ namespace ibc
     MatrixBase<MatrixType> &operator+=(const MatrixBase<MatrixType> &inMatrix)
     {
       return add(inMatrix);
+    }
+    // -------------------------------------------------------------------------
+    // +=
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &operator+=(const VectorBase<MatrixType> &inVector)
+    {
+      return translate(inVector);
     }
     // -------------------------------------------------------------------------
     // +=
@@ -298,6 +314,74 @@ namespace ibc
       return *this;
     }
     // -------------------------------------------------------------------------
+    // setScaleFactor
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setScaleFactor(MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      MatrixBase<MatrixType>::setScaleFactor((MatrixType *)mMat, inX, inY, inZ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setScaleFactor
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setScaleFactor(const VectorBase<MatrixType> &inVector)
+    {
+      MatrixBase<MatrixType>::setScaleFactor((MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setScaleMatrix
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setScaleMatrix(MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      setIdentity();
+      MatrixBase<MatrixType>::setScaleFactor((MatrixType *)mMat, inX, inY, inZ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setScaleMatrix
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setScaleMatrix(const VectorBase<MatrixType> &inVector)
+    {
+      setIdentity();
+      MatrixBase<MatrixType>::setScaleFactor((MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setTranslation
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setTranslation(MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      MatrixBase<MatrixType>::setTranslation((MatrixType *)mMat, inX, inY, inZ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setTranslation
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setTranslation(const VectorBase<MatrixType> &inVector)
+    {
+      MatrixBase<MatrixType>::setTranslation((MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setTranslationMatrix
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setTranslationMatrix(MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      setIdentity();
+      MatrixBase<MatrixType>::setTranslation((MatrixType *)mMat, inX, inY, inZ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // setTranslationMatrix
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &setTranslationMatrix(const VectorBase<MatrixType> &inVector)
+    {
+      setIdentity();
+      MatrixBase<MatrixType>::setTranslation((MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
     // add
     // -------------------------------------------------------------------------
     MatrixBase<MatrixType> &add(const MatrixBase<MatrixType> &inMatrix)
@@ -362,6 +446,22 @@ namespace ibc
       MatrixBase<MatrixType>::div((MatrixType *)mMat, inScale);
       return *this;
     }
+    // -------------------------------------------------------------------------
+    // translate
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &translate(MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      MatrixBase<MatrixType>::translate((MatrixType *)mMat, inX, inY, inZ);
+      return *this;
+    }
+    // -------------------------------------------------------------------------
+    // translate
+    // -------------------------------------------------------------------------
+    MatrixBase<MatrixType> &translate(const VectorBase<MatrixType> &inVector)
+    {
+      MatrixBase<MatrixType>::translate((MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return *this;
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -397,6 +497,38 @@ namespace ibc
       setZero(outDst);
       for (int i = 0; i < MATRIX_ROW_SIZE; i++)
         outDst[i*MATRIX_ROW_SIZE+i] = 1.0;
+    }
+    // -------------------------------------------------------------------------
+    // setScaleFactor
+    // -------------------------------------------------------------------------
+    static void  setScaleFactor(MatrixType ioMat[], MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      ioMat[0]  = inX;
+      ioMat[5]  = inY;
+      ioMat[10] = inZ;
+    }
+    // -------------------------------------------------------------------------
+    // setScaleFactor
+    // -------------------------------------------------------------------------
+    static void setScaleFactor(MatrixType ioMat[], const MatrixType inVec[])
+    {
+      setTranslation(inVec[0], inVec[1], inVec[2]);
+    }
+    // -------------------------------------------------------------------------
+    // setTranslation
+    // -------------------------------------------------------------------------
+    static void  setTranslation(MatrixType ioMat[], MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      ioMat[3]  = inX;
+      ioMat[7]  = inY;
+      ioMat[11] = inZ;
+    }
+    // -------------------------------------------------------------------------
+    // setTranslation
+    // -------------------------------------------------------------------------
+    static void setTranslation(MatrixType ioMat[], const MatrixType inVec[])
+    {
+      setTranslation(inVec[0], inVec[1], inVec[2]);
     }
     // -------------------------------------------------------------------------
     // add
@@ -459,6 +591,22 @@ namespace ibc
     {
       for (int i = 0; i < MATRIX_SIZE; i++)
         ioMat[i] /= inDiv;
+    }
+    // -------------------------------------------------------------------------
+    // translate
+    // -------------------------------------------------------------------------
+    static void translate(MatrixType ioMat[], MatrixType inX, MatrixType inY, MatrixType inZ)
+    {
+      ioMat[3]  += inX;
+      ioMat[7]  += inY;
+      ioMat[11] += inZ;
+    }
+    // -------------------------------------------------------------------------
+    // translate
+    // -------------------------------------------------------------------------
+    static void translate(MatrixType ioMat[], const MatrixType inVec[])
+    {
+      translate(inVec[0], inVec[1], inVec[2]);
     }
     // -------------------------------------------------------------------------
     // getTransposedMatrixIndex

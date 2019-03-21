@@ -38,8 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <math.h>
-#include <GL/gl.h>
-#include "ibc/gl/vector.h"
+#include "ibc/gl/matrix.h"
 
 // Macros ----------------------------------------------------------------------
 #define GL_UTILS_PI           3.141524
@@ -52,48 +51,56 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // Utils class
   // ---------------------------------------------------------------------------
-  class Utils
+  template <typename UtilsType> class Utils
   {
   public:
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // perspective
     // -------------------------------------------------------------------------
-    static void  perspective(GLdouble fovY, GLdouble aspect, GLdouble zNear, GLdouble zFar)
+    static MatrixBase<UtilsType> perspective(UtilsType inFovY, UtilsType inAspect,
+                                         UtilsType inNear, UtilsType inFar)
     {
-      GLdouble fW, fH;
+      UtilsType width, height;
 
-      fH = tan(fovY / 360.0 * GL_UTILS_PI) * zNear;
-      fW = fH * aspect;
-      glFrustum(-fW, fW, -fH, fH, zNear, zFar);
+      height = tan(inFovY / 360.0 * GL_UTILS_PI) * inNear;
+      width = height * inAspect;
+      return frustum(-width, width, -height, height, inNear, inFar);
     }
     // -------------------------------------------------------------------------
-    // lookAt
+    // frustum
     // -------------------------------------------------------------------------
-    static void lookAt(GLdouble eyex, GLdouble eyey, GLdouble eyez, GLdouble centerx,
-                      GLdouble centery, GLdouble centerz, GLdouble upx, GLdouble upy, GLdouble upz)
+    static MatrixBase<UtilsType> frustum(UtilsType inLeft, UtilsType inRight,
+                                      UtilsType inTop, UtilsType inBottom,
+                                      UtilsType inNear, UtilsType inFar)
     {
-      Vector  forward(eyex, eyey, eyez);
-      Vector  center(centerx, centery, centerz);
-      Vector  up(upx, upy, upz);
-      Vector  side;
+      MatrixBase<UtilsType> mat;
 
-      forward = center - forward;
-      forward.normalize();
-      side = forward * up;
-      side.normalize();
-      up = side * forward;
+      UtilsType   width  = inRight - inLeft;
+      UtilsType   height = inBottom - inTop;
+      UtilsType   depth  = inFar - inNear;
 
-      GLdouble m[] =
-      {
-        side[0], up[0], -forward[0], 0,
-        side[1], up[1], -forward[1], 0,
-        side[2], up[2], -forward[2], 0,
-        0, 0, 0, 1
-      };
+      mat[0][0] = 2.0 * inNear / width;
+      mat[0][1] = 0.0;
+      mat[0][2] = (inRight + inLeft) / width;
+      mat[0][3] = 0.0;
 
-      glMultMatrixd(m);
-      glTranslated(-eyex, -eyey, -eyez);
+      mat[1][0] = 0.0;
+      mat[1][1] = 2.0 * inNear / height;
+      mat[1][2] = (inTop + inBottom) / height;
+      mat[1][3] = 0.0;
+
+      mat[2][0] = 0.0;
+      mat[2][1] = 0.0;
+      mat[2][2] = -1.0 * (inFar + inNear) / depth;
+      mat[2][3] = -2.0 * inFar * inNear / depth;
+
+      mat[3][0] = 0.0;
+      mat[3][1] = 0.0;
+      mat[3][2] = -1.0;
+      mat[3][3] = 0.0;
+
+      return mat;
     }
   };
  };

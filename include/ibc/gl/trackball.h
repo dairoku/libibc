@@ -51,9 +51,6 @@ namespace ibc
   template <typename TrackballType> class  TrackballBase
   {
   public:
-    // Member variables (public) -----------------------------------------------
-    TrackballType   mGLRotationMatrix[4][4];
-
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // TrackballBase
@@ -61,7 +58,6 @@ namespace ibc
     TrackballBase()
     {
       mQuat.setIdentity();
-      mQuat.get_glRotationMatrix(mGLRotationMatrix);
       mIsMouseButtonDown = false;
     }
     // -------------------------------------------------------------------------
@@ -84,6 +80,8 @@ namespace ibc
       mPrevMouseY = inMouseY;
       mClientWidth = inClientWidth;
       mClientHeight = inClientHeight;
+      //
+      mQuat.normalize();  // A bit tricky to call here
     }
     // -------------------------------------------------------------------------
     // stopTrackingMouse
@@ -95,22 +93,23 @@ namespace ibc
       mIsMouseButtonDown = false;
     }
     // -------------------------------------------------------------------------
-    // setRotationByMouse
+    // trackMouse
     // -------------------------------------------------------------------------
     //
-    void setRotationByMouse(int inMouseX, int  inMouseY)
+    MatrixBase<TrackballType> trackMouse(int inMouseX, int  inMouseY)
     {
       if (mIsMouseButtonDown == false)
-        return;
+        return mQuat.rotationMatrix();
 
       QuaternionBase<TrackballType> quat;
       quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
                          mClientWidth, mClientHeight);
-      mQuat *= quat;
-    //mQuat.normalize();
-      mQuat.get_glRotationMatrix(mGLRotationMatrix);
       mPrevMouseX = inMouseX;
       mPrevMouseY = inMouseY;
+
+      mQuat *= quat;
+    //mQuat.normalize();
+      return mQuat.rotationMatrix();
     }
 
     // Static Functions --------------------------------------------------------
