@@ -64,15 +64,9 @@ namespace ibc
     GLObjView() :
       Glib::ObjectBase("GLObjView")
     {
-      mOffset.setZero();
-      mModelView.setIdentity();
       mProjection.setIdentity();
 
       mCameraFoV = 30.0;
-      mScaleFactor = 1.0;
-
-      tIsTrackingL = false;
-      tIsTrackingR = false;
 
       add_events(Gdk::SCROLL_MASK |
                  Gdk::BUTTON_MOTION_MASK | Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
@@ -100,17 +94,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual bool  on_button_press_event(GdkEventButton* button_event)
     {
-      if (button_event->button == 1)
-      {
-        tIsTrackingL = true;
-        mTrackball.startTrackingMouse(button_event->x, button_event->y, mWidth, mHeight);
-      }
-      else
-      {
-        tIsTrackingR = true;
-        tX = button_event->x;
-        tY = button_event->y;
-      }
+      mTrackball.startTrackingMouse(button_event->x, button_event->y,
+                                    mWidth, mHeight, button_event->button);
       return true;
     }
     // -------------------------------------------------------------------------
@@ -119,10 +104,6 @@ namespace ibc
     virtual bool  on_button_release_event(GdkEventButton* release_event)
     {
       mTrackball.stopTrackingMouse();
-
-      tIsTrackingL = false;
-      tIsTrackingR = false;
-
       return true;
     }
     // -------------------------------------------------------------------------
@@ -130,28 +111,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual bool  on_motion_notify_event(GdkEventMotion* motion_event)
     {
-      if (tIsTrackingL)
-      {
-        mModelView = mTrackball.trackMouse(motion_event->x, motion_event->y);
-      }
-      if (tIsTrackingR)
-      {
-        //mOffset[0] -= (tX - motion_event->x) * 0.01;
-        //mOffset[1] += (tY - motion_event->y) * 0.01;
-
-ibc::gl::VectorBase<GLfloat> offset;
-ibc::gl::MatrixBase<GLfloat> invMat = mModelView;
-invMat.inverse();
-
-offset[0] = -1.0 * (tX - motion_event->x) * 0.01;
-offset[1] = (tY - motion_event->y) * 0.01;
-offset[2] = 0.0;
-offset = invMat * offset;
-mOffset += offset;
-
-        tX = motion_event->x;
-        tY = motion_event->y;
-      }
+      mTrackball.trackMouse(motion_event->x, motion_event->y);
       queue_render();
       return true;
     }
@@ -160,28 +120,9 @@ mOffset += offset;
     // -------------------------------------------------------------------------
     virtual bool  on_scroll_event(GdkEventScroll *event)
     {
-      //std::cout << "wheel event\n"
-      //          << "time = " << event->time << std::endl
-      //          << "x = " << event->x << std::endl
-      //          << "y = " << event->y << std::endl
-      //          << "state = " << event->state << std::endl
-      //          << "direction = " << event->direction << std::endl
-      //          << "delta_x = " << event->delta_x << std::endl
-      //          << "delta_y = " << event->delta_y << std::endl;
-
-      //if (event->direction == 0)
-      //  mCameraFoV -= 1;
-      //else
-      //  mCameraFoV += 1;
-
-      if (event->direction == 0)
-        mScaleFactor /= 2;
-      else
-        mScaleFactor *= 2;
-
+      mTrackball.mouseWheel(event->direction, event->delta_x, event->delta_y);
       glUpdaetProjection();
       queue_render();
-
       return true;
     }
     // -------------------------------------------------------------------------
@@ -190,11 +131,9 @@ mOffset += offset;
     virtual void  glResize(int inWidth, int inHeight)
     {
       make_current();
-
       mWidth = inWidth;
       mHeight = inHeight;
       glViewport(0, 0, mWidth, mHeight);
-
       glUpdaetProjection();
     }
     // -------------------------------------------------------------------------
@@ -217,22 +156,9 @@ mOffset += offset;
       GLfloat glMat[16];
 
       make_current();
-
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUseProgram(mShaderProgram);
-
-ibc::gl::VectorBase<GLfloat> vec = mModelView * mOffset;
-ibc::gl::MatrixBase<GLfloat> mat = mModelView;
-ibc::gl::MatrixBase<GLfloat>  scale;
-scale.setScaleMatrix(mScaleFactor, mScaleFactor, mScaleFactor);
-mat.setTranslation(vec);
-
-mat = scale * mat;
-
-mat.getTransposedMatrix(glMat);
-
-      //mModelView.setTranslation(vec);
-      //mModelView.getTransposedMatrix(glMat);
+      mTrackball.getGLRotationMatrix(glMat);
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(glMat[0]));
       mProjection.getTransposedMatrix(glMat);
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(glMat[0]));
@@ -323,24 +249,15 @@ mat.getTransposedMatrix(glMat);
     }
 
     // Member variables --------------------------------------------------------
-    GLfloat mZoom;
     GLfloat mWidth, mHeight;
-
     GLfloat mCameraFoV;
-    GLfloat mScaleFactor;
 
     ibc::gl::TrackballBase<GLfloat> mTrackball;
 
-    ibc::gl::VectorBase<GLfloat> mOffset;
-    ibc::gl::MatrixBase<GLfloat> mModelView;
     ibc::gl::MatrixBase<GLfloat> mProjection;
 
     guint mModelViewLocation;
     guint mProjectionLocation;
-    
-    bool  tIsTrackingL;
-    bool  tIsTrackingR;
-    GLfloat tX, tY;
   };
  };
 };

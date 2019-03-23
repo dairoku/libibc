@@ -60,6 +60,10 @@ namespace ibc
       mQuat.setIdentity();
       mIsMouseButtonDown = false;
       mRotationSensitivity = inRotationSensitivity;
+
+      mScaleFactor = 1.0;
+      mModelView.setIdentity();
+      mOffset.setZero();
     }
     // -------------------------------------------------------------------------
     // ~TrackballBase
@@ -88,13 +92,15 @@ namespace ibc
     // call this function at onMouseBottunDown event
     //
     void startTrackingMouse(TrackballType inMouseX, TrackballType  inMouseY,
-                            TrackballType inClientWidth, TrackballType inClientHeight)
+                            TrackballType inClientWidth, TrackballType inClientHeight,
+                            unsigned int inMouseButton = 1)
     {
       mIsMouseButtonDown = true;
       mPrevMouseX = inMouseX;
       mPrevMouseY = inMouseY;
       mClientWidth = inClientWidth;
       mClientHeight = inClientHeight;
+      mMouseButton = inMouseButton;
       //
       mQuat.normalize();  // A bit tricky to call here
     }
@@ -111,20 +117,59 @@ namespace ibc
     // trackMouse
     // -------------------------------------------------------------------------
     //
-    MatrixBase<TrackballType> trackMouse(TrackballType inMouseX, TrackballType  inMouseY)
+    void  trackMouse(TrackballType inMouseX, TrackballType  inMouseY)
     {
       if (mIsMouseButtonDown == false)
-        return mQuat.rotationMatrix();
+        return;
 
-      QuaternionBase<TrackballType> quat;
-      quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
-                         mClientWidth, mClientHeight, mRotationSensitivity);
+      if (mMouseButton == 1)
+      {
+        QuaternionBase<TrackballType> quat;
+        quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
+                           mClientWidth, mClientHeight, mRotationSensitivity);
+          mQuat *= quat;
+      //mQuat.normalize();
+        mModelView = mQuat.rotationMatrix();
+      }
+      else
+      {
+        ibc::gl::VectorBase<TrackballType> offset;
+        ibc::gl::MatrixBase<TrackballType> mat = mModelView;
+        mat.inverse();
+        offset[0] = -1.0 * (mPrevMouseX - inMouseX) * 0.01;
+        offset[1] = (mPrevMouseY - inMouseY) * 0.01;
+        offset[2] = 0.0;
+        offset = mat * offset;
+        mOffset += offset;
+      }
       mPrevMouseX = inMouseX;
       mPrevMouseY = inMouseY;
+    }
+    // -------------------------------------------------------------------------
+    // mouseWheel
+    // -------------------------------------------------------------------------
+    //
+    void mouseWheel(int inDirection, TrackballType inDeltaX, TrackballType inDeltaY)
+    {
+      if (inDirection == 0)
+        mScaleFactor /= 2;
+      else
+        mScaleFactor *= 2;
+    }
+    // -------------------------------------------------------------------------
+    // getGLRotationMatrix
+    // -------------------------------------------------------------------------
+    //
+    void getGLRotationMatrix(TrackballType outMat[16])
+    {
+      ibc::gl::VectorBase<TrackballType>  vec = mModelView * mOffset;
+      ibc::gl::MatrixBase<TrackballType>  mat = mModelView;
+      ibc::gl::MatrixBase<TrackballType>  scale;
 
-      mQuat *= quat;
-    //mQuat.normalize();
-      return mQuat.rotationMatrix();
+      scale.setScaleMatrix(mScaleFactor, mScaleFactor, mScaleFactor);
+      mat.setTranslation(vec);
+      mat = scale * mat;
+      mat.getTransposedMatrix(outMat);
     }
 
     // Static Functions --------------------------------------------------------
@@ -176,10 +221,16 @@ namespace ibc
 
   protected:
     // Member variables (protected) --------------------------------------------
+    TrackballType mRotationSensitivity;
+
     QuaternionBase<TrackballType> mQuat;
     bool  mIsMouseButtonDown;
     TrackballType mPrevMouseX, mPrevMouseY, mClientWidth, mClientHeight;
-    TrackballType mRotationSensitivity;
+    unsigned int  mMouseButton;
+
+    TrackballType mScaleFactor;
+    ibc::gl::VectorBase<TrackballType> mOffset;
+    ibc::gl::MatrixBase<TrackballType> mModelView;
   };
 
   // ---------------------------------------------------------------------------
