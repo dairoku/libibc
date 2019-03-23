@@ -219,6 +219,13 @@ namespace ibc
     // -------------------------------------------------------------------------
     // *
     // -------------------------------------------------------------------------
+    VectorBase<MatrixType> operator*(const VectorBase<MatrixType> &inVector)
+    {
+      return multiByVector(inVector);
+    }
+    // -------------------------------------------------------------------------
+    // *
+    // -------------------------------------------------------------------------
     MatrixBase<MatrixType> operator*(const MatrixType inScale) const
     {
       MatrixBase<MatrixType> matrix(*this);
@@ -431,6 +438,16 @@ namespace ibc
       return *this;
     }
     // -------------------------------------------------------------------------
+    // multiByVector
+    // -------------------------------------------------------------------------
+    VectorBase<MatrixType> multiByVector(const VectorBase<MatrixType> &inVector)
+    {
+      VectorBase<MatrixType> r;
+      MatrixBase<MatrixType>::multiMatrixByVector(
+        (MatrixType *)r.mVec, (MatrixType *)mMat, (MatrixType *)inVector.mVec);
+      return r;
+    }
+    // -------------------------------------------------------------------------
     // scale
     // -------------------------------------------------------------------------
     MatrixBase<MatrixType> &scale(MatrixType inScale)
@@ -461,6 +478,13 @@ namespace ibc
     {
       MatrixBase<MatrixType>::translate((MatrixType *)mMat, (MatrixType *)inVector.mVec);
       return *this;
+    }
+    // -------------------------------------------------------------------------
+    // inverse
+    // -------------------------------------------------------------------------
+    bool inverse()
+    {
+      return MatrixBase<MatrixType>::inverse((MatrixType *)mMat, (MatrixType *)mMat);
     }
 
     // Static Functions --------------------------------------------------------
@@ -528,7 +552,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     static void setTranslation(MatrixType ioMat[], const MatrixType inVec[])
     {
-      setTranslation(inVec[0], inVec[1], inVec[2]);
+      setTranslation(ioMat, inVec[0], inVec[1], inVec[2]);
     }
     // -------------------------------------------------------------------------
     // add
@@ -577,6 +601,15 @@ namespace ibc
         }
     }
     // -------------------------------------------------------------------------
+    // multiMatrixByVector
+    // -------------------------------------------------------------------------
+    static void multiMatrixByVector(MatrixType outVec[], const MatrixType inMat[], const MatrixType inVec[])
+    {
+      outVec[0] = inMat[0] * inVec[0] + inMat[1] * inVec[1] + inMat[2]  * inVec[2] + inMat[3];
+      outVec[1] = inMat[4] * inVec[0] + inMat[5] * inVec[1] + inMat[6]  * inVec[2] + inMat[7];
+      outVec[2] = inMat[8] * inVec[0] + inMat[9] * inVec[1] + inMat[10] * inVec[2] + inMat[11];
+    }
+    // -------------------------------------------------------------------------
     // scale
     // -------------------------------------------------------------------------
     static void scale(MatrixType ioMat[], MatrixType inScale)
@@ -620,6 +653,124 @@ namespace ibc
         3, 7, 11, 15
       };
       return index;
+    }
+    // -------------------------------------------------------------------------
+    // inverse
+    // -------------------------------------------------------------------------
+    // The following code is based on the old gluInvertMatrix implementation of Mesa
+    //
+    static bool inverse(MatrixType outDst[], const MatrixType inSrc[])
+    {
+      MatrixType  t[16], v;
+
+      t[0] =  inSrc[5]  * inSrc[10] * inSrc[15] - 
+              inSrc[5]  * inSrc[11] * inSrc[14] - 
+              inSrc[9]  * inSrc[6]  * inSrc[15] + 
+              inSrc[9]  * inSrc[7]  * inSrc[14] +
+              inSrc[13] * inSrc[6]  * inSrc[11] - 
+              inSrc[13] * inSrc[7]  * inSrc[10];
+      t[1] = -inSrc[1]  * inSrc[10] * inSrc[15] + 
+              inSrc[1]  * inSrc[11] * inSrc[14] + 
+              inSrc[9]  * inSrc[2]  * inSrc[15] - 
+              inSrc[9]  * inSrc[3]  * inSrc[14] - 
+              inSrc[13] * inSrc[2]  * inSrc[11] + 
+              inSrc[13] * inSrc[3]  * inSrc[10];
+      t[2] =  inSrc[1]  * inSrc[6]  * inSrc[15] - 
+              inSrc[1]  * inSrc[7]  * inSrc[14] - 
+              inSrc[5]  * inSrc[2]  * inSrc[15] + 
+              inSrc[5]  * inSrc[3]  * inSrc[14] + 
+              inSrc[13] * inSrc[2]  * inSrc[7] - 
+              inSrc[13] * inSrc[3]  * inSrc[6];
+      t[3] = -inSrc[1]  * inSrc[6]  * inSrc[11] + 
+              inSrc[1]  * inSrc[7]  * inSrc[10] + 
+              inSrc[5]  * inSrc[2]  * inSrc[11] - 
+              inSrc[5]  * inSrc[3]  * inSrc[10] - 
+              inSrc[9]  * inSrc[2]  * inSrc[7] + 
+              inSrc[9]  * inSrc[3]  * inSrc[6];
+      //
+      t[4] = -inSrc[4]  * inSrc[10] * inSrc[15] + 
+              inSrc[4]  * inSrc[11] * inSrc[14] + 
+              inSrc[8]  * inSrc[6]  * inSrc[15] - 
+              inSrc[8]  * inSrc[7]  * inSrc[14] - 
+              inSrc[12] * inSrc[6]  * inSrc[11] + 
+              inSrc[12] * inSrc[7]  * inSrc[10];
+      t[5] =  inSrc[0]  * inSrc[10] * inSrc[15] - 
+              inSrc[0]  * inSrc[11] * inSrc[14] - 
+              inSrc[8]  * inSrc[2]  * inSrc[15] + 
+              inSrc[8]  * inSrc[3]  * inSrc[14] + 
+              inSrc[12] * inSrc[2]  * inSrc[11] - 
+              inSrc[12] * inSrc[3]  * inSrc[10];
+      t[6] = -inSrc[0]  * inSrc[6]  * inSrc[15] + 
+              inSrc[0]  * inSrc[7]  * inSrc[14] + 
+              inSrc[4]  * inSrc[2]  * inSrc[15] - 
+              inSrc[4]  * inSrc[3]  * inSrc[14] - 
+              inSrc[12] * inSrc[2]  * inSrc[7] + 
+              inSrc[12] * inSrc[3]  * inSrc[6];
+      t[7] =  inSrc[0]  * inSrc[6]  * inSrc[11] - 
+              inSrc[0]  * inSrc[7]  * inSrc[10] - 
+              inSrc[4]  * inSrc[2]  * inSrc[11] + 
+              inSrc[4]  * inSrc[3]  * inSrc[10] + 
+              inSrc[8]  * inSrc[2]  * inSrc[7] - 
+              inSrc[8]  * inSrc[3]  * inSrc[6];
+      //
+      t[8] =  inSrc[4]  * inSrc[9]  * inSrc[15] - 
+              inSrc[4]  * inSrc[11] * inSrc[13] - 
+              inSrc[8]  * inSrc[5]  * inSrc[15] + 
+              inSrc[8]  * inSrc[7]  * inSrc[13] + 
+              inSrc[12] * inSrc[5]  * inSrc[11] - 
+              inSrc[12] * inSrc[7]  * inSrc[9];
+      t[9] = -inSrc[0]  * inSrc[9]  * inSrc[15] + 
+              inSrc[0]  * inSrc[11] * inSrc[13] + 
+              inSrc[8]  * inSrc[1]  * inSrc[15] - 
+              inSrc[8]  * inSrc[3]  * inSrc[13] - 
+              inSrc[12] * inSrc[1]  * inSrc[11] + 
+              inSrc[12] * inSrc[3]  * inSrc[9];
+      t[10] = inSrc[0]  * inSrc[5]  * inSrc[15] - 
+              inSrc[0]  * inSrc[7]  * inSrc[13] - 
+              inSrc[4]  * inSrc[1]  * inSrc[15] + 
+              inSrc[4]  * inSrc[3]  * inSrc[13] + 
+              inSrc[12] * inSrc[1]  * inSrc[7] - 
+              inSrc[12] * inSrc[3]  * inSrc[5];
+      t[11] =-inSrc[0]  * inSrc[5]  * inSrc[11] + 
+              inSrc[0]  * inSrc[7]  * inSrc[9] + 
+              inSrc[4]  * inSrc[1]  * inSrc[11] - 
+              inSrc[4]  * inSrc[3]  * inSrc[9] - 
+              inSrc[8]  * inSrc[1]  * inSrc[7] + 
+              inSrc[8]  * inSrc[3]  * inSrc[5];
+      //
+      t[12] =-inSrc[4]  * inSrc[9]  * inSrc[14] + 
+              inSrc[4]  * inSrc[10] * inSrc[13] +
+              inSrc[8]  * inSrc[5]  * inSrc[14] - 
+              inSrc[8]  * inSrc[6]  * inSrc[13] - 
+              inSrc[12] * inSrc[5]  * inSrc[10] + 
+              inSrc[12] * inSrc[6]  * inSrc[9];
+      t[13] = inSrc[0]  * inSrc[9]  * inSrc[14] - 
+              inSrc[0]  * inSrc[10] * inSrc[13] - 
+              inSrc[8]  * inSrc[1]  * inSrc[14] + 
+              inSrc[8]  * inSrc[2]  * inSrc[13] + 
+              inSrc[12] * inSrc[1]  * inSrc[10] - 
+              inSrc[12] * inSrc[2]  * inSrc[9];
+      t[14] =-inSrc[0]  * inSrc[5]  * inSrc[14] + 
+              inSrc[0]  * inSrc[6]  * inSrc[13] + 
+              inSrc[4]  * inSrc[1]  * inSrc[14] - 
+              inSrc[4]  * inSrc[2]  * inSrc[13] - 
+              inSrc[12] * inSrc[1]  * inSrc[6] + 
+              inSrc[12] * inSrc[2]  * inSrc[5];
+      t[15] = inSrc[0]  * inSrc[5]  * inSrc[10] - 
+              inSrc[0]  * inSrc[6]  * inSrc[9] - 
+              inSrc[4]  * inSrc[1]  * inSrc[10] + 
+              inSrc[4]  * inSrc[2]  * inSrc[9] + 
+              inSrc[8]  * inSrc[1]  * inSrc[6] - 
+              inSrc[8]  * inSrc[2]  * inSrc[5];
+
+      v = inSrc[0] * t[0] + inSrc[1] * t[4] + inSrc[2] * t[8] + inSrc[3] * t[12];
+      if (v == 0)
+          return false;
+      v = 1.0 / v;
+
+      for (int i = 0; i < 16; i++)
+          outDst[i] = t[i] * v;
+      return true;
     }
   };
 
