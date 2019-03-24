@@ -152,9 +152,9 @@ namespace ibc
     void mouseWheel(int inDirection, TrackballType inDeltaX, TrackballType inDeltaY)
     {
       if (inDirection == 0)
-        mScaleFactor /= 1.2;
+        mScaleFactor /= 1.1;
       else
-        mScaleFactor *= 1.2;
+        mScaleFactor *= 1.1;
     }
     // -------------------------------------------------------------------------
     // getGLRotationMatrix

@@ -1,5 +1,5 @@
 // =============================================================================
-//  gl_surface_plot.h
+//  triangle.h
 //
 //  MIT License
 //
@@ -24,7 +24,7 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gtkmm/gl_surface_plot.h
+  \file     ibc/gl/models/triangle.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
@@ -32,94 +32,111 @@
 
   This file defines the class for the image widget
 */
+// -----------------------------------------------------------------------------
+// Appendix
+//
+// Note that this model does not support modelview and projection matrix
+// to be the simplest example
+// -----------------------------------------------------------------------------
 
-#ifndef IBC_GTKMM_IMAGE_GL_SURFACE_PLOT_H_
-#define IBC_GTKMM_IMAGE_GL_SURFACE_PLOT_H_
+#ifndef IBC_GL_MODEL_TRIANGLE_H_
+#define IBC_GL_MODEL_TRIANGLE_H_
 
 // Includes --------------------------------------------------------------------
-#include <math.h>
-#include <cstring>
-#include <gtkmm.h>
-#include "ibc/gl/matrix.h"
-#include "ibc/gl/utils.h"
-#include "ibc/gl/trackball.h"
-#include "ibc/gtkmm/gl_obj_view.h"
-#include "ibc/gtkmm/image_data.h"
-#include "ibc/gtkmm/view_data_interface.h"
-#include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/model_interface.h"
+
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+namespace ibc::gl::model // <- nested namespace (C++17)
 {
- namespace gtkmm
- {
   // ---------------------------------------------------------------------------
-  // ImageView class
+  // triangle class
   // ---------------------------------------------------------------------------
-  class GLSurfacePlot : virtual public GLObjView, virtual public ViewDataInterface
+  class Triangle : public virtual ibc::gl::ModelInterface
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // GLSurfacePlot
+    // Triangle
     // -------------------------------------------------------------------------
-    GLSurfacePlot() :
-      Glib::ObjectBase("GLSurfacePlot")
-    {
-      mImageDataPtr = NULL;
-      mIsImageSizeChanged = false;
-      
-      addModel(&mModel);
-    }
-    // -------------------------------------------------------------------------
-    // ~GLSurfacePlot
-    // -------------------------------------------------------------------------
-    virtual ~GLSurfacePlot()
+    Triangle()
     {
     }
-    // ViewDataInterface -------------------------------------------------------
     // -------------------------------------------------------------------------
-    // queueRedrawWidget
+    // ~Mono_to_RGB
     // -------------------------------------------------------------------------
-    virtual void  queueRedrawWidget()
+    virtual ~Triangle()
     {
-      queue_render();
+    }
+    // Member functions -------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // init
+    // -------------------------------------------------------------------------
+    virtual void init()
+    {
+      static const char *vertexShaderStr =
+        "#version 410\n"
+        "in vec3 vp;"
+        "void main ()"
+        "{"
+        "  gl_Position = vec4(vp, 1.0);"
+        "}";
+      static const char *fragmentShaderStr =
+        "#version 410\n"
+        "out vec4 frag_colour;"
+        "void main ()"
+        "{"
+        "  frag_colour = vec4(1.0, 1.0, 0.0, 1.0);"
+        "}";
+      static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
+
+      glGenVertexArrays(1, &mVertexArrayObject);
+      glBindVertexArray(mVertexArrayObject);
+
+      mVertexShader = glCreateShader(GL_VERTEX_SHADER);
+      glShaderSource(mVertexShader, 1, &vertexShaderStr, NULL);
+      glCompileShader(mVertexShader);
+
+      mFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+      glShaderSource(mFragmentShader, 1, &fragmentShaderStr, NULL);
+      glCompileShader(mFragmentShader);
+
+      mShaderProgram = glCreateProgram();
+      glAttachShader(mShaderProgram, mFragmentShader);
+      glAttachShader(mShaderProgram, mVertexShader);
+      glLinkProgram(mShaderProgram);
+
+      glGenBuffers(1, &mVertexBufferObject);
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferData(GL_ARRAY_BUFFER, (9 * sizeof(GLfloat)), points, GL_STATIC_DRAW);
+
+      glEnableVertexAttribArray(0);
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     }
     // -------------------------------------------------------------------------
-    // markAsImageSizeChanged
+    // dispose
     // -------------------------------------------------------------------------
-    virtual void  markAsImageSizeChanged()
+    virtual void dispose()
     {
-      mIsImageSizeChanged = true;
-      queue_render();
-    }
-    // Member functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // setImageDataPtr
-    // -------------------------------------------------------------------------
-    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr)
-    {
-      mImageDataPtr = inImageDataPtr;
-      mImageDataPtr->addWidget(this);
-      markAsImageSizeChanged();
     }
     // -------------------------------------------------------------------------
-    // isImageSizeChanged
+    // draw
     // -------------------------------------------------------------------------
-    bool  isImageSizeChanged() const
+    virtual void draw(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
-      return mIsImageSizeChanged;
+      glUseProgram(mShaderProgram);
+      glBindVertexArray(mVertexArrayObject);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    ibc::gl::model::ColorCube  mModel;
-
-    ImageData *mImageDataPtr;
-    bool      mIsImageSizeChanged;
+    GLuint mVertexArrayObject;
+    GLuint mVertexBufferObject;
+    GLuint mVertexShader, mFragmentShader;
+    GLuint mShaderProgram;
   };
- };
 };
 
-#endif  // #ifdef IBC_GTKMM_IMAGE_GL_SURFACE_PLOT_H_
-
+#endif  // #ifdef IBC_GL_MODEL_TRIANGLE_H_

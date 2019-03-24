@@ -80,15 +80,6 @@ namespace ibc
     }
 
   protected:
-    // structs -----------------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // vertex_info
-    // -------------------------------------------------------------------------
-    struct vertex_info
-    {
-      GLfloat position[3];
-      GLfloat color[3];
-    };
     // -------------------------------------------------------------------------
     // on_button_press_event
     // -------------------------------------------------------------------------
@@ -153,99 +144,17 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  glDisplay()
     {
-      GLfloat glMat[16];
+      // Update ModelView and Projection matrix
+      mTrackball.getGLRotationMatrix(mGLModelView);
+      mProjection.getTransposedMatrix(mGLProjection);
 
-      make_current();
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glUseProgram(mShaderProgram);
-      mTrackball.getGLRotationMatrix(glMat);
-      glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(glMat[0]));
-      mProjection.getTransposedMatrix(glMat);
-      glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(glMat[0]));
-      glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
-      glFlush();
-    }
-    // -------------------------------------------------------------------------
-    // getVertexDataSize
-    // -------------------------------------------------------------------------
-    virtual GLsizeiptr getVertexDataSize()
-    {
-      return 9 * 2 * sizeof(GLfloat);
-    }
-    // -------------------------------------------------------------------------
-    // getVertexData
-    // -------------------------------------------------------------------------
-    virtual const GLvoid *getVertexData()
-    {
-      static const struct vertex_info vertexData[] =
-      {
-        { {  0.0f,  0.500f, 0.0f }, { 1.f, 0.f, 0.f } },
-        { {  0.5f, -0.366f, 0.0f }, { 0.f, 1.f, 0.f } },
-        { { -0.5f, -0.366f, 0.0f }, { 0.f, 0.f, 1.f } },
-      };
-      return vertexData;
+      ibc::gtkmm::GLView::glDisplay();
     }
     // -------------------------------------------------------------------------
     // enableVertexDataAttributes
     // -------------------------------------------------------------------------
     virtual void enableVertexDataAttributes()
     {
-      // get the location of the "modelview" uniform
-      mModelViewLocation = glGetUniformLocation (mShaderProgram, "modelview");
-
-      // get the location of the "projection" uniform
-      mProjectionLocation = glGetUniformLocation (mShaderProgram, "projection");
-
-      // get the location of the "position" and "color" attributes
-      guint positionLocation = glGetAttribLocation (mShaderProgram, "position");
-      guint colorLocation = glGetAttribLocation (mShaderProgram, "color");
-
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-      // enable and set the position attribute
-      glEnableVertexAttribArray (positionLocation);
-      glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof (struct vertex_info),
-                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, position)));
-
-      // enable and set the color attribute
-      glEnableVertexAttribArray (colorLocation);
-      glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof (struct vertex_info),
-                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
-    }
-    // -------------------------------------------------------------------------
-    // getVertexShaderStr
-    // -------------------------------------------------------------------------
-    virtual const char *getVertexShaderStr()
-    {
-      const char *vertexShaderStr = "#version 130\n"
-                                    "in vec3 position;"
-                                    "in vec3 color;"
-                                    "uniform mat4 modelview;"
-                                    "uniform mat4 projection;"
-                                    "smooth out vec4 vertexColor;"
-                                    "void main() {"
-                                    "  gl_Position = projection * modelview * vec4(position, 1.0);"
-                                    "  vertexColor = vec4(color, 1.0);"
-                                    "}";
-      return vertexShaderStr;
-    }
-    // -------------------------------------------------------------------------
-    // getFragmentShaderStr
-    // -------------------------------------------------------------------------
-    virtual const char *getFragmentShaderStr()
-    {
-      const char *fragmentShaderStr = "#version 130\n"
-                                      "smooth in vec4 vertexColor;"
-                                      "out vec4 outputColor;"
-                                      "void main() {"
-                                      "  outputColor = vertexColor;"
-                                      "}";
-      return fragmentShaderStr;
     }
 
     // Member variables --------------------------------------------------------
@@ -253,11 +162,7 @@ namespace ibc
     GLfloat mCameraFoV;
 
     ibc::gl::TrackballBase<GLfloat> mTrackball;
-
     ibc::gl::MatrixBase<GLfloat> mProjection;
-
-    guint mModelViewLocation;
-    guint mProjectionLocation;
   };
  };
 };

@@ -45,10 +45,13 @@
 #define IBC_GTKMM_IMAGE_GL_VIEW_H_
 
 // Includes --------------------------------------------------------------------
+#include <vector>
 #include <math.h>
 #include <cstring>
 #include <epoxy/gl.h>
 #include <gtkmm.h>
+#include "ibc/gl/matrix.h"
+#include "ibc/gl/model_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -68,15 +71,35 @@ namespace ibc
     GLView() :
       Glib::ObjectBase("GLView")
     {
-      /*add_events(Gdk::SCROLL_MASK |
-                 Gdk::BUTTON_MOTION_MASK | Gdk::BUTTON_PRESS_MASK | Gdk::BUTTON_RELEASE_MASK |
-                 Gdk::POINTER_MOTION_MASK/);*/
+      // Initialize mModelView and mProjection (Set identity matrix)
+      ibc::gl::MatrixBase<GLfloat> matrix;
+      matrix.setIdentity();
+      matrix.getTransposedMatrix(mGLModelView);
+      matrix.getTransposedMatrix(mGLProjection);
     }
     // -------------------------------------------------------------------------
     // ~GLView
     // -------------------------------------------------------------------------
     virtual ~GLView()
     {
+    }
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // addModel
+    // -------------------------------------------------------------------------
+    void  addModel(ibc::gl::ModelInterface *inModel)
+    {
+      mModelList.push_back(inModel);
+    }
+    // -------------------------------------------------------------------------
+    // removeModel
+    // -------------------------------------------------------------------------
+    void  removeImageConverter(ibc::gl::ModelInterface *inModel)
+    {
+      auto it = std::find(mModelList.begin(), mModelList.end(), inModel);
+      if (it == mModelList.end())
+        return;
+      mModelList.erase(it);
     }
 
   protected:
@@ -123,6 +146,7 @@ namespace ibc
       glDisplay();
       return true;
     }
+
     // OpenGL related functions ------------------------------------------------
     // -------------------------------------------------------------------------
     // glInit
@@ -138,14 +162,16 @@ namespace ibc
       glClearDepth(1.0);
       glEnable(GL_DEPTH_TEST);
 
-      initShaders();
-      prepareVertexObjects();
+      for (auto it = mModelList.begin(); it != mModelList.end(); it++)
+        (*it)->init();
     }
     // -------------------------------------------------------------------------
     // glDispose
     // -------------------------------------------------------------------------
     virtual void  glDispose()
     {
+      for (auto it = mModelList.begin(); it != mModelList.end(); it++)
+        (*it)->dispose();
     }
     // -------------------------------------------------------------------------
     // glResize
@@ -166,103 +192,16 @@ namespace ibc
       make_current();
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glUseProgram(mShaderProgram);
-      glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
-      glFlush();
-    }
-    // -------------------------------------------------------------------------
-    // initShaders
-    // -------------------------------------------------------------------------
-    virtual void  initShaders()
-    {
-      const char *vertexShaderStr = getVertexShaderStr();
-      mVertexShader = glCreateShader(GL_VERTEX_SHADER);
-      glShaderSource(mVertexShader, 1, &vertexShaderStr, NULL);
-      glCompileShader(mVertexShader);
-
-      const char *fragmentShaderStr = getFragmentShaderStr();
-      mFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-      glShaderSource(mFragmentShader, 1, &fragmentShaderStr, NULL);
-      glCompileShader(mFragmentShader);
-
-      mShaderProgram = glCreateProgram();
-      glAttachShader(mShaderProgram, mFragmentShader);
-      glAttachShader(mShaderProgram, mVertexShader);
-      glLinkProgram(mShaderProgram);
-    }
-    // -------------------------------------------------------------------------
-    // prepareVertexObjects
-    // -------------------------------------------------------------------------
-    virtual void  prepareVertexObjects()
-    {
-      glGenVertexArrays(1, &mVertexArrayObject);
-      glBindVertexArray(mVertexArrayObject);
-
-      glGenBuffers(1, &mVertexBufferObject);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, getVertexDataSize(), getVertexData(), GL_STATIC_DRAW);
-
-      enableVertexDataAttributes();
-    }
-    // -------------------------------------------------------------------------
-    // getVertexDataSize
-    // -------------------------------------------------------------------------
-    virtual GLsizeiptr getVertexDataSize()
-    {
-      return 9 * sizeof(GLfloat);
-    }
-    // -------------------------------------------------------------------------
-    // getVertexData
-    // -------------------------------------------------------------------------
-    virtual const GLvoid *getVertexData()
-    {
-      static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
-      return points;
-    }
-    // -------------------------------------------------------------------------
-    // enableVertexDataAttributes
-    // -------------------------------------------------------------------------
-    virtual void enableVertexDataAttributes()
-    {
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    }
-    // -------------------------------------------------------------------------
-    // getVertexShaderStr
-    // -------------------------------------------------------------------------
-    virtual const char *getVertexShaderStr()
-    {
-      const char *vertexShaderStr = "#version 410\n"
-                                    "in vec3 vp;"
-                                    "void main ()"
-                                    "{"
-                                    "  gl_Position = vec4(vp, 1.0);"
-                                    "}";
-      return vertexShaderStr;
-    }
-    // -------------------------------------------------------------------------
-    // getFragmentShaderStr
-    // -------------------------------------------------------------------------
-    virtual const char *getFragmentShaderStr()
-    {
-      const char *fragmentShaderStr = "#version 410\n"
-                                      "out vec4 frag_colour;"
-                                      "void main ()"
-                                      "{"
-                                      "  frag_colour = vec4(1.0, 1.0, 0.0, 1.0);"
-                                      "}";
-      return fragmentShaderStr;
+      for (auto it = mModelList.begin(); it != mModelList.end(); it++)
+        (*it)->draw(mGLModelView, mGLProjection);
     }
 
     // Member variables --------------------------------------------------------
     const GLubyte *mRendererStr;
     const GLubyte *mVersionStr;
-    GLuint mVertexArrayObject;
-    GLuint mVertexBufferObject;
-    GLuint mVertexShader, mFragmentShader;
-    GLuint mShaderProgram;
+
+    std::vector<ibc::gl::ModelInterface *>  mModelList;
+    GLfloat mGLModelView[16], mGLProjection[16];
 
   private:
     // Member functions --------------------------------------------------------
