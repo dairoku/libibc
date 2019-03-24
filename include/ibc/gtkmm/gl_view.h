@@ -196,12 +196,12 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  prepareVertexObjects()
     {
+      glGenVertexArrays(1, &mVertexArrayObject);
+      glBindVertexArray(mVertexArrayObject);
+
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glBufferData(GL_ARRAY_BUFFER, getVertexDataSize(), getVertexData(), GL_STATIC_DRAW);
-
-      glGenVertexArrays(1, &mVertexArrayObject);
-      glBindVertexArray(mVertexArrayObject);
 
       enableVertexDataAttributes();
     }
