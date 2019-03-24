@@ -127,7 +127,7 @@ namespace ibc
         QuaternionBase<TrackballType> quat;
         quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
                            mClientWidth, mClientHeight, mRotationSensitivity);
-          mQuat *= quat;
+        mQuat *= quat;
       //mQuat.normalize();
         mModelView = mQuat.rotationMatrix();
       }
@@ -136,8 +136,8 @@ namespace ibc
         ibc::gl::VectorBase<TrackballType> offset;
         ibc::gl::MatrixBase<TrackballType> mat = mModelView;
         mat.inverse();
-        offset[0] = -1.0 * (mPrevMouseX - inMouseX) * 0.01;
-        offset[1] = (mPrevMouseY - inMouseY) * 0.01;
+        offset[0] = -2.0 * (mPrevMouseX - inMouseX) / mClientHeight / mScaleFactor;
+        offset[1] =  2.8 * (mPrevMouseY - inMouseY) / mClientHeight / mScaleFactor;
         offset[2] = 0.0;
         offset = mat * offset;
         mOffset += offset;
@@ -208,8 +208,8 @@ namespace ibc
       VectorBase<TrackballType> vec;
       TrackballType d;
 
-      vec[0] = (TrackballType )((2.0 * inX - inWidth) / inWidth);
-      vec[1] = (TrackballType )((inHeight - 2.0 * inY) / inHeight);
+      vec[0] = (2.0 * inX - inWidth) / inWidth;
+      vec[1] = (inHeight - 2.0 * inY) / inHeight;
       vec[2] = 0.0;
       d = vec.length();
       if (d > 1.0)
