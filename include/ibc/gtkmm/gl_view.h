@@ -52,6 +52,7 @@
 #include <gtkmm.h>
 #include "ibc/gl/matrix.h"
 #include "ibc/gl/model_interface.h"
+#include "ibc/gl/shader_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -94,12 +95,29 @@ namespace ibc
     // -------------------------------------------------------------------------
     // removeModel
     // -------------------------------------------------------------------------
-    void  removeImageConverter(ibc::gl::ModelInterface *inModel)
+    void  removeModel(ibc::gl::ModelInterface *inModel)
     {
       auto it = std::find(mModelList.begin(), mModelList.end(), inModel);
       if (it == mModelList.end())
         return;
       mModelList.erase(it);
+    }
+    // -------------------------------------------------------------------------
+    // addShader
+    // -------------------------------------------------------------------------
+    void  addShader(ibc::gl::ShaderInterface *inShader)
+    {
+      mShaderList.push_back(inShader);
+    }
+    // -------------------------------------------------------------------------
+    // removeShader
+    // -------------------------------------------------------------------------
+    void  removeShader(ibc::gl::ShaderInterface *inShader)
+    {
+      auto it = std::find(mShaderList.begin(), mShaderList.end(), inShader);
+      if (it == mShaderList.end())
+        return;
+      mShaderList.erase(it);
     }
 
   protected:
@@ -162,8 +180,11 @@ namespace ibc
       glClearDepth(1.0);
       glEnable(GL_DEPTH_TEST);
 
+      for (auto it = mShaderList.begin(); it != mShaderList.end(); it++)
+        (*it)->initShader();
+
       for (auto it = mModelList.begin(); it != mModelList.end(); it++)
-        (*it)->init();
+        (*it)->initModel();
     }
     // -------------------------------------------------------------------------
     // glDispose
@@ -171,7 +192,10 @@ namespace ibc
     virtual void  glDispose()
     {
       for (auto it = mModelList.begin(); it != mModelList.end(); it++)
-        (*it)->dispose();
+        (*it)->disposeModel();
+
+      for (auto it = mShaderList.begin(); it != mShaderList.end(); it++)
+        (*it)->disposeShader();
     }
     // -------------------------------------------------------------------------
     // glResize
@@ -193,14 +217,16 @@ namespace ibc
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       for (auto it = mModelList.begin(); it != mModelList.end(); it++)
-        (*it)->draw(mGLModelView, mGLProjection);
+        (*it)->drawModel(mGLModelView, mGLProjection);
     }
 
     // Member variables --------------------------------------------------------
     const GLubyte *mRendererStr;
     const GLubyte *mVersionStr;
 
-    std::vector<ibc::gl::ModelInterface *>  mModelList;
+    std::vector<ibc::gl::ShaderInterface *>   mShaderList;
+    std::vector<ibc::gl::ModelInterface *>    mModelList;
+
     GLfloat mGLModelView[16], mGLProjection[16];
 
   private:

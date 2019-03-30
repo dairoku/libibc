@@ -1,5 +1,5 @@
 // =============================================================================
-//  model_interface.h
+//  shader_base.h
 //
 //  MIT License
 //
@@ -24,38 +24,62 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/model_interface.h
+  \file     ibc/gl/models/shader_base.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/16
+  \date     2019/03/24
   \brief    Header file for ImageViewBase widget
 
   This file defines the class for the image widget
 */
 
-#ifndef IBC_GL_MODEL_INTERFACE_H_
-#define IBC_GL_MODEL_INTERFACE_H_
+#ifndef IBC_GL_SHADER_MINIMUM_H_
+#define IBC_GL_SHADER_MINIMUM_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/shader/shader_base.h"
+
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+namespace ibc::gl::shader // <- nested namespace (C++17)
 {
- namespace gl
- {
   // ---------------------------------------------------------------------------
-  // Model interface class
+  // Minimum
   // ---------------------------------------------------------------------------
-  class ModelInterface
+  class Minimum : public virtual ibc::gl::shader::ShaderBase
   {
   public:
-    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
-    virtual bool initModel() = 0;
-    virtual void disposeModel() = 0;
-    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;
+    // Constructors and Destructor ---------------------------------------------
+    // -------------------------------------------------------------------------
+    // Minimum
+    // -------------------------------------------------------------------------
+    Minimum()
+    {
+      static const char *vertexShaderStr =
+        "#version 410\n"
+        "in vec3 vp;"
+        "void main ()"
+        "{"
+        "  gl_Position = vec4(vp, 1.0);"
+        "}";
+      static const char *fragmentShaderStr =
+        "#version 410\n"
+        "out vec4 frag_colour;"
+        "void main ()"
+        "{"
+        "  frag_colour = vec4(1.0, 1.0, 0.0, 1.0);"
+        "}";
+
+      mVertexShaderStr = vertexShaderStr;
+      mFragmentShaderStr = fragmentShaderStr;
+    }
+    // -------------------------------------------------------------------------
+    // ~Minimum
+    // -------------------------------------------------------------------------
+    virtual ~Minimum()
+    {
+    }
   };
- };
 };
 
-#endif  // #ifdef IBC_GL_MODEL_INTERFACE_H_
+#endif  // #ifdef IBC_GL_SHADER_MINIMUM_H_

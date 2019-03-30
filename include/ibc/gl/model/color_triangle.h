@@ -38,7 +38,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "ibc/gl/model_interface.h"
-
+#include "ibc/gl/shader_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
@@ -55,6 +55,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     ColorTriangle()
     {
+      mShaderInterface = NULL;
     }
     // -------------------------------------------------------------------------
     // ~ColorTriangle
@@ -64,28 +65,17 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     }
     // Member functions -------------------------------------------------------
     // -------------------------------------------------------------------------
-    // init
+    // addShader
     // -------------------------------------------------------------------------
-    virtual void init()
+    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface)
     {
-      static const char *vertexShaderStr =
-        "#version 130\n"
-        "in vec3 position;"
-        "in vec3 color;"
-        "uniform mat4 modelview;"
-        "uniform mat4 projection;"
-        "smooth out vec4 vertexColor;"
-        "void main() {"
-        "  gl_Position = projection * modelview * vec4(position, 1.0);"
-        "  vertexColor = vec4(color, 1.0);"
-        "}";
-      static const char *fragmentShaderStr =
-        "#version 130\n"
-        "smooth in vec4 vertexColor;"
-        "out vec4 outputColor;"
-        "void main() {"
-        "  outputColor = vertexColor;"
-        "}";
+      mShaderInterface = inShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // initModel
+    // -------------------------------------------------------------------------
+    virtual bool initModel()
+    {
       static const struct vertex_info vertexData[] =
       {
         { {  0.0f,  0.500f, 0.0f }, { 1.f, 0.f, 0.f } },
@@ -93,18 +83,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
         { { -0.5f, -0.366f, 0.0f }, { 0.f, 0.f, 1.f } },
       };
 
-      mVertexShader = glCreateShader(GL_VERTEX_SHADER);
-      glShaderSource(mVertexShader, 1, &vertexShaderStr, NULL);
-      glCompileShader(mVertexShader);
-
-      mFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-      glShaderSource(mFragmentShader, 1, &fragmentShaderStr, NULL);
-      glCompileShader(mFragmentShader);
-
-      mShaderProgram = glCreateProgram();
-      glAttachShader(mShaderProgram, mFragmentShader);
-      glAttachShader(mShaderProgram, mVertexShader);
-      glLinkProgram(mShaderProgram);
+      mShaderProgram = mShaderInterface->getShaderProgram();
 
       glGenVertexArrays(1, &mVertexArrayObject);
       glBindVertexArray(mVertexArrayObject);
@@ -138,17 +117,19 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
                              (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
+
+      return true;
     }
     // -------------------------------------------------------------------------
-    // dispose
+    // disposeModel
     // -------------------------------------------------------------------------
-    virtual void dispose()
+    virtual void disposeModel()
     {
     }
     // -------------------------------------------------------------------------
-    // draw
+    // drawModel
     // -------------------------------------------------------------------------
-    virtual void draw(const GLfloat inModelView[16], const GLfloat inProjection[16])
+    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
       glUseProgram(mShaderProgram);
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
@@ -169,10 +150,11 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     };
 
     // Member variables --------------------------------------------------------
+    ibc::gl::ShaderInterface *mShaderInterface;
+    GLuint mShaderProgram;
+
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
-    GLuint mVertexShader, mFragmentShader;
-    GLuint mShaderProgram;
 
     guint mModelViewLocation;
     guint mProjectionLocation;

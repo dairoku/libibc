@@ -44,7 +44,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "ibc/gl/model_interface.h"
-
+#include "ibc/gl/shader_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
@@ -59,8 +59,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // Triangle
     // -------------------------------------------------------------------------
-    Triangle()
+    Triangle(ibc::gl::ShaderInterface *inShaderInterface)
     {
+      mShaderInterface = inShaderInterface;
     }
     // -------------------------------------------------------------------------
     // ~Mono_to_RGB
@@ -74,37 +75,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual void init()
     {
-      static const char *vertexShaderStr =
-        "#version 410\n"
-        "in vec3 vp;"
-        "void main ()"
-        "{"
-        "  gl_Position = vec4(vp, 1.0);"
-        "}";
-      static const char *fragmentShaderStr =
-        "#version 410\n"
-        "out vec4 frag_colour;"
-        "void main ()"
-        "{"
-        "  frag_colour = vec4(1.0, 1.0, 0.0, 1.0);"
-        "}";
       static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
 
-      glGenVertexArrays(1, &mVertexArrayObject);
-      glBindVertexArray(mVertexArrayObject);
-
-      mVertexShader = glCreateShader(GL_VERTEX_SHADER);
-      glShaderSource(mVertexShader, 1, &vertexShaderStr, NULL);
-      glCompileShader(mVertexShader);
-
-      mFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-      glShaderSource(mFragmentShader, 1, &fragmentShaderStr, NULL);
-      glCompileShader(mFragmentShader);
-
-      mShaderProgram = glCreateProgram();
-      glAttachShader(mShaderProgram, mFragmentShader);
-      glAttachShader(mShaderProgram, mVertexShader);
-      glLinkProgram(mShaderProgram);
+      mShaderProgram = mShaderInterface->getShaderProgram();
 
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
@@ -134,7 +107,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // Member variables --------------------------------------------------------
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
-    GLuint mVertexShader, mFragmentShader;
     GLuint mShaderProgram;
   };
 };

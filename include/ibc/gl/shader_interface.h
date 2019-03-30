@@ -1,5 +1,5 @@
 // =============================================================================
-//  model_interface.h
+//  shader_interface.h
 //
 //  MIT License
 //
@@ -24,20 +24,17 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/model_interface.h
+  \file     ibc/gl/models/shader_interface.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/16
+  \date     2019/03/26
   \brief    Header file for ImageViewBase widget
 
   This file defines the class for the image widget
 */
 
-#ifndef IBC_GL_MODEL_INTERFACE_H_
-#define IBC_GL_MODEL_INTERFACE_H_
-
-// Includes --------------------------------------------------------------------
-#include "ibc/gl/shader_interface.h"
+#ifndef IBC_GL_SHADER_INTERFACE_H_
+#define IBC_GL_SHADER_INTERFACE_H_
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -45,17 +42,19 @@ namespace ibc
  namespace gl
  {
   // ---------------------------------------------------------------------------
-  // Model interface class
+  // Shader interface class
   // ---------------------------------------------------------------------------
-  class ModelInterface
+  class ShaderInterface
   {
   public:
-    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
-    virtual bool initModel() = 0;
-    virtual void disposeModel() = 0;
-    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;
+    virtual bool initShader() = 0;
+    virtual void disposeShader() = 0;
+    virtual GLuint  getShaderProgram() = 0;
+    virtual GLuint  getVertexShader() = 0;
+    virtual GLuint  getFragmentShader() = 0;
+    virtual GLuint  geGeometryShader() = 0;
   };
  };
 };
 
-#endif  // #ifdef IBC_GL_MODEL_INTERFACE_H_
+#endif  // #ifdef IBC_GL_SHADER_INTERFACE_H_

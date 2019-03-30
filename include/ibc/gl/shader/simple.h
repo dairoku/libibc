@@ -1,5 +1,5 @@
 // =============================================================================
-//  model_interface.h
+//  shader_base.h
 //
 //  MIT License
 //
@@ -24,38 +24,66 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/model_interface.h
+  \file     ibc/gl/models/shader_base.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/16
+  \date     2019/03/24
   \brief    Header file for ImageViewBase widget
 
   This file defines the class for the image widget
 */
 
-#ifndef IBC_GL_MODEL_INTERFACE_H_
-#define IBC_GL_MODEL_INTERFACE_H_
+#ifndef IBC_GL_SHADER_SIMPLE_H_
+#define IBC_GL_SHADER_SIMPLE_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/shader/shader_base.h"
+
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+namespace ibc::gl::shader // <- nested namespace (C++17)
 {
- namespace gl
- {
   // ---------------------------------------------------------------------------
-  // Model interface class
+  // Simple
   // ---------------------------------------------------------------------------
-  class ModelInterface
+  class Simple : public virtual ibc::gl::shader::ShaderBase
   {
   public:
-    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
-    virtual bool initModel() = 0;
-    virtual void disposeModel() = 0;
-    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;
+    // Constructors and Destructor ---------------------------------------------
+    // -------------------------------------------------------------------------
+    // Simple
+    // -------------------------------------------------------------------------
+    Simple()
+    {
+      static const char *vertexShaderStr =
+        "#version 130\n"
+        "in vec3 position;"
+        "in vec3 color;"
+        "uniform mat4 modelview;"
+        "uniform mat4 projection;"
+        "smooth out vec4 vertexColor;"
+        "void main() {"
+        "  gl_Position = projection * modelview * vec4(position, 1.0);"
+        "  vertexColor = vec4(color, 1.0);"
+        "}";
+      static const char *fragmentShaderStr =
+        "#version 130\n"
+        "smooth in vec4 vertexColor;"
+        "out vec4 outputColor;"
+        "void main() {"
+        "  outputColor = vertexColor;"
+        "}";
+
+      mVertexShaderStr = vertexShaderStr;
+      mFragmentShaderStr = fragmentShaderStr;
+    }
+    // -------------------------------------------------------------------------
+    // ~Simple
+    // -------------------------------------------------------------------------
+    virtual ~Simple()
+    {
+    }
   };
- };
 };
 
-#endif  // #ifdef IBC_GL_MODEL_INTERFACE_H_
+#endif  // #ifdef IBC_GL_SHADER_SHADER_BASE_H_
