@@ -53,9 +53,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // ColorCube
     // -------------------------------------------------------------------------
-    ColorCube(ibc::gl::ShaderInterface *inShaderInterface)
+    ColorCube()
     {
-      mShaderInterface = inShaderInterface;
+      mShaderInterface = NULL;
     }
     // -------------------------------------------------------------------------
     // ~ColorCube
@@ -63,11 +63,25 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     virtual ~ColorCube()
     {
     }
-    // Member functions -------------------------------------------------------
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // init
+    // setShader
     // -------------------------------------------------------------------------
-    virtual void init()
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
+    {
+      mShaderInterface = inShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // getShader
+    // -------------------------------------------------------------------------
+    virtual ibc::gl::ShaderInterface *getShader()
+    {
+      return mShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // initModel
+    // -------------------------------------------------------------------------
+    virtual bool initModel()
     {
       static const struct vertex_info vertexData[] =
       {
@@ -134,17 +148,18 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
                              (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
+      return true;
     }
     // -------------------------------------------------------------------------
-    // dispose
+    // disposeModel
     // -------------------------------------------------------------------------
-    virtual void dispose()
+    virtual void disposeModel()
     {
     }
     // -------------------------------------------------------------------------
-    // draw
+    // drawModel
     // -------------------------------------------------------------------------
-    virtual void draw(const GLfloat inModelView[16], const GLfloat inProjection[16])
+    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
       glUseProgram(mShaderProgram);
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));

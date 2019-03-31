@@ -59,25 +59,42 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // Triangle
     // -------------------------------------------------------------------------
-    Triangle(ibc::gl::ShaderInterface *inShaderInterface)
+    Triangle()
     {
-      mShaderInterface = inShaderInterface;
+      mShaderInterface = NULL;
     }
     // -------------------------------------------------------------------------
-    // ~Mono_to_RGB
+    // ~Triangle
     // -------------------------------------------------------------------------
     virtual ~Triangle()
     {
     }
-    // Member functions -------------------------------------------------------
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // init
+    // setShader
     // -------------------------------------------------------------------------
-    virtual void init()
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
+    {
+      mShaderInterface = inShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // getShader
+    // -------------------------------------------------------------------------
+    virtual ibc::gl::ShaderInterface *getShader()
+    {
+      return mShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // initModel
+    // -------------------------------------------------------------------------
+    virtual bool initModel()
     {
       static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
 
       mShaderProgram = mShaderInterface->getShaderProgram();
+
+      glGenVertexArrays(1, &mVertexArrayObject);
+      glBindVertexArray(mVertexArrayObject);
 
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
@@ -86,17 +103,19 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+      return true;
     }
     // -------------------------------------------------------------------------
-    // dispose
+    // disposeModel
     // -------------------------------------------------------------------------
-    virtual void dispose()
+    virtual void disposeModel()
     {
     }
     // -------------------------------------------------------------------------
-    // draw
+    // drawModel
     // -------------------------------------------------------------------------
-    virtual void draw(const GLfloat inModelView[16], const GLfloat inProjection[16])
+    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
       glUseProgram(mShaderProgram);
       glBindVertexArray(mVertexArrayObject);
@@ -105,6 +124,8 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 
   protected:
     // Member variables --------------------------------------------------------
+    ibc::gl::ShaderInterface *mShaderInterface;
+
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
     GLuint mShaderProgram;

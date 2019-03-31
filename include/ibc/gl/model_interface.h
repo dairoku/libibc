@@ -50,7 +50,8 @@ namespace ibc
   class ModelInterface
   {
   public:
-    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
+    virtual ibc::gl::ShaderInterface *getShader() = 0;
     virtual bool initModel() = 0;
     virtual void disposeModel() = 0;
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;

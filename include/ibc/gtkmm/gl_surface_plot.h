@@ -47,6 +47,7 @@
 #include "ibc/gtkmm/image_data.h"
 #include "ibc/gtkmm/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/shader/simple.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -69,6 +70,8 @@ namespace ibc
       mImageDataPtr = NULL;
       mIsImageSizeChanged = false;
       
+      mModel.setShader(&mShader);
+      addShader(&mShader);
       addModel(&mModel);
     }
     // -------------------------------------------------------------------------
@@ -113,6 +116,7 @@ namespace ibc
 
   protected:
     // Member variables --------------------------------------------------------
+    ibc::gl::shader::Simple  mShader;
     ibc::gl::model::ColorCube  mModel;
 
     ImageData *mImageDataPtr;

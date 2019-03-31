@@ -63,13 +63,20 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     virtual ~ColorTriangle()
     {
     }
-    // Member functions -------------------------------------------------------
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // addShader
+    // setShader
     // -------------------------------------------------------------------------
-    virtual void addShader(ibc::gl::ShaderInterface *inShaderInterface)
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
     {
       mShaderInterface = inShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // getShader
+    // -------------------------------------------------------------------------
+    virtual ibc::gl::ShaderInterface *getShader()
+    {
+      return mShaderInterface;
     }
     // -------------------------------------------------------------------------
     // initModel
