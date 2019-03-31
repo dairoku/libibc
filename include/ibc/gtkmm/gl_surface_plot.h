@@ -49,6 +49,7 @@
 #include "ibc/gl/model/color_cube.h"
 #include "ibc/gl/model/surface_points.h"
 #include "ibc/gl/shader/simple.h"
+#include "ibc/gl/shader/point_sprite.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -72,8 +73,9 @@ namespace ibc
       mIsImageSizeChanged = false;
       
       mModel.setShader(&mShader);
-      mDataModel.setShader(&mShader);
+      mDataModel.setShader(&mPointSpriteShader);
       addShader(&mShader);
+      addShader(&mPointSpriteShader);
       addModel(&mModel);
       addModel(&mDataModel);
     }
@@ -120,6 +122,7 @@ namespace ibc
   protected:
     // Member variables --------------------------------------------------------
     ibc::gl::shader::Simple  mShader;
+    ibc::gl::shader::PointSprite  mPointSpriteShader;
     ibc::gl::model::ColorCube  mModel;
     ibc::gl::model::SurfacePoints  mDataModel;
 

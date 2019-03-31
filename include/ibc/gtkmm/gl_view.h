@@ -176,9 +176,12 @@ namespace ibc
       printf("Renderer: %s\n", mRendererStr);
       printf("OpenGL version supported %s\n", mVersionStr);
 
-      glClearColor(0.5, 0.5, 0.5, 1.0);
+      glClearColor(0.3, 0.3, 0.3, 0.0);
       glClearDepth(1.0);
+      glDepthFunc(GL_LESS);
       glEnable(GL_DEPTH_TEST);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_FRONT);
 
       for (auto it = mShaderList.begin(); it != mShaderList.end(); it++)
         (*it)->initShader();

@@ -40,6 +40,7 @@
 #include <math.h>
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
+#include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
@@ -60,7 +61,12 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mVertexData = NULL;
       
       mWidth = 640;
-      mHeight = 480;
+    //mHeight = 480;
+      mHeight = 640;
+      
+      mColorMap = new unsigned char[mColorMapNum * 3];
+      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
+                                        mColorMapNum, mColorMap);
     }
     // -------------------------------------------------------------------------
     // ~SurfacePoints
@@ -92,20 +98,31 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mVertexData = new VertexData[mNumPoints];
       size_t  dataSize = sizeof(VertexData) * mWidth * mHeight;
       double xPitch = 1.0 * 2.0 / (double )mWidth;
-      double thetaGain = 2.0 * M_PI / (double )mWidth;
       
       for (int i = 0; i < mHeight; i++)
         for (int j = 0; j < mWidth; j++)
         {
           double x = -1.0 + xPitch * j;
           double y = -1.0 + xPitch * i;
-          double z = sin(j * thetaGain);
+          double k = (M_PI * 3.0) * (M_PI * 3.0);
+          double z, d;
+          if (x == 0 && y == 0)
+            z = 1;
+          {
+            d = sqrt(k*x*x + k*y*y);
+            z = sin(d) / d;
+          }
+          int c = (int )(fabs(z + 0.1) *(mColorMapNum-1.0));
+          if (c >= mColorMapNum)
+            c = mColorMapNum - 1;
+          if (c < 0)
+            c = 0;
           mVertexData[mWidth * i + j].position[0] = x;
           mVertexData[mWidth * i + j].position[1] = y;
           mVertexData[mWidth * i + j].position[2] = z;
-          mVertexData[mWidth * i + j].color[0] = fabs(z);
-          mVertexData[mWidth * i + j].color[1] = fabs(z);
-          mVertexData[mWidth * i + j].color[2] = fabs(z);
+          mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
+          mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
+          mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
         }
 
       mShaderProgram = mShaderInterface->getShaderProgram();
@@ -157,6 +174,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
       glUseProgram(mShaderProgram);
+
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
       glBindVertexArray(mVertexArrayObject);
@@ -178,6 +196,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     size_t  mWidth, mHeight;
     size_t  mNumPoints;
     VertexData  *mVertexData;
+    
+    const int   mColorMapNum = 65536;
+    unsigned char *mColorMap;
 
     ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
