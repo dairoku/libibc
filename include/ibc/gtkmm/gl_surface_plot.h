@@ -47,6 +47,7 @@
 #include "ibc/gtkmm/image_data.h"
 #include "ibc/gtkmm/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/model/surface_points.h"
 #include "ibc/gl/shader/simple.h"
 
 // Namespace -------------------------------------------------------------------
@@ -71,8 +72,10 @@ namespace ibc
       mIsImageSizeChanged = false;
       
       mModel.setShader(&mShader);
+      mDataModel.setShader(&mShader);
       addShader(&mShader);
       addModel(&mModel);
+      addModel(&mDataModel);
     }
     // -------------------------------------------------------------------------
     // ~GLSurfacePlot
@@ -118,6 +121,7 @@ namespace ibc
     // Member variables --------------------------------------------------------
     ibc::gl::shader::Simple  mShader;
     ibc::gl::model::ColorCube  mModel;
+    ibc::gl::model::SurfacePoints  mDataModel;
 
     ImageData *mImageDataPtr;
     bool      mIsImageSizeChanged;
