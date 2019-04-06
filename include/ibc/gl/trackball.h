@@ -128,7 +128,7 @@ namespace ibc
         quat = getRotation(mPrevMouseX, mPrevMouseY, inMouseX, inMouseY,
                            mClientWidth, mClientHeight, mRotationSensitivity);
         mQuat *= quat;
-      //mQuat.normalize();
+        mQuat.normalize();
         mModelView = mQuat.rotationMatrix();
       }
       else

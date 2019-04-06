@@ -56,7 +56,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     PointSprite()
     {
       static const char *vertexShaderStr =
-        "#version 130\n"
+        "#version 410\n"
         "in vec3 position;"
         "in vec3 color;"
         "uniform mat4 modelview;"
@@ -65,13 +65,15 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         "varying out vec3 light;"
         "const vec4 lightSource = vec4(0.0, 0.0, 100.0, 1.0);"
         "void main() {"
+        "  vec4 n;"
         "  gl_Position = projection * modelview * vec4(position, 1.0);"
-        "  gl_PointSize = 30 / gl_Position.w;"
+        "  gl_PointSize = 1 * (5 - gl_Position.z);"
+        //"  gl_PointSize = 20;"
         "  light = normalize(vec3(lightSource - modelview * vec4(position, 1.0)));"
         "  vertexColor = vec4(color, 1.0);"
         "}";
       static const char *fragmentShaderStr =
-        "#version 130\n"
+        "#version 410\n"
         "smooth in vec4 vertexColor;"
         "varying in vec3 light;"
         "out vec4 outputColor;"
@@ -103,7 +105,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     {
       ShaderBase::initShader();
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-      glEnable(GL_POINT_SPRITE);
+      //glEnable(GL_POINT_SPRITE);
     }
   };
 };

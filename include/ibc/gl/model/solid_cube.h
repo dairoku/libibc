@@ -1,5 +1,5 @@
 // =============================================================================
-//  surface_points.h
+// solid_cube.h
 //
 //  MIT License
 //
@@ -24,53 +24,43 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/surface_points.h
+  \file     ibc/gl/models/solid_cube.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/31
+  \date     2019/04/06
   \brief    Header file for ImageViewBase widget
 
   This file defines the class for the image widget
 */
 
-#ifndef IBC_GL_MODEL_SURFACE_PLOT_H_
-#define IBC_GL_MODEL_SURFACE_PLOT_H_
+#ifndef IBC_GL_MODEL_SOLID_CUBE_H_
+#define IBC_GL_MODEL_SOLID_CUBE_H_
 
 // Includes --------------------------------------------------------------------
-#include <math.h>
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
-#include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
 {
   // ---------------------------------------------------------------------------
-  // ColorTriangle
+  // ColorCube class
   // ---------------------------------------------------------------------------
-  class SurfacePoints : public virtual ibc::gl::ModelInterface
+  class SolidCube : public virtual ibc::gl::ModelInterface
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // SurfacePoints
+    // SolidCube
     // -------------------------------------------------------------------------
-    SurfacePoints()
+    SolidCube()
     {
       mShaderInterface = NULL;
-      mVertexData = NULL;
-      
-      mWidth = 640;
-      mHeight = 480;
-      
-      mColorMap = new unsigned char[mColorMapNum * 3];
-      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
-                                        mColorMapNum, mColorMap);
     }
     // -------------------------------------------------------------------------
-    // ~SurfacePoints
+    // ~SolidCube
     // -------------------------------------------------------------------------
-    virtual ~SurfacePoints()
+    virtual ~SolidCube()
     {
     }
     // Member functions --------------------------------------------------------
@@ -93,36 +83,47 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
-      mNumPoints = mWidth * mHeight;
-      mVertexData = new VertexData[mNumPoints];
-      size_t  dataSize = sizeof(VertexData) * mWidth * mHeight;
-      double xPitch = 1.0 * 2.0 / (double )mWidth;
-      
-      for (int i = 0; i < mHeight; i++)
-        for (int j = 0; j < mWidth; j++)
-        {
-          double x = -1.0 + xPitch * j;
-          double y = -1.0 + xPitch * i;
-          double k = (M_PI * 3.0) * (M_PI * 3.0);
-          double z, d;
-          if (x == 0 && y == 0)
-            z = 1;
-          {
-            d = sqrt(k*x*x + k*y*y);
-            z = sin(d) / d;
-          }
-          int c = (int )(fabs(z + 0.1) *(mColorMapNum-1.0));
-          if (c >= mColorMapNum)
-            c = mColorMapNum - 1;
-          if (c < 0)
-            c = 0;
-          mVertexData[mWidth * i + j].position[0] = x;
-          mVertexData[mWidth * i + j].position[1] = y;
-          mVertexData[mWidth * i + j].position[2] = z;
-          mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
-          mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
-          mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
-        }
+      static const struct vertex_info vertexData[] =
+      {
+        { { -1.0f, -1.0f, -1.0f }, { 0.1f, 0.8f, 0.1f } },
+        { { -1.0f, -1.0f,  1.0f }, { 0.1f, 0.8f, 0.1f } },
+        { { -1.0f,  1.0f,  1.0f }, { 0.1f, 0.8f, 0.1f } },
+        { { -1.0f,  1.0f, -1.0f }, { 0.1f, 0.8f, 0.1f } },
+
+        { {  1.0f, -1.0f, -1.0f }, { 0.8f, 0.1f, 0.8f } },
+        { { -1.0f, -1.0f, -1.0f }, { 0.8f, 0.1f, 0.8f } },
+        { { -1.0f,  1.0f, -1.0f }, { 0.8f, 0.1f, 0.8f } },
+        { {  1.0f,  1.0f, -1.0f }, { 0.8f, 0.1f, 0.8f } },
+
+        { { -1.0f, -1.0f, -1.0f }, { 0.1f, 0.8f, 0.8f } },
+        { {  1.0f, -1.0f, -1.0f }, { 0.1f, 0.8f, 0.8f } },
+        { {  1.0f, -1.0f,  1.0f }, { 0.1f, 0.8f, 0.8f } },
+        { { -1.0f, -1.0f,  1.0f }, { 0.1f, 0.8f, 0.8f } },
+
+        { {  1.0f, -1.0f,  1.0f }, { 0.1f, 0.1f, 0.8f } },
+        { {  1.0f, -1.0f, -1.0f }, { 0.1f, 0.1f, 0.8f } },
+        { {  1.0f,  1.0f, -1.0f }, { 0.1f, 0.1f, 0.8f } },
+        { {  1.0f,  1.0f,  1.0f }, { 0.1f, 0.1f, 0.8f } },
+
+        { { -1.0f,  1.0f, -1.0f }, { 0.8f, 0.1f, 0.1f } },
+        { { -1.0f,  1.0f,  1.0f }, { 0.8f, 0.1f, 0.1f } },
+        { {  1.0f,  1.0f,  1.0f }, { 0.8f, 0.1f, 0.1f } },
+        { {  1.0f,  1.0f, -1.0f }, { 0.8f, 0.1f, 0.1f } },
+
+        { { -1.0f, -1.0f,  1.0f }, { 0.8f, 0.8f, 0.1f } },
+        { {  1.0f, -1.0f,  1.0f }, { 0.8f, 0.8f, 0.1f } },
+        { {  1.0f,  1.0f,  1.0f }, { 0.8f, 0.8f, 0.1f } },
+        { { -1.0f,  1.0f,  1.0f }, { 0.8f, 0.8f, 0.1f } }
+      };
+      static const GLuint indexData[] =
+      {
+        0,    1,  2,  0,  2,  3,
+        4,    5,  6,  4,  6,  7,
+        8,    9, 10,  8, 10, 11,
+        12,  13, 14, 12, 14, 15,
+        16,  17, 18, 16, 18, 19,
+        20,  21, 22, 20, 22, 23
+      };
 
       mShaderProgram = mShaderInterface->getShaderProgram();
 
@@ -131,30 +132,37 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, dataSize, mVertexData, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, (6 * 4 * 3 * 2 * sizeof(GLfloat)), vertexData, GL_STATIC_DRAW);
 
-      mModelViewLocation      = glGetUniformLocation (mShaderProgram, "modelview");
-      mProjectionLocation     = glGetUniformLocation (mShaderProgram, "projection");
-      guint positionLocation  = glGetAttribLocation (mShaderProgram, "position");
-      guint colorLocation     = glGetAttribLocation (mShaderProgram, "color");
+      glGenBuffers(1, &mIndexBufferObject);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBufferObject);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, (6 * 6 * sizeof(GLuint)), indexData, GL_STATIC_DRAW);
+
+      // get the location of the "modelview" uniform
+      mModelViewLocation = glGetUniformLocation (mShaderProgram, "modelview");
+
+      // get the location of the "projection" uniform
+      mProjectionLocation = glGetUniformLocation (mShaderProgram, "projection");
+
+      // get the location of the "position" and "color" attributes
+      guint positionLocation = glGetAttribLocation (mShaderProgram, "position");
+      guint colorLocation = glGetAttribLocation (mShaderProgram, "color");
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
+      // enable and set the position attribute
       glEnableVertexAttribArray (positionLocation);
       glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof(VertexData),
-                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, position)));
+                             sizeof (struct vertex_info),
+                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, position)));
 
+      // enable and set the color attribute
       glEnableVertexAttribArray (colorLocation);
       glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof(VertexData),
-                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, color)));
-
-      //glVertexAttribDivisor(0, 1);
-      //glVertexAttribDivisor(1, 1);
-
+                             sizeof (struct vertex_info),
+                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
       return true;
     }
     // -------------------------------------------------------------------------
@@ -169,12 +177,10 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
       glUseProgram(mShaderProgram);
-
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
       glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_POINTS, 0, mNumPoints);
-      //glDrawArraysInstanced(GL_POINTS, 0, 1, mNumPoints);
+      glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
 
   protected:
@@ -182,29 +188,23 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // vertex_info
     // -------------------------------------------------------------------------
-    typedef struct
+    struct vertex_info
     {
       GLfloat position[3];
       GLfloat color[3];
-    } VertexData;
+    };
 
     // Member variables --------------------------------------------------------
-    size_t  mWidth, mHeight;
-    size_t  mNumPoints;
-    VertexData  *mVertexData;
-    
-    const int   mColorMapNum = 65536;
-    unsigned char *mColorMap;
-
     ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
 
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
+    GLuint mIndexBufferObject;
 
     guint mModelViewLocation;
     guint mProjectionLocation;
   };
 };
 
-#endif  // #ifdef IBC_GL_MODEL_SURFACE_PLOT_H_
+#endif  // #ifdef IBC_GL_MODEL_SOLID_CUBE_H_

@@ -143,11 +143,15 @@ namespace ibc
     // -------------------------------------------------------------------------
     // on_create_context
     // -------------------------------------------------------------------------
-    /*virtual Glib::RefPtr<Gdk::GLContext>  on_create_context()
+    virtual Glib::RefPtr<Gdk::GLContext>  on_create_context()
     {
       Glib::RefPtr<Gdk::GLContext> context = Gtk::GLArea::on_create_context();
+
+      // Surprisingly depth buffer will not be created by the default setting
+      // We need to change this
+      set_has_depth_buffer(true);
       return context;
-    }*/
+    }
     // -------------------------------------------------------------------------
     // on_resize
     // -------------------------------------------------------------------------
@@ -177,11 +181,14 @@ namespace ibc
       printf("OpenGL version supported %s\n", mVersionStr);
 
       glClearColor(0.3, 0.3, 0.3, 0.0);
+
+      glEnable(GL_CCW);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
+
       glClearDepth(1.0);
       glDepthFunc(GL_LESS);
       glEnable(GL_DEPTH_TEST);
-      glEnable(GL_CULL_FACE);
-      glCullFace(GL_FRONT);
 
       for (auto it = mShaderList.begin(); it != mShaderList.end(); it++)
         (*it)->initShader();

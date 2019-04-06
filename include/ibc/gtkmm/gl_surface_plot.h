@@ -74,6 +74,7 @@ namespace ibc
       
       mModel.setShader(&mShader);
       mDataModel.setShader(&mPointSpriteShader);
+
       addShader(&mShader);
       addShader(&mPointSpriteShader);
       addModel(&mModel);
