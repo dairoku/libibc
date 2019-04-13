@@ -92,6 +92,8 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         mVertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(mVertexShader, 1, shaderStr, NULL);
         glCompileShader(mVertexShader);
+        if (handleShaderCompileError(mVertexShader, "mVertexShader"))
+          return false;
         glAttachShader(mShaderProgram, mVertexShader);
       }
 
@@ -101,6 +103,8 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         mFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(mFragmentShader, 1, shaderStr, NULL);
         glCompileShader(mFragmentShader);
+        if (handleShaderCompileError(mFragmentShader, "mFragmentShader"))
+          return false;
         glAttachShader(mShaderProgram, mFragmentShader);
       }
 
@@ -110,12 +114,46 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         mGeometryShader = glCreateShader(GL_GEOMETRY_SHADER);
         glShaderSource(mGeometryShader, 1, shaderStr, NULL);
         glCompileShader(mGeometryShader);
+        if (handleShaderCompileError(mGeometryShader, "mGeometryShader"))
+          return false;
         glAttachShader(mShaderProgram, mGeometryShader);
       }
 
       glLinkProgram(mShaderProgram);
+      if (handleProgramError(mShaderProgram))
+        return false;
 
       return true;
+    }
+    // -------------------------------------------------------------------------
+    // handleShaderCompileError
+    // -------------------------------------------------------------------------
+    virtual bool handleShaderCompileError(GLuint inShader, const char *inShaderNameStr)
+    {
+      GLchar *log = getShaderCompileError(inShader);
+      if (log == NULL)
+        return false;
+
+      printf("\nShader compile error: %s\n", inShaderNameStr);
+      printf("%s\n", (char *)log);
+      delete log;
+      return false;
+//    return true;
+    }
+    // -------------------------------------------------------------------------
+    // handleProgramError
+    // -------------------------------------------------------------------------
+    virtual bool handleProgramError(GLuint inProgram)
+    {
+      GLchar *log = getProgramError(inProgram);
+      if (log == NULL)
+        return false;
+
+      printf("\nProgram link error\n");
+      printf("%s\n", (char *)log);
+      delete log;
+      return false;
+//    return true;
     }
     // -------------------------------------------------------------------------
     // disposeShader
@@ -196,6 +234,48 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
           getGeometryShaderStr()  == NULL)
         return false;
       return true;
+    }
+    // -------------------------------------------------------------------------
+    // getShaderCompileError
+    // -------------------------------------------------------------------------
+    GLchar *getShaderCompileError(GLuint inShader)
+    {
+      GLint result;
+      glGetShaderiv(inShader, GL_COMPILE_STATUS, &result);
+      if (result != GL_FALSE)
+        return NULL;
+
+      GLint logLength;
+      GLsizei length;
+      GLchar *log;
+
+      glGetShaderiv(inShader, GL_INFO_LOG_LENGTH, &logLength);
+      logLength++;  // <- just in case
+      log = new GLchar[logLength];
+      glGetShaderInfoLog(inShader, logLength, &length, log);
+
+      return log;
+    }
+    // -------------------------------------------------------------------------
+    // getProgramError
+    // -------------------------------------------------------------------------
+    GLchar *getProgramError(GLuint inProgram)
+    {
+      GLint result;
+      glGetProgramiv(inProgram, GL_LINK_STATUS, &result);
+      if (result != GL_FALSE)
+        return NULL;
+
+      GLint logLength;
+      GLsizei length;
+      GLchar *log;
+
+      glGetProgramiv(inProgram, GL_INFO_LOG_LENGTH, &logLength);
+      logLength++;  // <- just in case
+      log = new GLchar[logLength];
+      glGetProgramInfoLog(inProgram, logLength, &length, log);
+
+      return log;
     }
   };
 };

@@ -46,7 +46,7 @@
 namespace ibc::gl::model // <- nested namespace (C++17)
 {
   // ---------------------------------------------------------------------------
-  // SurfacePoints
+  // ColorTriangle
   // ---------------------------------------------------------------------------
   class SurfacePoints : public virtual ibc::gl::ModelInterface
   {
@@ -94,8 +94,8 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     virtual bool initModel()
     {
       mNumPoints = mWidth * mHeight;
-      mVertexData = new unsigned char[mNumPoints];
-      size_t  dataSize = sizeof(unsigned char) * mNumPoints;
+      mVertexData = new VertexData[mNumPoints];
+      size_t  dataSize = sizeof(VertexData) * mWidth * mHeight;
       double xPitch = 1.0 * 2.0 / (double )mWidth;
       
       for (int i = 0; i < mHeight; i++)
@@ -116,18 +116,12 @@ namespace ibc::gl::model // <- nested namespace (C++17)
             c = mColorMapNum - 1;
           if (c < 0)
             c = 0;
-          //mVertexData[mWidth * i + j].position[0] = x;
-          //mVertexData[mWidth * i + j].position[1] = y;
-          //mVertexData[mWidth * i + j].position[2] = z;
-          //mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
-          //mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
-          //mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
-          z = 255.0 * z;
-          if (z > 255)
-            z = 255;
-          if (z < 0)
-            z = 0;
-          mVertexData[mWidth * i + j] = (unsigned char )z;
+          mVertexData[mWidth * i + j].position[0] = x;
+          mVertexData[mWidth * i + j].position[1] = y;
+          mVertexData[mWidth * i + j].position[2] = z;
+          mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
+          mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
+          mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
         }
 
       mShaderProgram = mShaderInterface->getShaderProgram();
@@ -139,34 +133,27 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glBufferData(GL_ARRAY_BUFFER, dataSize, mVertexData, GL_STATIC_DRAW);
 
-      mDataSizeLocation         = glGetUniformLocation(mShaderProgram, "dataSize");
-      mZGainLocation            = glGetUniformLocation(mShaderProgram, "zGain");
-      mZOffsetLocation          = glGetUniformLocation(mShaderProgram, "zOffset");
-      mZClampLocation           = glGetUniformLocation(mShaderProgram, "zClamp");
-      mIntensityMaxLocation     = glGetUniformLocation(mShaderProgram, "intensityMax");
-      mIntensityGainLocation    = glGetUniformLocation(mShaderProgram, "intensityGain");
-      mIntensityOffsetLocation  = glGetUniformLocation(mShaderProgram, "intensityOffset");
-      mIntensityClampLocation   = glGetUniformLocation(mShaderProgram, "intensityClamp");
-      //
-      mModelViewLocation        = glGetUniformLocation(mShaderProgram, "modelview");
-      mProjectionLocation       = glGetUniformLocation(mShaderProgram, "projection");
-      //
-      guint intensityLocation   = glGetAttribLocation(mShaderProgram, "intensity");
+      mModelViewLocation      = glGetUniformLocation (mShaderProgram, "modelview");
+      mProjectionLocation     = glGetUniformLocation (mShaderProgram, "projection");
+      guint positionLocation  = glGetAttribLocation (mShaderProgram, "position");
+      guint colorLocation     = glGetAttribLocation (mShaderProgram, "color");
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glEnableVertexAttribArray(intensityLocation);
-      glVertexAttribPointer (intensityLocation, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, NULL);
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-      glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
-      glTextureStorage1D(mTexture, 1, GL_RGB8, 256);
-      glBindTexture(GL_TEXTURE_1D, mTexture);
+      glEnableVertexAttribArray (positionLocation);
+      glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
+                             sizeof(VertexData),
+                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, position)));
 
-      unsigned char *colorMap = new unsigned char[256 * 3];
-      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
-                                        256, colorMap);
-      glTextureSubImage1D(mTexture, 0, 0, 256, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
-      delete colorMap;
+      glEnableVertexAttribArray (colorLocation);
+      glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
+                             sizeof(VertexData),
+                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, color)));
+
+      //glVertexAttribDivisor(0, 1);
+      //glVertexAttribDivisor(1, 1);
 
       return true;
     }
@@ -183,48 +170,40 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     {
       glUseProgram(mShaderProgram);
 
-      glUniform2f(mDataSizeLocation, mWidth, mHeight);
-      glUniform1f(mZGainLocation,   1.0 / 255.0);
-      glUniform1f(mZOffsetLocation, 0.0);
-      glUniform2f(mZClampLocation, 0.0, 1.0);
-      glUniform1f(mIntensityMaxLocation,    255.0);
-      glUniform1f(mIntensityGainLocation,   1.0);
-      glUniform1f(mIntensityOffsetLocation, 0.0);
-      glUniform2f(mIntensityClampLocation, 0.0, 255.0);
-
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
       glBindVertexArray(mVertexArrayObject);
       glDrawArrays(GL_POINTS, 0, mNumPoints);
+      //glDrawArraysInstanced(GL_POINTS, 0, 1, mNumPoints);
     }
 
   protected:
+    // structs -----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // vertex_info
+    // -------------------------------------------------------------------------
+    typedef struct
+    {
+      GLfloat position[3];
+      GLfloat color[3];
+    } VertexData;
+
     // Member variables --------------------------------------------------------
     size_t  mWidth, mHeight;
     size_t  mNumPoints;
-    unsigned char  *mVertexData;
-
+    VertexData  *mVertexData;
+    
     const int   mColorMapNum = 65536;
     unsigned char *mColorMap;
 
     ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
 
-    GLuint  mVertexArrayObject;
-    GLuint  mVertexBufferObject;
-    GLuint  mTexture;
+    GLuint mVertexArrayObject;
+    GLuint mVertexBufferObject;
 
-    GLint mDataSizeLocation;
-    GLint mZGainLocation;
-    GLint mZOffsetLocation;
-    GLint mZClampLocation;
-    GLint mIntensityMaxLocation;
-    GLint mIntensityGainLocation;
-    GLint mIntensityOffsetLocation;
-    GLint mIntensityClampLocation;
-
-    GLint mModelViewLocation;
-    GLint mProjectionLocation;
+    guint mModelViewLocation;
+    guint mProjectionLocation;
   };
 };
 
