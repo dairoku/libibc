@@ -56,7 +56,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     PointSprite()
     {
       static const char *vertexShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "in vec3 position;"
         "in vec3 color;"
         "uniform mat4 modelview;"
@@ -74,7 +74,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         "  vertexColor = vec4(color, 1.0);"
         "}";
       static const char *fragmentShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "smooth in vec4 vertexColor;"
         "varying in vec3 light;"
         "out vec4 outputColor;"

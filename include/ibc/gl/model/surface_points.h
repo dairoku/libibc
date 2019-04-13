@@ -107,6 +107,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
           double z, d;
           if (x == 0 && y == 0)
             z = 1;
+          else
           {
             d = sqrt(k*x*x + k*y*y);
             z = sin(d) / d;

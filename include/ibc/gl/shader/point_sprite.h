@@ -56,7 +56,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     PointSprite()
     {
       static const char *vertexShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "in float intensity;\n"
 
         "uniform vec2 dataSize;\n"
@@ -97,7 +97,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
         "}\n";
 
       static const char *fragmentShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "flat in int colorMapIndex;\n"
         "uniform sampler1D s;\n"
         "in vec3 light;\n"

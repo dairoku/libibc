@@ -56,14 +56,14 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     Minimum()
     {
       static const char *vertexShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "in vec3 vp;"
         "void main ()"
         "{"
         "  gl_Position = vec4(vp, 1.0);"
         "}";
       static const char *fragmentShaderStr =
-        "#version 410\n"
+        "#version 330\n"
         "out vec4 frag_colour;"
         "void main ()"
         "{"
