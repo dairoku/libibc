@@ -111,6 +111,12 @@ namespace ibc
       mImageDataPtr = inImageDataPtr;
       mImageDataPtr->addWidget(this);
       markAsImageSizeChanged();
+
+      GLenum type = ibc::gl::Utils::toGLDataType(mImageDataPtr->getImageType().mDataType);
+      mDataModel.setDataPtr(mImageDataPtr->getImageBufferPtr(),
+                            mImageDataPtr->getWidth(),
+                            mImageDataPtr->getHeight(),
+                            type);
     }
     // -------------------------------------------------------------------------
     // isImageSizeChanged

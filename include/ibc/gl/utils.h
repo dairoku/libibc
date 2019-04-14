@@ -39,6 +39,7 @@
 // Includes --------------------------------------------------------------------
 #include <math.h>
 #include "ibc/gl/matrix.h"
+#include "ibc/image/image.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -48,26 +49,26 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // Utils class
   // ---------------------------------------------------------------------------
-  template <typename UtilsType> class Utils
+  class Utils
   {
   public:
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // perspective
     // -------------------------------------------------------------------------
-    static MatrixBase<UtilsType> perspective(UtilsType inFovY, UtilsType inAspect,
+    template <typename UtilsType> static MatrixBase<UtilsType> perspective(UtilsType inFovY, UtilsType inAspect,
                                          UtilsType inNear, UtilsType inFar)
     {
       UtilsType width, height;
 
       height = tan(inFovY / 360.0 * M_PI) * inNear;
       width = height * inAspect;
-      return frustum(-width, width, -height, height, inNear, inFar);
+      return frustum<UtilsType>(-width, width, -height, height, inNear, inFar);
     }
     // -------------------------------------------------------------------------
     // frustum
     // -------------------------------------------------------------------------
-    static MatrixBase<UtilsType> frustum(UtilsType inLeft, UtilsType inRight,
+    template <typename UtilsType> static MatrixBase<UtilsType> frustum(UtilsType inLeft, UtilsType inRight,
                                       UtilsType inTop, UtilsType inBottom,
                                       UtilsType inNear, UtilsType inFar)
     {
@@ -98,6 +99,55 @@ namespace ibc
       mat[3][3] = 0.0;
 
       return mat;
+    }
+    // -------------------------------------------------------------------------
+    // sizeofGLDataType
+    // -------------------------------------------------------------------------
+    static size_t sizeofGLDataType(GLenum inType)
+    {
+      switch (inType)
+      {
+        case GL_BYTE:
+        case GL_UNSIGNED_BYTE:
+          return 1;
+        case GL_SHORT:
+        case GL_UNSIGNED_SHORT:
+          return 2;
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+          return 4;
+        case GL_HALF_FLOAT:
+          return 2;
+        case GL_FLOAT:
+          return 4;
+        case GL_FIXED:
+          return 4;
+        case GL_DOUBLE:
+          return 8;
+        default:
+          return 0;
+      }
+      return 0;
+    }
+    // -------------------------------------------------------------------------
+    // toGLDataType
+    // -------------------------------------------------------------------------
+    static GLenum toGLDataType(ibc::image::ImageType::DataType inType)
+    {
+      switch (inType)
+      {
+        case ibc::image::ImageType::DATA_TYPE_8BIT:
+          return GL_UNSIGNED_BYTE;
+        case ibc::image::ImageType::DATA_TYPE_16BIT:
+          return GL_UNSIGNED_SHORT;
+        case ibc::image::ImageType::DATA_TYPE_32BIT:
+          return GL_UNSIGNED_INT;
+        case ibc::image::ImageType::DATA_TYPE_FLOAT:
+          return GL_FLOAT;
+        case ibc::image::ImageType::DATA_TYPE_DOUBLE:
+          return GL_DOUBLE;
+      }
+      return GL_NONE;
     }
   };
  };

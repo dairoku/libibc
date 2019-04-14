@@ -40,6 +40,7 @@
 #include <math.h>
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
+#include "ibc/gl/utils.h"
 #include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
@@ -59,13 +60,22 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     {
       mShaderInterface = NULL;
       mVertexData = NULL;
-      
-      mWidth = 640;
-      mHeight = 480;
-      
-      mColorMap = new unsigned char[mColorMapNum * 3];
-      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
-                                        mColorMapNum, mColorMap);
+
+      mIsDataFormatUpdated  = false;
+      mIsDataModified       = false;
+      mIsColorMapModified   = false;
+
+      mIsVBOInitialized             = false;
+      mIsColoMapTextureInitialized  = false;
+
+      mDataPtr     = NULL;
+      mWidth       = 0;
+      mHeight      = 0;
+      mDataType    = GL_NONE;
+      mNumPoints   = 0;
+      mDataSize    = 0;
+      mColorMapIndex = ibc::image::ColorMap::CMIndex_Rainbow;
+      mColorMapSize = 0;
     }
     // -------------------------------------------------------------------------
     // ~SurfacePoints
@@ -74,6 +84,42 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     {
     }
     // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // setDataPtr
+    // -------------------------------------------------------------------------
+    void setDataPtr(void *inDataPtr, size_t inWidth, size_t inHeight, GLenum inType)
+    {
+      if (mWidth != inWidth || mHeight != inHeight || mDataType != inType)
+        mIsDataFormatUpdated = true;
+
+      mDataPtr    = inDataPtr;
+      mWidth      = inWidth;
+      mHeight     = inHeight;
+      mDataType   = inType;
+      mNumPoints  = mWidth * mHeight;
+      mDataSize = ibc::gl::Utils::sizeofGLDataType(mDataType) * mNumPoints;
+      if (mDataType == GL_BYTE || mDataType == GL_UNSIGNED_BYTE)
+        mColorMapSize = 256;
+      else
+        mColorMapSize = 65536;
+      //
+      mIsDataModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapIndex
+    // -------------------------------------------------------------------------
+    void setColorMapIndex(ibc::image::ColorMap::ColorMapIndex inColorMapIndex)
+    {
+      mColorMapIndex = inColorMapIndex;
+      mIsColorMapModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // markAsDataModified
+    // -------------------------------------------------------------------------
+    void markAsDataModified()
+    {
+      mIsDataModified = true;
+    }
     // -------------------------------------------------------------------------
     // setShader
     // -------------------------------------------------------------------------
@@ -93,53 +139,8 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
-      mNumPoints = mWidth * mHeight;
-      mVertexData = new unsigned char[mNumPoints];
-      size_t  dataSize = sizeof(unsigned char) * mNumPoints;
-      double xPitch = 1.0 * 2.0 / (double )mWidth;
-      
-      for (int i = 0; i < mHeight; i++)
-        for (int j = 0; j < mWidth; j++)
-        {
-          double x = -1.0 + xPitch * j;
-          double y = -1.0 + xPitch * i;
-          double k = (M_PI * 3.0) * (M_PI * 3.0);
-          double z, d;
-          if (x == 0 && y == 0)
-            z = 1;
-          else
-          {
-            d = sqrt(k*x*x + k*y*y);
-            z = sin(d) / d;
-          }
-          int c = (int )(fabs(z + 0.1) *(mColorMapNum-1.0));
-          if (c >= mColorMapNum)
-            c = mColorMapNum - 1;
-          if (c < 0)
-            c = 0;
-          //mVertexData[mWidth * i + j].position[0] = x;
-          //mVertexData[mWidth * i + j].position[1] = y;
-          //mVertexData[mWidth * i + j].position[2] = z;
-          //mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
-          //mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
-          //mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
-          z = 255.0 * z;
-          if (z > 255)
-            z = 255;
-          if (z < 0)
-            z = 0;
-          mVertexData[mWidth * i + j] = (unsigned char )z;
-        }
-
+      // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
-
-      glGenVertexArrays(1, &mVertexArrayObject);
-      glBindVertexArray(mVertexArrayObject);
-
-      glGenBuffers(1, &mVertexBufferObject);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, dataSize, mVertexData, GL_STATIC_DRAW);
-
       mDataSizeLocation         = glGetUniformLocation(mShaderProgram, "dataSize");
       mZGainLocation            = glGetUniformLocation(mShaderProgram, "zGain");
       mZOffsetLocation          = glGetUniformLocation(mShaderProgram, "zOffset");
@@ -148,17 +149,28 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mIntensityGainLocation    = glGetUniformLocation(mShaderProgram, "intensityGain");
       mIntensityOffsetLocation  = glGetUniformLocation(mShaderProgram, "intensityOffset");
       mIntensityClampLocation   = glGetUniformLocation(mShaderProgram, "intensityClamp");
-      //
+      mLightSourceLocation      = glGetUniformLocation(mShaderProgram, "lightSource");
+      mMaterialLocation         = glGetUniformLocation(mShaderProgram, "material");
       mModelViewLocation        = glGetUniformLocation(mShaderProgram, "modelview");
       mProjectionLocation       = glGetUniformLocation(mShaderProgram, "projection");
-      //
       guint intensityLocation   = glGetAttribLocation(mShaderProgram, "intensity");
 
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glEnableVertexAttribArray(intensityLocation);
-      glVertexAttribPointer (intensityLocation, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, NULL);
+      // Initialze Vertex Array Object
+      glGenVertexArrays(1, &mVertexArrayObject);
+      glBindVertexArray(mVertexArrayObject);
 
+      if (mIsDataFormatUpdated)
+      {
+        initVBO();
+        initColoMapTexture();
+        mIsDataFormatUpdated = false;
+      }
+
+      glEnableVertexAttribArray(0);
+      glEnableVertexAttribArray(intensityLocation);
+      glVertexAttribPointer(intensityLocation, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, NULL);
+
+      // Initialize Texture
       glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
       glTextureStorage1D(mTexture, 1, GL_RGB8, 256);
       glBindTexture(GL_TEXTURE_1D, mTexture);
@@ -176,37 +188,65 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual void disposeModel()
     {
+      disposeColoMapTexture();
+      disposeVBO();
     }
     // -------------------------------------------------------------------------
     // drawModel
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
+      if (mIsDataFormatUpdated)
+      {
+        initVBO();
+        initColoMapTexture();
+        mIsDataFormatUpdated = false;
+      }
+      else
+      {
+        if (mIsDataModified)
+          updateVBO();
+        if (mIsColorMapModified)
+          updateColoMapTexture();
+      }
+
       glUseProgram(mShaderProgram);
 
       glUniform2f(mDataSizeLocation, mWidth, mHeight);
-      glUniform1f(mZGainLocation,   1.0 / 255.0);
+      glUniform1f(mZGainLocation,   1.0 / mColorMapSize);
       glUniform1f(mZOffsetLocation, 0.0);
       glUniform2f(mZClampLocation, 0.0, 1.0);
-      glUniform1f(mIntensityMaxLocation,    255.0);
+      glUniform1f(mIntensityMaxLocation,    mColorMapSize);
       glUniform1f(mIntensityGainLocation,   1.0);
       glUniform1f(mIntensityOffsetLocation, 0.0);
-      glUniform2f(mIntensityClampLocation, 0.0, 255.0);
-
+      glUniform2f(mIntensityClampLocation, 0.0, mColorMapSize);
+      glUniform4f(mLightSourceLocation, 0.0, 0.0, 100.0, 1.0);
+      glUniform1i(mMaterialLocation, 0);
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
+
       glBindVertexArray(mVertexArrayObject);
       glDrawArrays(GL_POINTS, 0, mNumPoints);
     }
 
   protected:
     // Member variables --------------------------------------------------------
+    bool  mIsDataFormatUpdated;
+    bool  mIsDataModified;
+    bool  mIsColorMapModified;
+
+    bool  mIsVBOInitialized;
+    bool  mIsColoMapTextureInitialized;
+
+    void  *mDataPtr;
+    GLenum  mDataType;
     size_t  mWidth, mHeight;
     size_t  mNumPoints;
-    unsigned char  *mVertexData;
+    size_t  mDataSize;
+    ibc::image::ColorMap::ColorMapIndex mColorMapIndex;
+    int mColorMapSize;
 
-    const int   mColorMapNum = 65536;
-    unsigned char *mColorMap;
+    unsigned char  *mVertexData;
 
     ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
@@ -223,9 +263,86 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     GLint mIntensityGainLocation;
     GLint mIntensityOffsetLocation;
     GLint mIntensityClampLocation;
+    GLint mLightSourceLocation;
+    GLint mMaterialLocation;
 
     GLint mModelViewLocation;
     GLint mProjectionLocation;
+
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // initVBO
+    // -------------------------------------------------------------------------
+    void initVBO()
+    {
+      if (mIsVBOInitialized)
+        disposeVBO();
+      //
+      glGenBuffers(1, &mVertexBufferObject);
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferData(GL_ARRAY_BUFFER, mDataSize, NULL, GL_DYNAMIC_DRAW);
+      mIsVBOInitialized = true;
+      //
+      updateVBO();
+    }
+    // -------------------------------------------------------------------------
+    // updateVBO
+    // -------------------------------------------------------------------------
+    void updateVBO()
+    {
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, mDataSize, mDataPtr);
+      mIsDataModified = false;
+    }
+    // -------------------------------------------------------------------------
+    // disposeVBO
+    // -------------------------------------------------------------------------
+    void disposeVBO()
+    {
+      if (mIsVBOInitialized == false)
+        return;
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glDeleteBuffers(1, &mVertexBufferObject);
+      mIsVBOInitialized = false;
+    }
+    // -------------------------------------------------------------------------
+    // initColoMapTexture
+    // -------------------------------------------------------------------------
+    void initColoMapTexture()
+    {
+      if (mIsColoMapTextureInitialized)
+        disposeColoMapTexture();
+      //
+      glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
+      glTextureStorage1D(mTexture, 1, GL_RGB8, mColorMapSize);
+      glBindTexture(GL_TEXTURE_1D, mTexture);
+      mIsColoMapTextureInitialized = true;
+      //
+      updateColoMapTexture();
+    }
+    // -------------------------------------------------------------------------
+    // updateColoMapTexture
+    // -------------------------------------------------------------------------
+    void updateColoMapTexture()
+    {
+      unsigned char *colorMap = new unsigned char[mColorMapSize * 3];
+      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
+                                        mColorMapSize, colorMap);
+      glTextureSubImage1D(mTexture, 0, 0, mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      delete colorMap;
+      mIsColorMapModified = false;
+    }
+    // -------------------------------------------------------------------------
+    // disposeColoMapTexture
+    // -------------------------------------------------------------------------
+    void disposeColoMapTexture()
+    {
+      if (mIsColoMapTextureInitialized == false)
+        return;
+      glBindTexture(GL_TEXTURE_1D, 0);
+      glDeleteTextures(1, &mTexture);
+      mIsColoMapTextureInitialized = false;
+    }
   };
 };
 

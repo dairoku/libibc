@@ -132,7 +132,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  glUpdaetProjection()
     {
-      mProjection = ibc::gl::Utils<GLfloat>::perspective(mCameraFoV, mWidth / (GLfloat )mHeight, 1.0, 100);
+      mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 1.0, 100);
       ibc::gl::MatrixBase<GLfloat>  translate, scale;
       translate.setTranslationMatrix(0.0, 0.0, -5);
       mProjection *= translate;
