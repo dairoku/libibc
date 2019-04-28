@@ -54,26 +54,128 @@ namespace ibc
     Q_OBJECT
 
   public:
-    // Constructors and Destructor ---------------------------------------------
-    ImageView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    virtual ~ImageView();
-
-    double  getZoomScale() { return mZoomScale; };
-    void    setZoomScale(double inScale);
-    double  calcZoomScale(int inStep);
-
+    // Constants ---------------------------------------------------------------
     const static int    ZOOM_STEP_DEFAULT     = 1;
     const static int    MOUSE_WHEEL_ZOOM_STEP = 60;
 
-  protected:
-    void paintEvent(QPaintEvent *event) override;
+    // Constructors and Destructor ---------------------------------------------
+    // -------------------------------------------------------------------------
+    // ImageView
+    // -------------------------------------------------------------------------
+    ImageView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
+      : QWidget(parent, f)
+    {
+      mImage = new QImage(256, 256, QImage::Format_Grayscale8);
 
+      uchar *pixPtr = mImage->bits();
+      for (int i = 0; i < 256; i++)
+        for (int j = 0; j < 256; j++, pixPtr++)
+          *pixPtr = ((uchar)j) ^ ((uchar)i);
+
+      mZoomScale = 1.0;
+      resize(256, 256);
+    }
+    // -------------------------------------------------------------------------
+    // ~ImageView
+    // -------------------------------------------------------------------------
+    virtual ~ImageView()
+    {
+    }
+
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getZoomScale
+    // -------------------------------------------------------------------------
+    double  getZoomScale()
+    {
+      return mZoomScale;
+    };
+    // -------------------------------------------------------------------------
+    // setZoomScale
+    // -------------------------------------------------------------------------
+    void  setZoomScale(double inScale)
+    {
+      double  prevZoomScale = mZoomScale;
+
+      if (inScale <= 0.01)
+        inScale = 0.01;
+      mZoomScale = inScale;
+
+      double scale = mZoomScale;
+      int width = (int)(256.0 * scale);
+      int height = (int)(256.0 * scale);
+      resize(width, height);
+
+      //checkImageViewOffset();
+      //updateStatusBar();
+
+      /*double	scale = mZoomScale / 100.0;
+      if (prevZoomScale > mZoomScale &&
+        ((int)(getWidth() * scale) <= mImageViewRect.right - mImageViewRect.left ||
+        (int)(getHeight() * scale) <= mImageViewRect.bottom - mImageViewRect.top))
+        updateImageView(true);
+      else
+        updateImageView();
+
+      updateMouseCursor();*/
+    }
+    // -------------------------------------------------------------------------
+    // calcZoomScale
+    // -------------------------------------------------------------------------
+    double  calcZoomScale(int inStep)
+    {
+      double  val, scale;
+
+      //val = log10(mZoomScale*100.0) + inStep/100.0;
+      //scale = pow(10, val)/100.0;
+      scale = mZoomScale * pow(10, inStep / 100.0);
+
+      // 100% snap & 1% limit (just in case...)
+      if (fabs(scale - 1.0) <= 0.01)
+        scale = 1.0;
+      if (scale <= 0.01)
+        scale = 0.01;
+
+      return scale;
+    }
+
+  protected:
+    // Member variables --------------------------------------------------------
     QImage  *mImage;
     double  mZoomScale;
 
-    private slots:
-    void slot_zoomIn(void);
-    void slot_zoomOut(void);
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // paintEvent
+    // -------------------------------------------------------------------------
+    void paintEvent(QPaintEvent *event) override
+    {
+      QRect rect(0, 0, size().width(), size().height());
+      QPainter painter(this);
+
+      painter.drawImage(rect, *mImage);
+      //painter.drawText(rect, Qt::AlignCenter, "Hello, world");
+      //painter.restore();
+    }
+
+  private slots:
+    // Qt slot member functions ------------------------------------------------
+    // -------------------------------------------------------------------------
+    // slot_zoomIn
+    // -------------------------------------------------------------------------
+    void slot_zoomIn(void)
+    {
+      double scale = calcZoomScale(ZOOM_STEP_DEFAULT*5);
+      setZoomScale(scale);
+    }
+    // -------------------------------------------------------------------------
+    // slot_zoomOut
+    // -------------------------------------------------------------------------
+    void slot_zoomOut(void)
+    {
+      double scale = calcZoomScale(-ZOOM_STEP_DEFAULT*5);
+      setZoomScale(scale);
+    }
   };
  };
 };
