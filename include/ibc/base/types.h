@@ -3,7 +3,7 @@
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2018-2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -39,28 +39,36 @@
 // Types -----------------------------------------------------------------------
 
 #ifndef int8
-typedef char              int8;
+typedef char                  int8;
 #endif
 #ifndef uint8
-typedef unsigned char     uint8;
+typedef unsigned char         uint8;
 #endif
 #ifndef int16
-typedef short             int16;
+typedef short                 int16;
 #endif
 #ifndef uint16
-typedef unsigned short    uint16;
+typedef unsigned short        uint16;
 #endif
 #ifndef int32
-typedef int               int32;
+typedef int                   int32;
 #endif
 #ifndef uint32
-typedef unsigned int      uint32;
+typedef unsigned int          uint32;
 #endif
 #ifndef int64
-typedef __int64           int64;
+ #ifdef _WIN32
+  typedef __int64             int64;
+ #else
+  typedef long long           int64;
+ #endif
 #endif
 #ifndef uint64
-typedef unsigned __int64  uint64;
+ #ifdef _WIN32
+  typedef unsigned __int64    uint64;
+ #else
+  typedef unsigned long long  uint64;
+ #endif
 #endif
 
 #endif  // IBC_TYPES_H_

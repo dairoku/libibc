@@ -37,10 +37,11 @@
 #define IBC_IMAGE_COLOR_MAP_H_
 
 // Includes --------------------------------------------------------------------
-#include <Windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <cstring>
+#include <vector>
 #include "ibc/image/image_exception.h"
 
 // Macros ----------------------------------------------------------------------
@@ -61,6 +62,8 @@ namespace ibc
     // Constatns ---------------------------------------------------------------
     enum ColorMapIndex
     {
+      CMIndex_NOT_SPECIFIED  = 0,
+
       // Linear
       CMIndex_GrayScale   = 1,
       CMIndex_Jet,
@@ -78,6 +81,8 @@ namespace ibc
       CMIndex_BlueDarkYellow,
       CMIndex_GreenRed,
 
+      CMIndex_ANY            = 32765,
+
       // For Internal use only
       CMIndex_End         = -1
     };
@@ -91,103 +96,154 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getColorMap
     // -------------------------------------------------------------------------
-    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap)
+    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap,
+                             int inMultiNum = 1,
+                             double inGain = 1.0, int inOffset = 0)
     {
-      int  i, num, total;
-      const ColorMapData    *colorMapData;
-      double  prevRatio;
-      const unsigned char    *rgb1, *rgb2;
-      
-      colorMapData = getColorMapData(inIndex);
-      if (colorMapData == NULL)
-        return;
-      
-      total = 0;
-      if (colorMapData[0].ratio != 0)
+      int  i, index, num, total, offset, numAll;
+      std::vector<ColorMapData> colorMapData;
+      double  ratio0, ratio1, offsetRatio, prevRatio;
+      const unsigned char    *rgb0, *rgb1;
+
+      getMultiColorMapData(inIndex, inMultiNum, colorMapData);
+      if (colorMapData.size() < 2 || inGain <= 0.0 || inColorNum == 0)
       {
-        num = (int )((double )inColorNum * colorMapData[0].ratio);
+        clearColorMap(inColorNum, outColorMap);
+        return;
+      }
+
+      total = 0;
+      index = 0;
+      offsetRatio = (double )inOffset / (double )inColorNum;
+      ratio0 = colorMapData[index].ratio / inGain - offsetRatio;
+      if (ratio0 > 0)
+      {
+        num = (int )((double )inColorNum * ratio0);
         for (i = 0; i < num; i++)
         {
-          outColorMap[0] = colorMapData[0].rgb.R;
-          outColorMap[1] = colorMapData[0].rgb.G;
-          outColorMap[2] = colorMapData[0].rgb.B;
+          outColorMap[0] = colorMapData[index].rgb.R;
+          outColorMap[1] = colorMapData[index].rgb.G;
+          outColorMap[2] = colorMapData[index].rgb.B;
           outColorMap += 3;
           total++;
         }
       }
 
-      while (colorMapData[1].index == inIndex)
+      while (index + 1 < colorMapData.size())
       {
-        rgb1 = (const unsigned char *)&(colorMapData[0].rgb);
-        rgb2 = (const unsigned char *)&(colorMapData[1].rgb);
-        if (colorMapData[1].ratio == 1.0)
+        ratio1 = colorMapData[index+1].ratio / inGain - offsetRatio;
+        rgb0 = (const unsigned char *)&(colorMapData[index].rgb);
+        rgb1 = (const unsigned char *)&(colorMapData[index+1].rgb);
+        if (ratio1 > 0)
         {
-          num = inColorNum - total;
+          if (ratio1 == 1.0)  // <- this is to absorb calculation error
+            numAll = inColorNum - total;
+          else
+            numAll = (int )(ratio1 * inColorNum)- (int )(ratio0 * inColorNum);  // Do not use (ratio1 - ratio0) * inColorNum
+          if (ratio0 < 0.0)
+          {
+            if (ratio1 < 1.0)
+              num = inColorNum * ratio1;
+            else
+              num = inColorNum;
+            offset = (int )((0.0 - ratio0) * (double )inColorNum);
+          }
+          else
+          {
+            num = numAll;
+            offset = 0;
+          }
+          if (num > inColorNum - total)
+            num = inColorNum - total;
+          switch (colorMapData[index].type)
+          {
+            case CMType_Linear:
+              calcLinearColorMap(rgb0, rgb1, offset, numAll, num, outColorMap);
+              break;
+            case CMType_Diverging:
+              calcDivergingColorMap(rgb0, rgb1, offset, numAll, num, outColorMap);
+              break;
+          }
         }
-        else
-        {
-          num = (int)((double)inColorNum *
-            (colorMapData[1].ratio - colorMapData[0].ratio));
-        }
-
-        switch (colorMapData[0].type)
-        {
-          case CMType_Linear:
-            calcLinearColorMap(rgb1, rgb2, num, outColorMap);
-            break;
-          case CMType_Diverging:
-            calcDivergingColorMap(rgb1, rgb2, num, outColorMap);
-            break;
-        }
-        
+        ratio0 = ratio1;
         outColorMap += num * 3;
         total += num;
-        colorMapData++;
+        index++;
+        if (total == inColorNum)
+          break;
       }
 
-      if (colorMapData[0].ratio != 1.0)
+      if (total < inColorNum)
       {
-        num = (int )((double )inColorNum * (1.0 - colorMapData[0].ratio));
+        num = inColorNum - total;
         for (i = 0; i < num; i++)
         {
-          outColorMap[0] = colorMapData[0].rgb.R;
-          outColorMap[1] = colorMapData[0].rgb.G;
-          outColorMap[2] = colorMapData[0].rgb.B;
+          outColorMap[0] = rgb1[0];
+          outColorMap[1] = rgb1[1];
+          outColorMap[2] = rgb1[2];
           outColorMap += 3;
         }
       }
     }
     // -------------------------------------------------------------------------
-    // getMultiColorMap
+    // getMonoMap
     // -------------------------------------------------------------------------
-    static void  getMultiColorMap(ColorMapIndex inIndex, int inColorNum, int inMultiNum, unsigned char *outColorMap)
+    static void  getMonoMap(int inColorNum,  unsigned char *outColorMap, double inGamma = 1.0,
+                            double inGain = 1.0, int inOffset = 0.0)
     {
-      int  unit = inColorNum / inMultiNum;
-      
-      inMultiNum--;
-      for (int i = 0; i < inMultiNum; i++)
+      if (inGamma <= 0.0 || inColorNum == 0 || inGain <= 0.0)
       {
-        getColorMap(inIndex, unit, outColorMap);
-        outColorMap += (unit * 3);
-        inColorNum -= unit;
+        clearColorMap(inColorNum, outColorMap);
+        return;
       }
-      getColorMap(inIndex, inColorNum, outColorMap);
+
+      double pitch = 1.0 / (double )(inColorNum - 1.0);
+      inGamma = 1.0 / inGamma;
+      for (int i = 0; i < inColorNum; i++)
+      {
+        double v = pitch * (i + inOffset) * inGain;
+        if (v < 0.0)
+          v = 0.0;
+        if (v > 1.0)
+          v = 1.0;
+        v = pow(v, inGamma);
+        v = v * 255.0;
+        if (v >= 255)
+          v = 255;
+        outColorMap[0] = (unsigned char)v;
+        outColorMap[1] = (unsigned char)v;
+        outColorMap[2] = (unsigned char)v;
+        outColorMap += 3;
+      }
+    }
+    // -------------------------------------------------------------------------
+    // clearColorMap
+    // -------------------------------------------------------------------------
+    static void  clearColorMap(int inColorNum,  unsigned char *outColorMap)
+    {
+      if (inColorNum == 0)
+        return;
+      std::memset(outColorMap, 0, inColorNum * 3);
     }
     // -------------------------------------------------------------------------
     // calcLinearColorMap
     // -------------------------------------------------------------------------
-    static void  calcLinearColorMap(const unsigned char *inRgb1, const unsigned char *inRgb2,
-                     int inColorNum, unsigned char *outColorMap)
+    static void  calcLinearColorMap(const unsigned char *inRgb0, const unsigned char *inRgb1,
+                      int inOffset, int inColorNumAll,
+                      int inMapNum, unsigned char *outColorMap)
     {
       double  interp, k, v;
       
-      k = 1.0 / (double )(inColorNum - 1.0);
-      for (int i = 0; i < inColorNum; i++)
+      k = 1.0 / (double )(inColorNumAll - 1.0);
+      for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double )i * k;
+        int t = i + inOffset;
+        if (t >= inColorNumAll) // Sannity check
+          t = inColorNumAll - 1;
+        interp = (double )t * k;
         for (int j = 0; j < 3; j++)
         {
-          v = (1.0 - interp) * inRgb1[j] + interp * inRgb2[j];
+          v = (1.0 - interp) * inRgb0[j] + interp * inRgb1[j];
           if (v > 255)
             v = 255;
           outColorMap[i * 3 + j] = (unsigned char)v;
@@ -197,60 +253,64 @@ namespace ibc
     // -------------------------------------------------------------------------
     // calcDivergingColorMap
     // -------------------------------------------------------------------------
-    static void  calcDivergingColorMap(const unsigned char *inRgb1, const unsigned char *inRgb2,
-                     int inColorNum, unsigned char *outColorMap)
+    static void  calcDivergingColorMap(const unsigned char *inRgb0, const unsigned char *inRgb1,
+                      int inOffset, int inColorNumAll,
+                      int inMapNum, unsigned char *outColorMap)
     {
       double  interp, k;
       
-      k = 1.0 / (double )(inColorNum - 1.0);
-      for (int i = 0; i < inColorNum; i++)
+      k = 1.0 / (double )(inColorNumAll - 1.0);
+      for (int i = 0; i < inMapNum; i++)
       {
-        interp = (double )i * k;
-        interpolateColor(inRgb1, inRgb2, interp, &(outColorMap[i * 3]));
+        int t = i + inOffset;
+        if (t >= inColorNumAll) // Sannity check
+          t = inColorNumAll - 1;
+        interp = (double )t * k;
+        interpolateColor(inRgb0, inRgb1, interp, &(outColorMap[i * 3]));
       }
     }
     // -------------------------------------------------------------------------
     // interpolateColor
     // -------------------------------------------------------------------------
-    static void  interpolateColor(const unsigned char *inRgb1, const unsigned char *inRgb2,
+    static void  interpolateColor(const unsigned char *inRgb0, const unsigned char *inRgb1,
                      double inInterp, unsigned char *outRgb)
     {
-      double  msh1[3], msh2[3], msh[3], m;
+      double  msh0[3], msh1[3], msh[3], m;
       
+      convRgbToMsh(inRgb0, msh0);
       convRgbToMsh(inRgb1, msh1);
-      convRgbToMsh(inRgb2, msh2);
       
-      if ((msh1[1] > 0.05 && msh2[1] > 0.05) && fabs(msh1[2] - msh2[2]) > 1.0472)
+      if ((msh0[1] > 0.05 && msh1[1] > 0.05) && fabs(msh0[2] - msh1[2]) > 1.0472)
       {
-        if (msh1[0] > msh2[0])
-          m = msh1[0];
+        if (msh0[0] > msh1[0])
+          m = msh0[0];
         else
-          m = msh2[0];
+          m = msh1[0];
         if (m < 88)
           m = 88;
         if (inInterp < 0.5)
         {
-          msh2[0] = m;
-          msh2[1] = 0;
-          msh2[2] = 0;
+          msh1[0] = m;
+          msh1[1] = 0;
+          msh1[2] = 0;
           inInterp = 2 * inInterp;
         }
         else
         {
-          msh1[0] = m;
-          msh1[1] = 0;
-          msh1[2] = 0;
+          msh0[0] = m;
+          msh0[1] = 0;
+          msh0[2] = 0;
           inInterp = 2 * inInterp - 1;
         }
       }
       
-      if (msh1[1] < 0.05 && msh2[1] > 0.05)
-        msh1[2] =  adjustHue(msh2, msh1[0]);
-      else if (msh1[1] > 0.05 && msh2[1] < 0.05)
-        msh2[2] =  adjustHue(msh1, msh2[0]);
+      if (msh0[1] < 0.05 && msh1[1] > 0.05)
+        msh0[2] =  adjustHue(msh1, msh0[0]);
+      else if (msh0[1] > 0.05 && msh1[1] < 0.05)
+        msh1[2] =  adjustHue(msh0, msh1[0]);
       
       for (int i = 0; i < 3; i++)
-        msh[i] = (1 - inInterp) * msh1[i] + inInterp * msh2[i];
+        msh[i] = (1 - inInterp) * msh0[i] + inInterp * msh1[i];
       
       convMshToRgb(msh, outRgb);
     }
@@ -445,6 +505,20 @@ namespace ibc
         outRgb[i] = (unsigned char)value;
       }
     }
+    // -------------------------------------------------------------------------
+    // stringToColorMapIndex
+    // -------------------------------------------------------------------------
+    static ColorMapIndex stringToColorMapIndex(const char *inString, ColorMapIndex inDefault = CMIndex_NOT_SPECIFIED)
+    {
+      const ColorMapIndexTable  *tablePtr = getColorMapIndexTable();
+      while (tablePtr->index != CMIndex_NOT_SPECIFIED)
+      {
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+          return tablePtr->index;
+        tablePtr++;
+      }
+      return tablePtr->index;
+    }
 
   private:
     // Typedefs ----------------------------------------------------------------
@@ -461,6 +535,11 @@ namespace ibc
       ColorMapType  type;
       ColorMapRGB    rgb;
     } ColorMapData;
+    typedef struct
+    {
+      ColorMapIndex index;
+      const char  *str;
+    } ColorMapIndexTable;
     
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -496,6 +575,34 @@ namespace ibc
       if (inT > 0.20689)
         return pow(inT, 3);
       return (inT - 16.0 / 116.0) / 7.78703;
+    }
+    // -------------------------------------------------------------------------
+    // getMultiColorMapData
+    // -------------------------------------------------------------------------
+    static void getMultiColorMapData(ColorMapIndex inIndex, int inMultiNum, std::vector<ColorMapData> &outData)
+    {
+      const ColorMapData  *colorMapData;
+      int i, j, dataNum;
+      double singleRatio;
+
+      colorMapData = getColorMapData(inIndex);
+      if (colorMapData == NULL)
+        return;
+
+      dataNum = 0;
+      while (colorMapData[dataNum].index == inIndex)
+        dataNum++;
+      singleRatio = 1.0 / (double )inMultiNum;
+
+      outData.clear();
+      for (i = 0; i < inMultiNum; i++)
+      {
+        for (j = 0; j < dataNum; j++)
+        {
+          outData.push_back(colorMapData[j]);
+          outData.back().ratio = colorMapData[j].ratio * singleRatio + singleRatio * i;
+        }
+      }
     }
     // -------------------------------------------------------------------------
     // getColorMapData
@@ -586,7 +693,31 @@ namespace ibc
       
       return colorMapData;
     }
-
+    // -------------------------------------------------------------------------
+    // stringToColorMapIndex
+    // -------------------------------------------------------------------------
+    static const ColorMapIndexTable *getColorMapIndexTable()
+    {
+      const static ColorMapIndexTable  table[] =
+      {
+        {CMIndex_GrayScale, "GrayScale"},
+        {CMIndex_Jet, "Jet"},
+        {CMIndex_Rainbow, "Rainbow"},
+        {CMIndex_RainbowWide, "RainbowWide"},
+        {CMIndex_Spectrum, "Spectrum"},
+        {CMIndex_SpectrumWide, "SpectrumWide"},
+        {CMIndex_Thermal, "Thermal"},
+        {CMIndex_ThermalWide, "ThermalWide"},
+        {CMIndex_CoolWarm, "CoolWarm"},
+        {CMIndex_PurpleOrange, "PurpleOrange"},
+        {CMIndex_GreenPurple, "GreenPurple"},
+        {CMIndex_BlueDarkYellow, "BlueDarkYellow"},
+        {CMIndex_GreenRed, "GreenRed"},
+        {CMIndex_ANY, "ANY"},
+        {CMIndex_NOT_SPECIFIED, ""}
+      };
+      return table;
+    }
   };
  };
 };

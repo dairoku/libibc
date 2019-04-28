@@ -1,9 +1,9 @@
 // =============================================================================
-//  image_exception.h
+//  model_interface.h
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -24,51 +24,39 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/image/image_exception.h
+  \file     ibc/gl/models/model_interface.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2018/03/10
-  \brief    Header file for handling the exception
+  \date     2019/03/16
+  \brief    Header file for ImageViewBase widget
 
-  This file defines exception classes for the IBC Library
+  This file defines the class for the image widget
 */
 
-#ifndef IBC_IMAGE_EXCEPTION_H_
-#define IBC_IMAGE_EXCEPTION_H_
+#ifndef IBC_GL_MODEL_INTERFACE_H_
+#define IBC_GL_MODEL_INTERFACE_H_
 
 // Includes --------------------------------------------------------------------
-#include <stdio.h>
-#include <string.h>
-#include "ibc/base/exception.h"
+#include "ibc/gl/shader_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
+ namespace gl
+ {
   // ---------------------------------------------------------------------------
-  // BaseException class
+  // Model interface class
   // ---------------------------------------------------------------------------
-  class  ImageException : public Exception
+  class ModelInterface
   {
   public:
-    // Constructors and Destructor ---------------------------------------------
-    ImageException(int inExceptionCode, const char *inDescription,
-                  const char *inLocation, int inOSErrorCode = 0)
-      : Exception("ImageException", inExceptionCode, inDescription,
-                  inLocation, inOSErrorCode)
-    {
-    }
-    ImageException(const ImageException &inEx)
-      : Exception(inEx)
-    {
-    }
-    virtual ~ImageException() {};
-
-    // Constatns ---------------------------------------------------------------
-    enum ExceptionCode
-    {
-      FILE_FORMAT_ERROR = Exception::SUB_CLASS_ERROR
-    };
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface) = 0;
+    virtual ibc::gl::ShaderInterface *getShader() = 0;
+    virtual bool initModel() = 0;
+    virtual void disposeModel() = 0;
+    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;
   };
+ };
 };
 
-#endif  // IBC_IMAGE_EXCEPTION_H_
+#endif  // #ifdef IBC_GL_MODEL_INTERFACE_H_
