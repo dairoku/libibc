@@ -199,9 +199,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChGains
     // -------------------------------------------------------------------------
-    virtual void  setChGains(const std::vector<double> &inGain)
+    virtual void  setChGains(const std::vector<double> &inGains)
     {
-      //
+      mGain = inGains[0];
       mIsColorMapModified = true;
     }
     // -------------------------------------------------------------------------
@@ -230,9 +230,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChOffsets
     // -------------------------------------------------------------------------
-    virtual void  setChOffsets(const std::vector<double> &inGain)
+    virtual void  setChOffsets(const std::vector<double> &inOffsets)
     {
-      //
+      mOffset = inOffsets[0];
       mIsColorMapModified = true;
     }
     // -------------------------------------------------------------------------
@@ -318,6 +318,8 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat, ColorMap::ColorMapIndex inIndex))(Mono_to_RGB *, const void *, void *)
     {
+      UNUSED(inDstFormat);
+      //
       if (inSrcFormat->mType.checkType( ImageType::PIXEL_TYPE_MONO,
                                         ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
                                         ImageType::DATA_TYPE_8BIT))

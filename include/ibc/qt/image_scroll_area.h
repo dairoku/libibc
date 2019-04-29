@@ -105,6 +105,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  mouseReleaseEvent(QMouseEvent *event)
     {
+      UNUSED(event);
     }
     // -------------------------------------------------------------------------
     // wheelEvent

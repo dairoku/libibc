@@ -185,7 +185,7 @@ namespace ibc
     EndianType      mEndian;
     BayerType       mBayerType;
     uint32          mFourCC;
-    int             mComponentsPerPixel;
+    unsigned int    mComponentsPerPixel;
 
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
@@ -208,7 +208,7 @@ namespace ibc
                 BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
                 EndianType inEndian = ENDIAN_TYPE_HOST,
                 uint32 inFourCC = 0,
-                int inComponentsPerPixel = 0)
+                unsigned int inComponentsPerPixel = 0)
     {
       mPixelType              = inPixelType;
       mBufferType             = inBufferType;
@@ -244,7 +244,7 @@ namespace ibc
         return false;
       if (mBayerType == BAYER_TYPE_NOT_SPECIFIED)
         return false;
-      if (mComponentsPerPixel < 0)
+      if (mComponentsPerPixel == 0)
         return false;
       return true;
     }
@@ -281,7 +281,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // coponentsPerPixel
     // -------------------------------------------------------------------------
-    static int  coponentsPerPixel(PixelType inType)
+    static unsigned int  coponentsPerPixel(PixelType inType)
     {
       switch (inType)
       {
@@ -302,6 +302,8 @@ namespace ibc
         case PIXEL_TYPE_BGRA:
         case PIXEL_TYPE_CMYK:
           return 4;
+        default:
+          break;
       }
       return 0;
     }
@@ -332,6 +334,8 @@ namespace ibc
           return 4;
         case DATA_TYPE_DOUBLE:
           return 8;
+        default:
+          break;
       }
       return 0;
     }
@@ -499,8 +503,8 @@ namespace ibc
   public:
     // Member variables --------------------------------------------------------
     ImageType       mType;
-    int             mWidth;
-    int             mHeight;
+    unsigned int    mWidth;
+    unsigned int    mHeight;
     bool            mIsBottomUp;
     size_t          mBufferSize;
     size_t          mHeaderOffset;
@@ -513,7 +517,7 @@ namespace ibc
     // ImageFormat
     // -------------------------------------------------------------------------
     ImageFormat(const ImageType &inType,
-                uint32 inWidth, uint32 inHeight,
+                unsigned int inWidth, unsigned int inHeight,
                 bool inIsBottomUp = false,
                 size_t inBufferSize = 0,
                 size_t inHeaderOffset = 0,
@@ -570,7 +574,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     size_t getPlaneOffset(unsigned int inPlaneIndex = 0) const
     {
-      calculatePlaneOffset(*this, inPlaneIndex);
+      return calculatePlaneOffset(*this, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getPlanePtr
@@ -591,7 +595,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     size_t getLineOffset(unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      calculateLineOffset(*this, inY, inPlaneIndex);
+      return calculateLineOffset(*this, inY, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getLinePtr

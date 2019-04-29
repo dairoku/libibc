@@ -134,8 +134,6 @@ namespace ibc
       if (mImageDataPtr == NULL)
         return;
 
-      double  prevZoomScale = mZoomScale;
-
       if (inScale <= 0.01)
         inScale = 0.01;
       mZoomScale = inScale;
@@ -150,11 +148,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     double  calcZoomScale(int inStep)
     {
-      double  val, scale;
-
-      //val = log10(mZoomScale*100.0) + inStep/100.0;
-      //scale = pow(10, val)/100.0;
-      scale = mZoomScale * pow(10, inStep / 100.0);
+      double  scale = mZoomScale * pow(10, inStep / 100.0);
 
       // 100% snap & 1% limit (just in case...)
       if (fabs(scale - 1.0) <= 0.01)
@@ -190,6 +184,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     void paintEvent(QPaintEvent *event) override
     {
+      UNUSED(event);
+      //
       if (mImageDataPtr == NULL)
         return;
       if (mImageDataPtr->checkImageData() == false)

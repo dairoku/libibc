@@ -122,9 +122,14 @@ namespace ibc
     //
     static float  swap(float inValue)
     {
-      uint32  *valuePtr = (uint32 *)(&inValue);
-      uint32  result = swap(*valuePtr);
-      return *((float *)(&result));
+      union
+      {
+       float  value_float;
+       uint32 value_uint32;
+      } u;
+      u.value_float = inValue;
+      u.value_uint32 = swap(u.value_uint32);
+      return u.value_float;
     }
     // -------------------------------------------------------------------------
     // swap
@@ -133,9 +138,14 @@ namespace ibc
     //
     static double  swap(double inValue)
     {
-      uint64  *valuePtr = (uint64 *)(&inValue);
-      uint64  result = swap(*valuePtr);
-      return *((double *)(&result));
+      union
+      {
+       double  value_double;
+       uint64 value_uint64;
+      } u;
+      u.value_double = inValue;
+      u.value_uint64 = swap(u.value_uint64);
+      return u.value_double;
     }
   };
 };

@@ -71,4 +71,6 @@ typedef unsigned int          uint32;
  #endif
 #endif
 
+#define UNUSED(x)   (void)(x)
+
 #endif  // IBC_TYPES_H_

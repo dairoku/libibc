@@ -100,8 +100,8 @@ namespace ibc
         return false;
 
       // Sanity check here
-      if (mQImage->width()  != mImageFormatPtr->mWidth ||
-          mQImage->height() != mImageFormatPtr->mHeight ||
+      if ((unsigned int )mQImage->width()  != mImageFormatPtr->mWidth ||
+          (unsigned int )mQImage->height() != mImageFormatPtr->mHeight ||
           mActiveConverter == NULL)
         return false; // Should throw exception?
 

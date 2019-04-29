@@ -116,6 +116,8 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     virtual void  setColorMapIndex(ColorMap::ColorMapIndex inIndex, int inMultiNum = 1)
     {
       // Do nothing (This class does not have the color map function)
+      UNUSED(inIndex);
+      UNUSED(inMultiNum);
     }
     // -------------------------------------------------------------------------
     // getColorMapIndex
@@ -150,9 +152,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChGains
     // -------------------------------------------------------------------------
-    virtual void  setChGains(const std::vector<double> &inGain)
+    virtual void  setChGains(const std::vector<double> &inGains)
     {
-      //
+      mGain = inGains[0];
       mIsParameterModified = true;
     }
     // -------------------------------------------------------------------------
@@ -181,9 +183,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChOffsets
     // -------------------------------------------------------------------------
-    virtual void  setChOffsets(const std::vector<double> &inGain)
+    virtual void  setChOffsets(const std::vector<double> &inOffsets)
     {
-      //
+      mOffset = inOffsets[0];
       mIsParameterModified = true;
     }
     // -------------------------------------------------------------------------
@@ -222,6 +224,8 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat))(RGB_to_RGB *, const void *, void *)
     {
+      UNUSED(inDstFormat);
+      //
       if (inSrcFormat->mType.checkType( ibc::image::ImageType::PIXEL_TYPE_RGB,
                                         ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
                                         ibc::image::ImageType::DATA_TYPE_8BIT))

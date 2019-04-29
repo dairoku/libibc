@@ -96,14 +96,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getColorMap
     // -------------------------------------------------------------------------
-    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap,
-                             int inMultiNum = 1,
+    static void  getColorMap(ColorMapIndex inIndex, unsigned int inColorNum, unsigned char *outColorMap,
+                             unsigned int inMultiNum = 1,
                              double inGain = 1.0, int inOffset = 0)
     {
-      int  i, index, num, total, offset, numAll;
+      unsigned int  i, index, num, total, offset, numAll;
       std::vector<ColorMapData> colorMapData;
-      double  ratio0, ratio1, offsetRatio, prevRatio;
-      const unsigned char    *rgb0, *rgb1;
+      double  ratio0, ratio1, offsetRatio;
+      const unsigned char    *rgb0 = NULL, *rgb1 = NULL;
 
       getMultiColorMapData(inIndex, inMultiNum, colorMapData);
       if (colorMapData.size() < 2 || inGain <= 0.0 || inColorNum == 0)
@@ -114,6 +114,7 @@ namespace ibc
 
       total = 0;
       index = 0;
+      num = 0;
       offsetRatio = (double )inOffset / (double )inColorNum;
       ratio0 = colorMapData[index].ratio / inGain - offsetRatio;
       if (ratio0 > 0)
@@ -521,7 +522,7 @@ namespace ibc
           return tablePtr->index;
         tablePtr++;
       }
-      return tablePtr->index;
+      return inDefault;
     }
 
   private:
@@ -583,10 +584,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getMultiColorMapData
     // -------------------------------------------------------------------------
-    static void getMultiColorMapData(ColorMapIndex inIndex, int inMultiNum, std::vector<ColorMapData> &outData)
+    static void getMultiColorMapData(ColorMapIndex inIndex, unsigned int inMultiNum, std::vector<ColorMapData> &outData)
     {
       const ColorMapData  *colorMapData;
-      int i, j, dataNum;
+      unsigned int i, j, dataNum;
       double singleRatio;
 
       colorMapData = getColorMapData(inIndex);
