@@ -38,7 +38,7 @@
 
 // Includes ------------------------------------------------------ --------------
 #include <cstring>
-#include <arpa/inet.h>  // <- for byte swapping
+//#include <arpa/inet.h>  // <- for byte swapping
 #include "ibc/image/image.h"
 #include "ibc/image/image_converter_interface.h"
 #include "ibc/image/image_exception.h"

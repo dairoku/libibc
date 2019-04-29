@@ -40,6 +40,8 @@
 // Includes --------------------------------------------------------------------
 #include <QtWidgets>
 #include <QImage>
+#include "ibc/qt/image_data.h"
+#include "ibc/qt/view_data_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -49,7 +51,7 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // ImageView class
   // ---------------------------------------------------------------------------
-  class ImageView : public QWidget
+  class ImageView : public QWidget, virtual public ViewDataInterface
   {
     Q_OBJECT
 
@@ -65,15 +67,9 @@ namespace ibc
     ImageView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
       : QWidget(parent, f)
     {
-      mImage = new QImage(256, 256, QImage::Format_Grayscale8);
-
-      uchar *pixPtr = mImage->bits();
-      for (int i = 0; i < 256; i++)
-        for (int j = 0; j < 256; j++, pixPtr++)
-          *pixPtr = ((uchar)j) ^ ((uchar)i);
-
+      mImageDataPtr = NULL;
+      mIsImageSizeChanged = false;
       mZoomScale = 1.0;
-      resize(256, 256);
     }
     // -------------------------------------------------------------------------
     // ~ImageView
@@ -83,6 +79,46 @@ namespace ibc
     }
 
     // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // setImageDataPtr
+    // -------------------------------------------------------------------------
+    void  setImageDataPtr(ibc::qt::ImageData *inImageDataPtr)
+    {
+      if (mImageDataPtr == NULL)
+      {
+        mImageDataPtr = inImageDataPtr;
+        mImageDataPtr->addWidget(this);
+        updateSizeUsingImageData();
+        return;
+      }
+ 
+      mImageDataPtr->removeWidget(this);
+      mImageDataPtr = inImageDataPtr;
+      mImageDataPtr->addWidget(this);
+      markAsImageSizeChanged();
+    }
+    // -------------------------------------------------------------------------
+    // queueRedrawWidget
+    // -------------------------------------------------------------------------
+    virtual void  queueRedrawWidget()
+    {
+      update();
+    }
+    // -------------------------------------------------------------------------
+    // markAsImageSizeChanged
+    // -------------------------------------------------------------------------
+    virtual void  markAsImageSizeChanged()
+    {
+      mIsImageSizeChanged = true;
+      update();
+    }
+    // -------------------------------------------------------------------------
+    // isImageSizeChanged
+    // -------------------------------------------------------------------------
+    bool  isImageSizeChanged() const
+    {
+      return mIsImageSizeChanged;
+    }
     // -------------------------------------------------------------------------
     // getZoomScale
     // -------------------------------------------------------------------------
@@ -95,6 +131,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  setZoomScale(double inScale)
     {
+      if (mImageDataPtr == NULL)
+        return;
+
       double  prevZoomScale = mZoomScale;
 
       if (inScale <= 0.01)
@@ -102,22 +141,9 @@ namespace ibc
       mZoomScale = inScale;
 
       double scale = mZoomScale;
-      int width = (int)(256.0 * scale);
-      int height = (int)(256.0 * scale);
+      int width = (int )(mImageDataPtr->getWidth() * scale);
+      int height = (int )(mImageDataPtr->getHeight() * scale);
       resize(width, height);
-
-      //checkImageViewOffset();
-      //updateStatusBar();
-
-      /*double	scale = mZoomScale / 100.0;
-      if (prevZoomScale > mZoomScale &&
-        ((int)(getWidth() * scale) <= mImageViewRect.right - mImageViewRect.left ||
-        (int)(getHeight() * scale) <= mImageViewRect.bottom - mImageViewRect.top))
-        updateImageView(true);
-      else
-        updateImageView();
-
-      updateMouseCursor();*/
     }
     // -------------------------------------------------------------------------
     // calcZoomScale
@@ -141,19 +167,44 @@ namespace ibc
 
   protected:
     // Member variables --------------------------------------------------------
-    QImage  *mImage;
-    double  mZoomScale;
+    ImageData *mImageDataPtr;
+    bool      mIsImageSizeChanged;
+    double    mZoomScale;
 
     // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // updateSizeUsingImageData
+    // -------------------------------------------------------------------------
+    bool  updateSizeUsingImageData()
+    {
+      if (mImageDataPtr == NULL)
+        return false;
+      if (mImageDataPtr->checkImageBufferPtr() == false)  // dare to use this instead of checkImageData()
+        return false;
+     
+      setZoomScale(mZoomScale);
+      return true;
+    }
     // -------------------------------------------------------------------------
     // paintEvent
     // -------------------------------------------------------------------------
     void paintEvent(QPaintEvent *event) override
     {
+      if (mImageDataPtr == NULL)
+        return;
+      if (mImageDataPtr->checkImageData() == false)
+        return;
+      if (mIsImageSizeChanged)
+      {
+        updateSizeUsingImageData();
+        mIsImageSizeChanged = false;
+      }
+
+      mImageDataPtr->updateQImage();
       QRect rect(0, 0, size().width(), size().height());
       QPainter painter(this);
 
-      painter.drawImage(rect, *mImage);
+      painter.drawImage(rect, *mImageDataPtr->mQImage);
       //painter.drawText(rect, Qt::AlignCenter, "Hello, world");
       //painter.restore();
     }

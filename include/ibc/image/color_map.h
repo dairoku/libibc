@@ -513,7 +513,11 @@ namespace ibc
       const ColorMapIndexTable  *tablePtr = getColorMapIndexTable();
       while (tablePtr->index != CMIndex_NOT_SPECIFIED)
       {
+#ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
           return tablePtr->index;
         tablePtr++;
       }

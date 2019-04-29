@@ -103,8 +103,10 @@ namespace ibc
       if (mActiveConverter != NULL)
         mActiveConverter->dispose();
       mActiveConverter = findSupportedConverter(inSrcFormat, inDstFormat);
-      if (mActiveConverter != NULL)
-        mActiveConverter->init(inSrcFormat, inDstFormat);
+      if (mActiveConverter == NULL)
+        return false;
+      mActiveConverter->init(inSrcFormat, inDstFormat);
+      return true;
     }
 
   private:

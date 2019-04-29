@@ -45,7 +45,7 @@
 #endif
 
 // Macros ----------------------------------------------------------------------
-#if !defined(__LITTLE_ENDIAN__) and !defined(__BIG_ENDIAN__) 
+#if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
   #if __BYTE_ORDER == __LITTLE_ENDIAN
     #define __LITTLE_ENDIAN__
   #else

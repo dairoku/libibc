@@ -387,7 +387,11 @@ namespace ibc
       const PixelTypeTable  *tablePtr = getPixelTypeTable();
       while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
       {
+#ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
           return tablePtr->type;
         tablePtr++;
       }
@@ -401,7 +405,11 @@ namespace ibc
       const DataTypeTable  *tablePtr = getDataTypeTable();
       while (tablePtr->type != DATA_TYPE_NOT_SPECIFIED)
       {
+#ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
           return tablePtr->type;
         tablePtr++;
       }
@@ -604,7 +612,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     size_t getPixelOffset(unsigned int inX = 0, unsigned int inY = 0, unsigned int inPlaneIndex = 0) const
     {
-      calculatePixelOffset(*this, inX, inY, inPlaneIndex);
+      return calculatePixelOffset(*this, inX, inY, inPlaneIndex);
     }
     // -------------------------------------------------------------------------
     // getPixelPtr
