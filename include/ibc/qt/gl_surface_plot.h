@@ -23,29 +23,28 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
+
 /*!
-  \file     ibc/gtkmm/gl_surface_plot.h
+  \file     ibc/qt/gl_surface_plot.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
+  \date     2019/04/30
+  \brief    Header file for handling the image buffer
 
-  This file defines the class for the image widget
+  This file defines the image buffer class for the ibc Library
 */
 
-#ifndef IBC_GTKMM_GL_SURFACE_PLOT_H_
-#define IBC_GTKMM_GL_SURFACE_PLOT_H_
+#ifndef IBC_QT_GL_SURFACE_PLOT_H_
+#define IBC_QT_GL_SURFACE_PLOT_H_
 
 // Includes --------------------------------------------------------------------
-#include <math.h>
-#include <cstring>
-#include <gtkmm.h>
+#include <QtWidgets>
 #include "ibc/gl/matrix.h"
 #include "ibc/gl/utils.h"
 #include "ibc/gl/trackball.h"
-#include "ibc/gtkmm/gl_obj_view.h"
-#include "ibc/gtkmm/image_data.h"
-#include "ibc/gtkmm/view_data_interface.h"
+#include "ibc/qt/gl_obj_view.h"
+#include "ibc/qt/image_data.h"
+#include "ibc/qt/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
 #include "ibc/gl/model/surface_points.h"
 #include "ibc/gl/shader/simple.h"
@@ -54,24 +53,26 @@
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
- namespace gtkmm
+ namespace qt
  {
   // ---------------------------------------------------------------------------
   // GLSurfacePlot class
   // ---------------------------------------------------------------------------
   class GLSurfacePlot : virtual public GLObjView, virtual public ViewDataInterface
   {
+    Q_OBJECT
+
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // GLSurfacePlot
     // -------------------------------------------------------------------------
-    GLSurfacePlot() :
-      Glib::ObjectBase("GLSurfacePlot")
+    GLSurfacePlot(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
+      : GLObjView(parent, f)
     {
       mImageDataPtr = NULL;
       mIsImageSizeChanged = false;
-      
+
       mModel.setShader(&mShader);
       mDataModel.setShader(&mPointSpriteShader);
 
@@ -92,7 +93,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  queueRedrawWidget()
     {
-      queue_render();
+      update();
     }
     // -------------------------------------------------------------------------
     // markAsImageSizeChanged
@@ -100,13 +101,13 @@ namespace ibc
     virtual void  markAsImageSizeChanged()
     {
       mIsImageSizeChanged = true;
-      queue_render();
+      update();
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // setImageDataPtr
     // -------------------------------------------------------------------------
-    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr)
+    void  setImageDataPtr(ibc::qt::ImageData *inImageDataPtr)
     {
       mImageDataPtr = inImageDataPtr;
       mImageDataPtr->addWidget(this);
@@ -133,11 +134,11 @@ namespace ibc
     ibc::gl::model::ColorCube  mModel;
     ibc::gl::model::SurfacePoints  mDataModel;
 
-    ImageData *mImageDataPtr;
+    ibc::qt::ImageData *mImageDataPtr;
     bool      mIsImageSizeChanged;
   };
  };
 };
 
-#endif  // #ifdef IBC_GTKMM_GL_SURFACE_PLOT_H_
+#endif  // #ifdef IBC_QT_GL_SURFACE_PLOT_H_
 

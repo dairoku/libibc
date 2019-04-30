@@ -50,7 +50,8 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 #ifndef QT_VERSION
   class ModelBase : public virtual ibc::gl::ModelInterface
 #else
-  class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLExtraFunctions
+//class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLExtraFunctions
+  class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLFunctions_4_5_Core
 #endif
   {
   public:
@@ -60,6 +61,8 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     ModelBase()
     {
+      mShaderInterface = NULL;
+
 #ifdef QT_VERSION
       mOpenGLFunctionsInitialized = false;
 #endif

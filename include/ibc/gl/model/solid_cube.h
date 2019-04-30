@@ -37,8 +37,7 @@
 #define IBC_GL_MODEL_SOLID_CUBE_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/model_interface.h"
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model/model_base.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
@@ -46,7 +45,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
   // ---------------------------------------------------------------------------
   // ColorCube class
   // ---------------------------------------------------------------------------
-  class SolidCube : public virtual ibc::gl::ModelInterface
+  class SolidCube : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -65,24 +64,13 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // setShader
-    // -------------------------------------------------------------------------
-    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
-    {
-      mShaderInterface = inShaderInterface;
-    }
-    // -------------------------------------------------------------------------
-    // getShader
-    // -------------------------------------------------------------------------
-    virtual ibc::gl::ShaderInterface *getShader()
-    {
-      return mShaderInterface;
-    }
-    // -------------------------------------------------------------------------
     // initModel
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
+      if (ModelBase::initModel() == false)
+        return false;
+
       static const struct vertex_info vertexData[] =
       {
         { { -1.0f, -1.0f, -1.0f }, { 0.1f, 0.8f, 0.1f } },
@@ -145,24 +133,25 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mProjectionLocation = glGetUniformLocation (mShaderProgram, "projection");
 
       // get the location of the "position" and "color" attributes
-      guint positionLocation = glGetAttribLocation (mShaderProgram, "position");
-      guint colorLocation = glGetAttribLocation (mShaderProgram, "color");
+      GLint positionLocation = glGetAttribLocation (mShaderProgram, "position");
+      GLint colorLocation = glGetAttribLocation (mShaderProgram, "color");
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
       // enable and set the position attribute
-      glEnableVertexAttribArray (positionLocation);
-      glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
+      glEnableVertexAttribArray(positionLocation);
+      glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
-                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, position)));
+                             (const GLvoid *)offsetof(struct vertex_info, position));
 
       // enable and set the color attribute
-      glEnableVertexAttribArray (colorLocation);
-      glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
+      glEnableVertexAttribArray(colorLocation);
+      glVertexAttribPointer(colorLocation, 3, GL_FLOAT, GL_FALSE,
                              sizeof (struct vertex_info),
-                             (GLvoid *) (G_STRUCT_OFFSET (struct vertex_info, color)));
+                             (const GLvoid *)offsetof(struct vertex_info, color));
+
       return true;
     }
     // -------------------------------------------------------------------------
@@ -195,15 +184,13 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     };
 
     // Member variables --------------------------------------------------------
-    ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
-
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
     GLuint mIndexBufferObject;
 
-    guint mModelViewLocation;
-    guint mProjectionLocation;
+    GLint mModelViewLocation;
+    GLint mProjectionLocation;
   };
 };
 

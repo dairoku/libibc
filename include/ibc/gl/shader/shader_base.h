@@ -49,7 +49,8 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
 #ifndef QT_VERSION
   class ShaderBase : public virtual ibc::gl::ShaderInterface
 #else
-  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLExtraFunctions
+//class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLExtraFunctions
+  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLFunctions_4_5_Core
 #endif
   {
   public:

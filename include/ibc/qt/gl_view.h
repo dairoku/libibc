@@ -39,7 +39,8 @@
 
 // Includes --------------------------------------------------------------------
 #include <QOpenGLWidget>
-#include <QOpenGLExtraFunctions>
+//#include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions_4_5_Core>
 #include "ibc/gl/matrix.h"
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
@@ -52,7 +53,8 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // GLView class
   // ---------------------------------------------------------------------------
-  class GLView : public QOpenGLWidget, protected QOpenGLExtraFunctions
+//class GLView : public QOpenGLWidget, protected QOpenGLExtraFunctions
+  class GLView : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
   {
     Q_OBJECT
 
@@ -141,9 +143,9 @@ namespace ibc
 
       glClearColor(0.3, 0.3, 0.3, 0.0);
 
-      //glEnable(GL_CCW);
-      //glEnable(GL_CULL_FACE);
-      //glCullFace(GL_BACK);
+      glEnable(GL_CCW);
+      glEnable(GL_CULL_FACE);
+      glCullFace(GL_BACK);
 
       glClearDepthf(1.0);
       glDepthFunc(GL_LESS);
