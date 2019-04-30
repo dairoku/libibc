@@ -475,7 +475,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     static VectorType angle(const VectorType inVec0[], const VectorType inVec1[])
     {
-      VectorType  v, d, cosTheta;
+      VectorType  v, cosTheta;
       //
       v = length(inVec0) * length(inVec1);
       if (v == 0.0)

@@ -146,6 +146,8 @@ namespace ibc
           return GL_FLOAT;
         case ibc::image::ImageType::DATA_TYPE_DOUBLE:
           return GL_DOUBLE;
+        default:
+          break;
       }
       return GL_NONE;
     }

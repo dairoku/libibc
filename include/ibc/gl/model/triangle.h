@@ -115,9 +115,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 
   protected:
     // Member variables --------------------------------------------------------
+    GLuint mShaderProgram;
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
-    GLuint mShaderProgram;
   };
 };
 
