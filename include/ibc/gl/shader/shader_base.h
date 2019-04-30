@@ -46,7 +46,11 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
   // ---------------------------------------------------------------------------
   // ShaderBase
   // ---------------------------------------------------------------------------
+#ifndef QT_VERSION
   class ShaderBase : public virtual ibc::gl::ShaderInterface
+#else
+  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLExtraFunctions
+#endif
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -65,6 +69,10 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
       mVertexShaderStr     = inVetexShaderStr;
       mFragmentShaderStr  = inFragmentShaderStr;
       mGeometryShaderStr = inGeometoryShaderStr;
+
+#ifdef QT_VERSION
+      mOpenGLFunctionsInitialized = false;
+#endif
     }
     // -------------------------------------------------------------------------
     // ~ShaderBase
@@ -78,6 +86,13 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool initShader()
     {
+#ifdef QT_VERSION
+      if (mOpenGLFunctionsInitialized == false)
+      {
+        initializeOpenGLFunctions();
+        mOpenGLFunctionsInitialized = true;
+      }
+#endif
       if (initCheck() == false)
         return false;
 
@@ -199,6 +214,9 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     GLuint mGeometryShader;
     const char  *mGeometryShaderStr;
     GLuint mShaderProgram;
+#ifdef QT_VERSION
+    bool  mOpenGLFunctionsInitialized;
+#endif
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------

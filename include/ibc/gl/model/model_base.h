@@ -1,5 +1,5 @@
 // =============================================================================
-//  triangle.h
+//  model_base.h
 //
 //  MIT License
 //
@@ -24,74 +24,79 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/triangle.h
+  \file     ibc/gl/models/model_base.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
+  \date     2019/04/30
+  \brief    Header file for ModelViewBase widget
 
   This file defines the class for the image widget
 */
-// -----------------------------------------------------------------------------
-// Appendix
-//
-// Note that this model does not support modelview and projection matrix
-// to be the simplest example
-// -----------------------------------------------------------------------------
 
-#ifndef IBC_GL_MODEL_TRIANGLE_H_
-#define IBC_GL_MODEL_TRIANGLE_H_
+#ifndef IBC_GL_MODEL_BASE_H_
+#define IBC_GL_MODEL_BASE_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/model/model_base.h"
+#include "ibc/base/types.h"
+#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::gl::model // <- nested namespace (C++17)
 {
   // ---------------------------------------------------------------------------
-  // triangle class
+  // ModelBase class
   // ---------------------------------------------------------------------------
-  class Triangle : public virtual ibc::gl::model::ModelBase
+#ifndef QT_VERSION
+  class ModelBase : public virtual ibc::gl::ModelInterface
+#else
+  class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLExtraFunctions
+#endif
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // Triangle
+    // ModelBase
     // -------------------------------------------------------------------------
-    Triangle()
+    ModelBase()
     {
-      mShaderInterface = NULL;
+#ifdef QT_VERSION
+      mOpenGLFunctionsInitialized = false;
+#endif
     }
     // -------------------------------------------------------------------------
-    // ~Triangle
+    // ~ModelBase
     // -------------------------------------------------------------------------
-    virtual ~Triangle()
+    virtual ~ModelBase()
     {
     }
     // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // setShader
+    // -------------------------------------------------------------------------
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
+    {
+      mShaderInterface = inShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // getShader
+    // -------------------------------------------------------------------------
+    virtual ibc::gl::ShaderInterface *getShader()
+    {
+      return mShaderInterface;
+    }
     // -------------------------------------------------------------------------
     // initModel
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
-      if (ModelBase::initModel() == false)
-        return false;
-
-      static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
-
-      mShaderProgram = mShaderInterface->getShaderProgram();
-
-      glGenVertexArrays(1, &mVertexArrayObject);
-      glBindVertexArray(mVertexArrayObject);
-
-      glGenBuffers(1, &mVertexBufferObject);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, (9 * sizeof(GLfloat)), points, GL_STATIC_DRAW);
-
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
+#ifdef QT_VERSION
+      if (mOpenGLFunctionsInitialized == false)
+      {
+        initializeOpenGLFunctions();
+        mOpenGLFunctionsInitialized = true;
+      }
+#endif
       return true;
     }
     // -------------------------------------------------------------------------
@@ -107,18 +112,15 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     {
       UNUSED(inModelView);
       UNUSED(inProjection);
-      //
-      glUseProgram(mShaderProgram);
-      glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    GLuint mVertexArrayObject;
-    GLuint mVertexBufferObject;
-    GLuint mShaderProgram;
+    ibc::gl::ShaderInterface *mShaderInterface;
+#ifdef QT_VERSION
+    bool  mOpenGLFunctionsInitialized;
+#endif
   };
 };
 
-#endif  // #ifdef IBC_GL_MODEL_TRIANGLE_H_
+#endif  // #ifdef IBC_GL_MODEL_BASE_H_
