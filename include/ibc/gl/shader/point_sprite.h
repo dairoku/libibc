@@ -130,7 +130,7 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
       if (ShaderBase::initShader() == false)
         return false;
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-      //glEnable(GL_POINT_SPRITE);
+      glEnable(GL_POINT_SPRITE);
       return true;
     }
   };
