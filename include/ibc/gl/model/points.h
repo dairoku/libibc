@@ -1,5 +1,5 @@
 // =============================================================================
-//  surface_points.h
+//  points.h
 //
 //  MIT License
 //
@@ -24,7 +24,7 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/surface_points.h
+  \file     ibc/gl/models/points.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/31
@@ -33,13 +33,11 @@
   This file defines the class for the image widget
 */
 
-#ifndef IBC_GL_MODEL_SURFACE_PLOT_H_
-#define IBC_GL_MODEL_SURFACE_PLOT_H_
+#ifndef IBC_GL_MODEL_POINTS_H_
+#define IBC_GL_MODEL_POINTS_H_
 
 // Includes --------------------------------------------------------------------
-#include <math.h>
-#include "ibc/gl/model_interface.h"
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model/model_base.h"
 #include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
@@ -47,114 +45,92 @@
 namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
-  // ColorTriangle
+  // Points
   // ---------------------------------------------------------------------------
-  class SurfacePoints : public virtual ibc::gl::ModelInterface
+  class Points : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // SurfacePoints
+    // Points
     // -------------------------------------------------------------------------
-    SurfacePoints()
+    Points()
     {
-      mShaderInterface = NULL;
-      mVertexData = NULL;
-      
-      mWidth = 640;
-      mHeight = 480;
-      
-      mColorMap = new unsigned char[mColorMapNum * 3];
-      ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
-                                        mColorMapNum, mColorMap);
+      mIsDataNumUpdated = false;
+      mIsDataModified   = false;
+      mIsVBOInitialized = false;
+
+      mDataNum = 0;
+      mDataSize = 0;
     }
     // -------------------------------------------------------------------------
-    // ~SurfacePoints
+    // ~Points
     // -------------------------------------------------------------------------
-    virtual ~SurfacePoints()
+    virtual ~Points()
     {
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // setShader
+    // setDataPtr
     // -------------------------------------------------------------------------
-    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
+    // The data format should be
+    // { float x, float y, float z}, {float r, float g, float b}
+    //
+    void setDataPtr(float *inDataPtr, size_t inDataNum)
     {
-      mShaderInterface = inShaderInterface;
+      if (mDataNum != inDataNum)
+        mIsDataNumUpdated = true;
+
+      mDataPtr  = inDataPtr;
+      mDataNum  = inDataNum;
+      mDataSize = sizeof(float) * mDataNum * 6;
+      mIsDataModified = true;
     }
     // -------------------------------------------------------------------------
-    // getShader
+    // markAsDataModified
     // -------------------------------------------------------------------------
-    virtual ibc::gl::ShaderInterface *getShader()
+    void markAsDataModified()
     {
-      return mShaderInterface;
+      mIsDataModified = true;
     }
     // -------------------------------------------------------------------------
     // initModel
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
-      mNumPoints = mWidth * mHeight;
-      mVertexData = new VertexData[mNumPoints];
-      size_t  dataSize = sizeof(VertexData) * mWidth * mHeight;
-      double xPitch = 1.0 * 2.0 / (double )mWidth;
-      
-      for (int i = 0; i < mHeight; i++)
-        for (int j = 0; j < mWidth; j++)
-        {
-          double x = -1.0 + xPitch * j;
-          double y = -1.0 + xPitch * i;
-          double k = (M_PI * 3.0) * (M_PI * 3.0);
-          double z, d;
-          if (x == 0 && y == 0)
-            z = 1;
-          {
-            d = sqrt(k*x*x + k*y*y);
-            z = sin(d) / d;
-          }
-          int c = (int )(fabs(z + 0.1) *(mColorMapNum-1.0));
-          if (c >= mColorMapNum)
-            c = mColorMapNum - 1;
-          if (c < 0)
-            c = 0;
-          mVertexData[mWidth * i + j].position[0] = x;
-          mVertexData[mWidth * i + j].position[1] = y;
-          mVertexData[mWidth * i + j].position[2] = z;
-          mVertexData[mWidth * i + j].color[0] = mColorMap[c * 3 + 0] / 255.0;
-          mVertexData[mWidth * i + j].color[1] = mColorMap[c * 3 + 1] / 255.0;
-          mVertexData[mWidth * i + j].color[2] = mColorMap[c * 3 + 2] / 255.0;
-        }
+      if (ModelBase::initModel() == false)
+        return false;
 
+      // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
+      mModelViewLocation      = glGetUniformLocation (mShaderProgram, "modelview");
+      mProjectionLocation     = glGetUniformLocation (mShaderProgram, "projection");
+      GLint positionLocation  = glGetAttribLocation (mShaderProgram, "position");
+      GLint colorLocation     = glGetAttribLocation (mShaderProgram, "color");
 
+      // Initialze Vertex Array Object
       glGenVertexArrays(1, &mVertexArrayObject);
       glBindVertexArray(mVertexArrayObject);
 
-      glGenBuffers(1, &mVertexBufferObject);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, dataSize, mVertexData, GL_STATIC_DRAW);
-
-      mModelViewLocation      = glGetUniformLocation (mShaderProgram, "modelview");
-      mProjectionLocation     = glGetUniformLocation (mShaderProgram, "projection");
-      guint positionLocation  = glGetAttribLocation (mShaderProgram, "position");
-      guint colorLocation     = glGetAttribLocation (mShaderProgram, "color");
+      if (mIsDataNumUpdated)
+      {
+        initVBO();
+        mIsDataNumUpdated = false;
+      }
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
+      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); //<- we don't need this?
+      //
       glEnableVertexAttribArray (positionLocation);
-      glVertexAttribPointer (positionLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof(VertexData),
-                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, position)));
-
+      glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE,
+                            sizeof (struct vertex_info),
+                            (const GLvoid *)offsetof(struct vertex_info, position));
+      //
       glEnableVertexAttribArray (colorLocation);
-      glVertexAttribPointer (colorLocation, 3, GL_FLOAT, GL_FALSE,
-                             sizeof(VertexData),
-                             (GLvoid *)(G_STRUCT_OFFSET(VertexData, color)));
-
-      //glVertexAttribDivisor(0, 1);
-      //glVertexAttribDivisor(1, 1);
+      glVertexAttribPointer(colorLocation, 3, GL_FLOAT, GL_FALSE,
+                            sizeof (struct vertex_info),
+                            (const GLvoid *)offsetof(struct vertex_info, color));
 
       return true;
     }
@@ -163,19 +139,30 @@ namespace ibc { namespace gl { namespace model
     // -------------------------------------------------------------------------
     virtual void disposeModel()
     {
+      disposeVBO();
     }
     // -------------------------------------------------------------------------
     // drawModel
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
+      if (mIsDataNumUpdated)
+      {
+        initVBO();
+        mIsDataNumUpdated = false;
+      }
+      else
+      {
+        if (mIsDataModified)
+          updateVBO();
+      }
+
       glUseProgram(mShaderProgram);
 
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
       glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_POINTS, 0, mNumPoints);
-      //glDrawArraysInstanced(GL_POINTS, 0, 1, mNumPoints);
+      glDrawArrays(GL_POINTS, 0, mDataNum);
     }
 
   protected:
@@ -183,29 +170,65 @@ namespace ibc { namespace gl { namespace model
     // -------------------------------------------------------------------------
     // vertex_info
     // -------------------------------------------------------------------------
-    typedef struct
+    struct vertex_info
     {
       GLfloat position[3];
       GLfloat color[3];
-    } VertexData;
+    };
 
     // Member variables --------------------------------------------------------
-    size_t  mWidth, mHeight;
-    size_t  mNumPoints;
-    VertexData  *mVertexData;
-    
-    const int   mColorMapNum = 65536;
-    unsigned char *mColorMap;
+    bool  mIsDataNumUpdated;
+    bool  mIsDataModified;
+    bool  mIsVBOInitialized;
 
-    ibc::gl::ShaderInterface *mShaderInterface;
+    void  *mDataPtr;
+    size_t  mDataNum;
+    size_t  mDataSize;
+
     GLuint mShaderProgram;
-
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
 
-    guint mModelViewLocation;
-    guint mProjectionLocation;
+    GLint mModelViewLocation;
+    GLint mProjectionLocation;
+
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // initVBO
+    // -------------------------------------------------------------------------
+    void initVBO()
+    {
+      if (mIsVBOInitialized)
+        disposeVBO();
+      //
+      glGenBuffers(1, &mVertexBufferObject);
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferData(GL_ARRAY_BUFFER, mDataSize, NULL, GL_DYNAMIC_DRAW);
+      mIsVBOInitialized = true;
+      //
+      updateVBO();
+    }
+    // -------------------------------------------------------------------------
+    // updateVBO
+    // -------------------------------------------------------------------------
+    void updateVBO()
+    {
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, mDataSize, mDataPtr);
+      mIsDataModified = false;
+    }
+    // -------------------------------------------------------------------------
+    // disposeVBO
+    // -------------------------------------------------------------------------
+    void disposeVBO()
+    {
+      if (mIsVBOInitialized == false)
+        return;
+      glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glDeleteBuffers(1, &mVertexBufferObject);
+      mIsVBOInitialized = false;
+    }
   };
 };};};
 
-#endif  // #ifdef IBC_GL_MODEL_SURFACE_PLOT_H_
+#endif  // #ifdef IBC_GL_MODEL_POINTS_H_

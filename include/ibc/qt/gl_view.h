@@ -38,6 +38,7 @@
 #define IBC_QT_GL_VIEW_H_
 
 // Includes --------------------------------------------------------------------
+#include <QtWidgets>
 #include <QOpenGLWidget>
 //#include <QOpenGLExtraFunctions>
 #include <QOpenGLFunctions_4_5_Core>
