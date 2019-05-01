@@ -42,7 +42,8 @@
 #include "ibc/gl/model_interface.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // ModelBase class
@@ -124,6 +125,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     bool  mOpenGLFunctionsInitialized;
 #endif
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_BASE_H_

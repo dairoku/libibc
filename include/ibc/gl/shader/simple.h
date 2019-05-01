@@ -41,7 +41,8 @@
 
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::shader // <- nested namespace (C++17)
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
   // ---------------------------------------------------------------------------
   // Simple
@@ -84,6 +85,6 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     {
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_SHADER_SHADER_BASE_H_

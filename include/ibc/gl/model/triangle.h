@@ -46,7 +46,8 @@
 #include "ibc/gl/model/model_base.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // triangle class
@@ -119,6 +120,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_TRIANGLE_H_

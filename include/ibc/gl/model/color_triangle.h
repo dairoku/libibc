@@ -40,7 +40,8 @@
 #include "ibc/gl/model/model_base.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // ColorTriangle
@@ -152,6 +153,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     GLint mModelViewLocation;
     GLint mProjectionLocation;
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_COLOR_TRIANGLE_H_

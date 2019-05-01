@@ -40,7 +40,8 @@
 #include "ibc/gl/model/model_base.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // ColorCube class
@@ -192,6 +193,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     GLint mModelViewLocation;
     GLint mProjectionLocation;
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_SOLID_CUBE_H_

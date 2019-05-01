@@ -41,7 +41,8 @@
 
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::shader // <- nested namespace (C++17)
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
   // ---------------------------------------------------------------------------
   // Simple
@@ -110,6 +111,6 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
       //glEnable(GL_POINT_SPRITE);
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_SHADER_POINT_SPRITE_H_

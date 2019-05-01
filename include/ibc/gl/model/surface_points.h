@@ -43,7 +43,8 @@
 #include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // SurfacePoints
@@ -330,6 +331,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mIsColoMapTextureInitialized = false;
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_SURFACE_PLOT_H_
