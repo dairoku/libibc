@@ -92,6 +92,7 @@ namespace ibc
     void  setDataPtr(float *inDataPtr, size_t inDataNum)
     {
       mDataModel.setDataPtr(inDataPtr, inDataNum);
+      update();
     }
 
   protected:

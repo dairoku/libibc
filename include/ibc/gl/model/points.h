@@ -103,10 +103,10 @@ namespace ibc { namespace gl { namespace model
 
       // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
-      mModelViewLocation      = glGetUniformLocation (mShaderProgram, "modelview");
-      mProjectionLocation     = glGetUniformLocation (mShaderProgram, "projection");
-      GLint positionLocation  = glGetAttribLocation (mShaderProgram, "position");
-      GLint colorLocation     = glGetAttribLocation (mShaderProgram, "color");
+      mModelViewLocation  = glGetUniformLocation(mShaderProgram, "modelview");
+      mProjectionLocation = glGetUniformLocation(mShaderProgram, "projection");
+      mPositionLocation   = glGetAttribLocation (mShaderProgram, "position");
+      mColorLocation      = glGetAttribLocation (mShaderProgram, "color");
 
       // Initialze Vertex Array Object
       glGenVertexArrays(1, &mVertexArrayObject);
@@ -117,20 +117,6 @@ namespace ibc { namespace gl { namespace model
         initVBO();
         mIsDataNumUpdated = false;
       }
-
-      glEnableVertexAttribArray(0);
-      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL); //<- we don't need this?
-      //
-      glEnableVertexAttribArray (positionLocation);
-      glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE,
-                            sizeof (struct vertex_info),
-                            (const GLvoid *)offsetof(struct vertex_info, position));
-      //
-      glEnableVertexAttribArray (colorLocation);
-      glVertexAttribPointer(colorLocation, 3, GL_FLOAT, GL_FALSE,
-                            sizeof (struct vertex_info),
-                            (const GLvoid *)offsetof(struct vertex_info, color));
 
       return true;
     }
@@ -146,6 +132,9 @@ namespace ibc { namespace gl { namespace model
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
+      if (mDataNum == 0)
+        return;
+
       if (mIsDataNumUpdated)
       {
         initVBO();
@@ -191,6 +180,8 @@ namespace ibc { namespace gl { namespace model
 
     GLint mModelViewLocation;
     GLint mProjectionLocation;
+    GLint mPositionLocation;
+    GLint mColorLocation;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -201,12 +192,24 @@ namespace ibc { namespace gl { namespace model
       if (mIsVBOInitialized)
         disposeVBO();
       //
+      glBindVertexArray(mVertexArrayObject);
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
       glBufferData(GL_ARRAY_BUFFER, mDataSize, NULL, GL_DYNAMIC_DRAW);
       mIsVBOInitialized = true;
       //
       updateVBO();
+
+      glEnableVertexAttribArray(0);
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glEnableVertexAttribArray(mPositionLocation);
+      glVertexAttribPointer(mPositionLocation, 3, GL_FLOAT, GL_FALSE,
+                            sizeof (struct vertex_info),
+                            (const GLvoid *)offsetof(struct vertex_info, position));
+      glEnableVertexAttribArray(mColorLocation);
+      glVertexAttribPointer(mColorLocation, 3, GL_FLOAT, GL_FALSE,
+                            sizeof (struct vertex_info),
+                            (const GLvoid *)offsetof(struct vertex_info, color));
     }
     // -------------------------------------------------------------------------
     // updateVBO
@@ -224,7 +227,9 @@ namespace ibc { namespace gl { namespace model
     {
       if (mIsVBOInitialized == false)
         return;
+      //
       glBindBuffer(GL_ARRAY_BUFFER, 0);
+      glBindVertexArray(0);
       glDeleteBuffers(1, &mVertexBufferObject);
       mIsVBOInitialized = false;
     }
