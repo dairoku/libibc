@@ -816,6 +816,10 @@ namespace ibc
   typedef MatrixBase<double>  Matrix;
   typedef MatrixBase<float>  MatrixF;
   typedef MatrixBase<int>  MatrixI;
+  //
+  typedef MatrixBase<GLdouble>  glMatrix4d;
+  typedef MatrixBase<GLfloat>   glMatrix4f;
+  typedef MatrixBase<GLint>     glMatrix4i;
  };
 };
 

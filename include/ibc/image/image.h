@@ -77,7 +77,7 @@ namespace ibc
       PIXEL_TYPE_FOURCC         = 8192,
       PIXEL_TYPE_MULTI_CH       = 9216,
       PIXEL_TYPE_JPEG           = 10240,
-      PIXEL_TYPE_ANY            = 32765
+      PIXEL_TYPE_ANY            = 32767
     };
   
      enum  BufferType
@@ -88,7 +88,7 @@ namespace ibc
       BUFFER_TYPE_PLANAR_ALIGNED,
       BUFFER_TYPE_PLANAR_PACKED,
       BUFFER_TYPE_COMPRESSION   = 10240,
-      BUFFER_TYPE_ANY           = 32765
+      BUFFER_TYPE_ANY           = 32767
     };
   
     enum  DataType
@@ -109,7 +109,7 @@ namespace ibc
       DATA_TYPE_64BIT         = 64,
       DATA_TYPE_FLOAT         = 512,
       DATA_TYPE_DOUBLE        = 1024,
-      DATA_TYPE_ANY           = 32765
+      DATA_TYPE_ANY           = 32767
     };
   
     enum  EndianType
@@ -118,7 +118,7 @@ namespace ibc
       ENDIAN_LITTLE,
       ENDIAN_BIG,
       ENDIAN_TYPE_HOST          = 32764,
-      ENDIAN_TYPE_ANY           = 32765
+      ENDIAN_TYPE_ANY           = 32767
     };
 
     enum  BayerType
@@ -128,7 +128,7 @@ namespace ibc
       BAYER_TYPE_GRBG,
       BAYER_TYPE_BGGR,
       BAYER_TYPE_RGGB,
-      BAYER_TYPE_ANY           = 32765
+      BAYER_TYPE_ANY           = 32767
     };
   
     enum  ChannelType
@@ -175,7 +175,7 @@ namespace ibc
       CH_TYPE_V_0           = 3104,
       CH_TYPE_V_1,
       CH_TYPE_MULTI_0       = 4096,
-      CH_TYPE_ANY           = 32765
+      CH_TYPE_ANY           = 32767
     };
 
     // Member variables (public) -----------------------------------------------

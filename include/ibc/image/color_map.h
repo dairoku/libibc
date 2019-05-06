@@ -81,7 +81,7 @@ namespace ibc
       CMIndex_BlueDarkYellow,
       CMIndex_GreenRed,
 
-      CMIndex_ANY            = 32765,
+      CMIndex_ANY            = 32767,
 
       // For Internal use only
       CMIndex_End         = -1

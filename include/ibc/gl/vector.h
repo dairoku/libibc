@@ -532,6 +532,10 @@ namespace ibc
   typedef VectorBase<double>  Vector;
   typedef VectorBase<float>  VectorF;
   typedef VectorBase<int>  VectorI;
+  //
+  typedef VectorBase<GLdouble>  glVector3d;
+  typedef VectorBase<GLfloat>   glVector3f;
+  typedef VectorBase<GLint>     glVector3i;
  };
 };
 
