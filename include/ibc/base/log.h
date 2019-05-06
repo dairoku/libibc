@@ -48,59 +48,64 @@
 #define IBC_LOG_AT_TOSTRING(x)  IBC_LOG_AT_STRINGIFY(x)
 #define IBC_LOG_AT              IBC_LOG_AT_TOSTRING(__FILE__) ":" IBC_LOG_AT_TOSTRING(__LINE__)
 #define IBC_LOG_LOCATION_MACRO  "(" IBC_LOG_AT ")"
-//#define IBC_LOG_LOCATION_MACRO  IBC_LOG_AT_FUNCTION(__FUNCTION__) " (" IBC_LOG_AT ")"
-//#define IBC_LOG_LOCATION_MACRO  IBC_LOG_AT_TOSTRING(__PRETTY_FUNCTION__) " (" IBC_LOG_AT ")"
+#define IBC_FUNC_NAME_MACRO  __PRETTY_FUNCTION__
+//#define IBC_FUNC_NAME_MACRO  __FUNCTION__   // TODO switch this by a compiler
 
 #ifndef IBC_LOG_WR_DISABLE
-#define IBC_LOG_WR(log, type, level, outstr, locstr) { if(log!=NULL)log->write(type, level, outstr, locstr); }
-#define IBC_LOG_WR_LIMIT(log, type, level, outstr, locstr, limit) { {static int c = 0; if (c < limit) {c++; IBC_LOG_WR(log, type, level, outstr, locstr);};}; }
-#define IBC_LOG_WR_ONCE(log, type, level, outstr, locstr) { IBC_LOG_WR_LIMIT(log, type, level, outstr, locstr, 1);  }
-#define IBC_LOG_MSG(log, type, level, outstr) { IBC_LOG_WR(log, type, level, outstr, IBC_LOG_LOCATION_MACRO); }
-#define IBC_LOG_MSG_ONCE(log, type, level, outstr) { IBC_LOG_WR_ONCE(log, type, level, outstr, IBC_LOG_LOCATION_MACRO); }
+#define IBC_LOG_WR(log, type, level, locstr, funcstr, outstr, ...) { if(log!=NULL)log->write(type, level, locstr, funcstr, outstr, ##__VA_ARGS__); }
+#define IBC_LOG_WR_LIMIT(log, type, level, locstr, funcstr, limit, outstr, ...) { {static int c = 0; if (c < limit) {c++; IBC_LOG_WR(log, type, level, locstr, funcstr, outstr, ##__VA_ARGS__);};}; }
+#define IBC_LOG_WR_ONCE(log, type, level, locstr, funcstr, outstr, ...) { IBC_LOG_WR_LIMIT(log, type, level, locstr, funcstr, 1, outstr, ##__VA_ARGS__);  }
+#define IBC_LOCAL_LOG_OUT(log, type, level, outstr, ...) { IBC_LOG_WR(log, type, level, IBC_LOG_LOCATION_MACRO, IBC_FUNC_NAME_MACRO, outstr, ##__VA_ARGS__); }
+#define IBC_LOCAL_LOG_OUT_ONCE(log, type, level, outstr, ...) { IBC_LOG_WR_ONCE(log, type, level, IBC_LOG_LOCATION_MACRO, IBC_FUNC_NAME_MACRO, outstr, ##__VA_ARGS__); }
+#define IBC_LOG_OUT(type, level, outstr, ...) { IBC_LOCAL_LOG_OUT(IBC_GLOBAL_LOG, type, level, outstr, ##__VA_ARGS__); }
+#define IBC_LOG_OUT_ONCE(type, level, outstr, ...) { IBC_LOCAL_LOG_OUT_ONCE(IBC_GLOBAL_LOG, type, level, outstr, ##__VA_ARGS__); }
 #else
-#define IBC_LOG_WR(log, type, level, outstr, locstr)
-#define IBC_LOG_WR_LIMIT(log, type, level, outstr, limit, locstr)
-#define IBC_LOG_WR_ONCE(log, type, level, outstr, locstr)
+#define IBC_LOG_WR(log, type, level, locstr, outstr, ...)
+#define IBC_LOG_WR_LIMIT(log, type, level, limit, locstr, outstr, ...)
+#define IBC_LOG_WR_ONCE(log, type, level, locstr, outstr, ...)
+#define IBC_LOG_OUT(log, type, level, outstr, ...)
+#define IBC_LOG_OUT_ONCE(log, type, level, outstr, ...)
 #endif
 
 #ifndef IBC_LOG_INFO_DISABLE
-#define IBC_LOG_INFO(log, outstr) { IBC_LOG_MSG(log, ibc::Log::INFO_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
+#define IBC_LOG_INFO(outstr, ...) { IBC_LOG_OUT(ibc::Log::INFO_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
 #else
-#define IBC_LOG_INFO(log, outstr)
+#define IBC_LOG_INFO(outstr, ...)
 #endif
 
 #ifndef IBC_LOG_WARNING_DISABLE
-#define IBC_LOG_WARNING(log, outstr) { IBC_LOG_MSG(log, ibc::Log::WARNING_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
+#define IBC_LOG_WARNING(outstr, ...) { IBC_LOG_OUT(ibc::Log::WARNING_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
 #else
-#define IBC_LOG_WARNING(log, outstr)
+#define IBC_LOG_WARNING(outstr, ...)
 #endif
 
 #ifndef IBC_LOG_ERROR_DISABLE
-#define IBC_LOG_ERROR(log, outstr) { IBC_LOG_MSG(log, ibc::Log::ERROR_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
+#define IBC_LOG_ERROR(outstr, ...) { IBC_LOG_OUT(ibc::Log::ERROR_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
 #else
-#define IBC_LOG_ERROR(log, outstr)
+#define IBC_LOG_ERROR(outstr, ...)
 #endif
 
 #ifndef IBC_LOG_TRACE_DISABLE
-#define IBC_LOG_TRACE(log, outstr) { IBC_LOG_MSG(log, ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
-#define IBC_LOG_TRACE_ONCE(log, outstr) { IBC_LOG_MSG_ONCE(log, ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
-#define IBC_TRACE(log) { IBC_LOG_TRACE(log, ""); }
-#define IBC_TRACE_ONCE(log) { IBC_LOG_TRACE_ONCE(log, ""); }
+#define IBC_LOG_TRACE(outstr, ...) { IBC_LOG_OUT(ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
+#define IBC_LOG_TRACE_ONCE(outstr, ...) { IBC_LOG_OUT_ONCE(ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
+#define IBC_TRACE(log) { IBC_LOG_TRACE(""); }
+#define IBC_TRACE_ONCE(log) { IBC_LOG_TRACE_ONCE(""); }
 #else
-#define IBC_LOG_TRACE(log, outstr)
-#define IBC_LOG_TRACE_ONCE(log, outstr)
+#define IBC_LOG_TRACE(outstr, ...)
+#define IBC_LOG_TRACE_ONCE(outstr, ...)
 #define IBC_TRACE(log)
 #define IBC_TRACE_ONCE(log)
 #endif
 
 #ifndef IBC_LOG_DEBUG_DISABLE
-#define IBC_LOG_DEBUG(log, outstr) { IBC_LOG_MSG(log, ibc::Log::DEBUG_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
+#define IBC_LOG_DEBUG(outstr, ...) { IBC_LOG_OUT(ibc::Log::DEBUG_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
 #else
-#define IBC_LOG_DEBUG(log, outstr)
+#define IBC_LOG_DEBUG(outstr, ...)
 #endif
 
 #define IBC_DEFAULT_LOG   (ibc::ConsoleLog::getInstance())
 #define IBC_NULL_LOG      (ibc::NullLog::getInstance())
+#define IBC_GLOBAL_LOG    (ibc::GlobalLog::getInstance()->getLog())
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -133,9 +138,11 @@ namespace ibc
 
     // Member Functions --------------------------------------------------------
     virtual void  write(uint32 inType, uint8 inLenvel,
-                        const char *inMessage,const char *inLocation) = 0;
-    virtual void  binayDump(DumpType inDumpType, const char *inDumpName,
-                            const char *inLocation, const unsigned char *inData, size_t inDataLen) = 0;
+                        const char *inLocation, const char *inFuncName,
+                        const char *inMessage, ...) = 0;
+    virtual void  dump(DumpType inDumpType, const char *inDumpName,
+                            const char *inLocation, const char *inFuncName,
+                            const unsigned char *inData, size_t inDataLen) = 0;
   };
 
   // ---------------------------------------------------------------------------
@@ -278,6 +285,8 @@ namespace ibc
   class  StreamLog : public LogBase
   {
   public:
+    const static size_t MSG_BUF_SIZE    = 256;  // TODO : Rethink this
+
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // StreamLog
@@ -300,50 +309,68 @@ namespace ibc
     // write
     // -------------------------------------------------------------------------
     virtual void  write(uint32 inType, uint8 inLevel,
-                        const char *inMessage, const char *inLocation)
+                        const char *inLocation, const char *inFuncName,
+                        const char *inMessage, ...)
     {
       if (isLogOutMessage(inType, inLevel) == false)
         return;
 
-      const size_t  bufSize = 80;
-      char  buf[bufSize];
       std::ostream *stream;
-
+      bool  outMessage = false;
+     char  buf[MSG_BUF_SIZE];
+ 
       if (inType == ERROR_MSG)
         stream = mErrorStream;
       else
         stream = mMessageStream;
 
-      makeTimeStampStr(buf, bufSize);
+      makeTimeStampStr(buf, MSG_BUF_SIZE);
       *stream << buf;
-      makeTypeStr(inType, buf, bufSize);
+      makeTypeStr(inType, buf, MSG_BUF_SIZE);
       *stream << buf;
-      makeLevelStr(inLevel, buf, bufSize);
+      makeLevelStr(inLevel, buf, MSG_BUF_SIZE);
       *stream << buf;
-      // ToDO : sanity check input string length...
+      // TODO : sanity check the following input string lengthes...
       if (inMessage != NULL)
-        *stream << inMessage;
+        if (inMessage[0] != 0)
+        {
+          va_list arg;
+          va_start(arg, inMessage);
+          vsnprintf(buf, MSG_BUF_SIZE, inMessage, arg);
+          va_end(arg);
+          *stream << buf;
+          outMessage = true;
+        }
+      if (inFuncName != NULL)
+        if (inFuncName[0] != 0)
+        {
+          if (outMessage)
+            *stream << " ";
+          *stream << " @[" << inFuncName << "]";
+          outMessage = true;
+        }
       if (inLocation != NULL)
         if (inLocation[0] != 0)
         {
-          if (inMessage != NULL)
-            if (inMessage[0] != 0)
-              *stream << " ";
-          *stream << "@" << inLocation;
+          if (outMessage)
+            *stream << " ";
+          *stream << "<< " << inLocation;
         }
       *stream << std::endl;
     }
     // -------------------------------------------------------------------------
-    // binayDump
+    // dump
     // -------------------------------------------------------------------------
-    virtual void  binayDump(DumpType inDumpType, const char *inDumpName,
-                            const char *inLocation, const uint8 *inData, size_t inDataLen)
+    virtual void  dump(DumpType inDumpType, const char *inDumpName,
+                            const char *inLocation, const char *inFuncName,
+                            const uint8 *inData, size_t inDataLen)
     {
       UNUSED(inDumpType);
       UNUSED(inDumpName);
       UNUSED(inLocation);
       UNUSED(inData);
       UNUSED(inDataLen);
+      UNUSED(inFuncName);
     }
 
   protected:
@@ -396,24 +423,28 @@ namespace ibc
     // write
     // -------------------------------------------------------------------------
     virtual void  write(uint32 inType, uint8 inLenvel,
-                        const char *inMessage, const char *inLocation)
+                        const char *inLocation, const char *inFuncName,
+                        const char *inMessage, ...)
     {
       UNUSED(inType);
       UNUSED(inLenvel);
-      UNUSED(inMessage);
       UNUSED(inLocation);
+      UNUSED(inFuncName);
+      UNUSED(inMessage);
     }
     // -------------------------------------------------------------------------
-    // binayDump
+    // dump
     // -------------------------------------------------------------------------
-    virtual void  binayDump(DumpType inDumpType, const char *inDumpName,
-                            const char *inLocation, const unsigned char *inData, size_t inDataLen)
+    virtual void  dump(DumpType inDumpType, const char *inDumpName,
+                            const char *inLocation, const char *inFuncName,
+                            const unsigned char *inData, size_t inDataLen)
     {
       UNUSED(inDumpType);
       UNUSED(inDumpName);
       UNUSED(inLocation);
       UNUSED(inData);
       UNUSED(inDataLen);
+      UNUSED(inFuncName);
     }
 
     // Static Member functions -------------------------------------------------
@@ -441,6 +472,62 @@ namespace ibc
     {
     }
   };
+
+  // ---------------------------------------------------------------------------
+  // GlobalLog class
+  // ---------------------------------------------------------------------------
+  class  GlobalLog
+  {
+  public:
+    // Member functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getLog
+    // -------------------------------------------------------------------------
+    Log *getLog()
+    {
+      if (mLog == NULL)
+        return IBC_DEFAULT_LOG;
+      return mLog;
+    }
+    // -------------------------------------------------------------------------
+    // setLog
+    // -------------------------------------------------------------------------
+    void  setLog(Log *inLog)
+    {
+      mLog = inLog;
+    }
+
+    // Static Member functions -------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getInstance
+    // -------------------------------------------------------------------------
+    static GlobalLog *getInstance()
+    {
+      static GlobalLog sLogInstance;
+      return &sLogInstance;
+    }
+
+  protected:
+    // Member variables (protected) --------------------------------------------
+    Log *mLog;
+
+  private:
+    // Constructors and Destructor ---------------------------------------------
+    // -------------------------------------------------------------------------
+    // GlobalLog
+    // -------------------------------------------------------------------------
+    GlobalLog()
+    {
+      mLog = NULL;
+    }
+    // -------------------------------------------------------------------------
+    // ~GlobalLog
+    // -------------------------------------------------------------------------
+    virtual ~GlobalLog()
+    {
+    }
+  };
+
 };
 
 #endif  // IBC_LOG_H_

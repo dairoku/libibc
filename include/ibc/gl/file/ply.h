@@ -395,14 +395,13 @@ namespace ibc { namespace gl { namespace file
     // create
     // -------------------------------------------------------------------------
     static PLYHeader *create(const char *inHeaderStr, size_t inLen,
-                             size_t *outHeaderSize,
-                             ibc::Log *inLog = IBC_DEFAULT_LOG)
+                             size_t *outHeaderSize)
     {
-      *outHeaderSize = findPLYHeader(inHeaderStr, inLen, inLog);
+      *outHeaderSize = findPLYHeader(inHeaderStr, inLen);
       if (*outHeaderSize == 0)
         return NULL;
       PLYHeader *header = new PLYHeader();
-      if (parseHeader(inHeaderStr, *outHeaderSize, header, inLog) == false)
+      if (parseHeader(inHeaderStr, *outHeaderSize, header) == false)
       {
         delete header;
         return NULL;
@@ -413,8 +412,7 @@ namespace ibc { namespace gl { namespace file
     // parseHeader
     // -------------------------------------------------------------------------
     static bool parseHeader(const char *inHeaderStr, size_t inLen,
-                            PLYHeader *outHeader,
-                             ibc::Log *inLog = IBC_DEFAULT_LOG)
+                            PLYHeader *outHeader)
     {
       bool  foundStart    = false;
       bool  foundEnd      = false;
@@ -434,7 +432,7 @@ namespace ibc { namespace gl { namespace file
       Common::findLines(inHeaderStr, inLen, &lines);
       if (lines.size() < 2)
       {
-        IBC_LOG_ERROR(inLog, "Invaild header string");
+        IBC_LOG_ERROR("Invaild header string");
         return false;
       }
       //
@@ -445,7 +443,7 @@ namespace ibc { namespace gl { namespace file
         Common::findWords(linePtr, lines[i].len, &words);
         if (words.size() == 0)
         {
-          IBC_LOG_ERROR(inLog, "A blank line in the PLY header");
+          IBC_LOG_ERROR("A blank line in the PLY header");
           return false;
         }
         const char  *wordPtr = &(linePtr[words[0].from]);
@@ -455,7 +453,7 @@ namespace ibc { namespace gl { namespace file
         {
           if (type == LINE_TYPE_START)
           {
-            IBC_LOG_ERROR(inLog, "Found a \"ply\" more than twice");
+            IBC_LOG_ERROR("Found a \"ply\" more than twice");
             return false;
           }
         }
@@ -463,7 +461,7 @@ namespace ibc { namespace gl { namespace file
         {
           if (type != LINE_TYPE_START)
           {
-            IBC_LOG_ERROR(inLog, "The header does not start with \"ply\"");
+            IBC_LOG_ERROR("The header does not start with \"ply\"");
             return false;
           }
         }
@@ -474,7 +472,7 @@ namespace ibc { namespace gl { namespace file
           {
             if (propertyCount == 0)
             {
-              IBC_LOG_WARNING(inLog, "The element defintion with no property");
+              IBC_LOG_WARNING("The element defintion with no property");
               //return false;
             }
             foundElement = false;
@@ -493,18 +491,18 @@ namespace ibc { namespace gl { namespace file
           case LINE_TYPE_FORMAT:
             if (foundFormat)
             {
-              IBC_LOG_ERROR(inLog, "Found a \"format\" more than twice");
+              IBC_LOG_ERROR("Found a \"format\" more than twice");
               return false;
             }
             if (words.size() != 3)
             {
-              IBC_LOG_ERROR(inLog, "Invalid format line");
+              IBC_LOG_ERROR("Invalid format line");
               return false;
             }
             format = findDataFormatWord(&(linePtr[words[1].from]), words[1].len);
             if (format == DATA_FORMAT_NOT_SPECIFIED)
             {
-              IBC_LOG_ERROR(inLog, "Unknown data format");
+              IBC_LOG_ERROR("Unknown data format");
               return false;
             }
             // ToDo check version string (at least output warning, if it is not "1.0")
@@ -528,7 +526,7 @@ namespace ibc { namespace gl { namespace file
           case LINE_TYPE_ELEMENT:
             if (words.size() < 3)
             {
-              IBC_LOG_ERROR(inLog, "Invalid element line");
+              IBC_LOG_ERROR("Invalid element line");
               return false;
             }
             // TODO : Clean up here
@@ -544,7 +542,7 @@ namespace ibc { namespace gl { namespace file
           case LINE_TYPE_PROPERTY:
             if (foundElement == false)
             {
-              IBC_LOG_ERROR(inLog, "Property without an element line");
+              IBC_LOG_ERROR("Property without an element line");
               return false;
             }
             if (elementNum == 0) // Just skip
@@ -554,7 +552,7 @@ namespace ibc { namespace gl { namespace file
             }
             if (words.size() < 3)
             {
-              IBC_LOG_ERROR(inLog, "Invalid element line");
+              IBC_LOG_ERROR("Invalid element line");
               return false;
             }
             if (isPropertyList(&(linePtr[words[1].from]), words[1].len) == false)
@@ -566,7 +564,7 @@ namespace ibc { namespace gl { namespace file
             {
               if (words.size() != 5)
               {
-                IBC_LOG_ERROR(inLog, "Invalid element line");
+                IBC_LOG_ERROR("Invalid element line");
                 return false;
               }
               outHeader->addPropertyList(elementIndex, &(linePtr[words[4].from]), words[4].len,
@@ -576,7 +574,7 @@ namespace ibc { namespace gl { namespace file
             propertyCount++;
             break;
           default:
-            IBC_LOG_ERROR(inLog, "Invalid line");
+            IBC_LOG_ERROR("Invalid line");
             return false;
         }
         if (foundEnd)
@@ -584,17 +582,17 @@ namespace ibc { namespace gl { namespace file
       }
       if (foundEnd == false)
       {
-        IBC_LOG_ERROR(inLog, "\"end_header\" is missing");
+        IBC_LOG_ERROR("\"end_header\" is missing");
         return false;
       }
       if (elementCount == 0)
       {
-        IBC_LOG_ERROR(inLog, "element is missing");
+        IBC_LOG_ERROR("element is missing");
         return false;
       }
       if (foundFormat == false)
       {
-        IBC_LOG_ERROR(inLog, "format is missing");
+        IBC_LOG_ERROR("format is missing");
         return false;
       }
       //
@@ -603,12 +601,11 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // findPLYHeader
     // -------------------------------------------------------------------------
-    static size_t findPLYHeader(const char *inHeaderStr, size_t inLen,
-                                ibc::Log *inLog = IBC_DEFAULT_LOG)
+    static size_t findPLYHeader(const char *inHeaderStr, size_t inLen)
     {
       if (inLen < MIN_HEADER_LEN)
       {
-        IBC_LOG_ERROR(inLog, "inLen < MIN_HEADER_LEN");
+        IBC_LOG_ERROR("inLen < MIN_HEADER_LEN");
         return 0;
       }
       // Check the PLY header start string "ply"
@@ -618,7 +615,7 @@ namespace ibc { namespace gl { namespace file
       {
         if (*bufPtr != *startStr)
         {
-          IBC_LOG_ERROR(inLog, "\"ply\" is missing");
+          IBC_LOG_ERROR("\"ply\" is missing");
           return 0;
         }
         bufPtr++;
@@ -634,7 +631,7 @@ namespace ibc { namespace gl { namespace file
       size_t  pos = strView.find(endStr);
       if (pos == std::basic_string<char>::npos)
       {
-        IBC_LOG_ERROR(inLog, "\"end_header\" is missing");
+        IBC_LOG_ERROR("\"end_header\" is missing");
         return 0;
       }
       pos += strlen(endStr);
@@ -643,7 +640,7 @@ namespace ibc { namespace gl { namespace file
       {
         if (!(strView[pos] == Common::CHAR_CR_CODE || strView[pos] == Common::CHAR_LF_CODE))
         {
-          IBC_LOG_ERROR(inLog, "Invalid EOL code after \"end_header\" #1");
+          IBC_LOG_ERROR("Invalid EOL code after \"end_header\" #1");
           return 0;
         }
       }
@@ -651,7 +648,7 @@ namespace ibc { namespace gl { namespace file
       {
         if (strView[pos] != Common::CHAR_CR_CODE && strView[pos+1] != Common::CHAR_LF_CODE)
         {
-          IBC_LOG_ERROR(inLog, "Invalid EOL code after \"end_header\" #2");
+          IBC_LOG_ERROR("Invalid EOL code after \"end_header\" #2");
           return 0;
         }
       }
@@ -983,48 +980,47 @@ namespace ibc { namespace gl { namespace file
     static bool readHeader(const char *inFileName,
                     PLYHeader **outHeader,
                     void **outDataPtr, size_t *outDataSize,
-                    char **outHeaderStrBufPtr = NULL,
-                    ibc::Log *inLog = IBC_DEFAULT_LOG)
+                    char **outHeaderStrBufPtr = NULL)
     {
       int fd = ::open(inFileName, O_RDONLY);
       if (fd == -1)
       {
-        IBC_LOG_ERROR(inLog, "Failed : open()");
+        IBC_LOG_ERROR("Failed : open()");
         return false;
       }
       FILE  *fp = ::fdopen(fd, "rb");
       if (fp == NULL)
       {
-        IBC_LOG_ERROR(inLog, "Failed : fdopen()");
+        IBC_LOG_ERROR("Failed : fdopen()");
         return false;
       }
       struct stat stbuf;
       if (::fstat(fd, &stbuf) == -1)
       {
-        IBC_LOG_ERROR(inLog, "Failed : fstat()");
+        IBC_LOG_ERROR("Failed : fstat()");
         return false;
       }
       size_t  fileSize = stbuf.st_size;
       unsigned char *buf = new unsigned char[fileSize];
       if (buf == NULL)
       {
-        IBC_LOG_ERROR(inLog, "Failed : buf == NULL");
+        IBC_LOG_ERROR("Failed : buf == NULL");
         ::fclose(fp);
         return false;
       }
       if (::fread(buf, sizeof(unsigned char), fileSize, fp) != fileSize)
       {
-        IBC_LOG_ERROR(inLog, "Failed : fread()");
+        IBC_LOG_ERROR("Failed : fread()");
         delete buf;
         ::fclose(fp);
         return false;
       }
       ::fclose(fp);
       size_t  headerSize;
-      *outHeader = PLYHeader::create((char *)buf, fileSize, &headerSize, inLog);
+      *outHeader = PLYHeader::create((char *)buf, fileSize, &headerSize);
       if (*outHeader == NULL)
       {
-        IBC_LOG_ERROR(inLog, "Failed : *outHeader == NULL");
+        IBC_LOG_ERROR("Failed : *outHeader == NULL");
         delete buf;
         return false;
       }
@@ -1033,7 +1029,7 @@ namespace ibc { namespace gl { namespace file
         *outHeaderStrBufPtr = new char[headerSize + 1];
         if (*outHeaderStrBufPtr == NULL)
         {
-          IBC_LOG_ERROR(inLog, "Failed : *outHeaderStrBufPtr == NULL");
+          IBC_LOG_ERROR("Failed : *outHeaderStrBufPtr == NULL");
           delete outHeader;
           delete buf;
           return false;
@@ -1052,8 +1048,7 @@ namespace ibc { namespace gl { namespace file
     static bool get_glXYZf_RGBub(PLYHeader &inHeader,
                     const void *inDataPtr, size_t inDataSize,
                     ibc::gl::glXYZf_RGBAub **outDataPtr, size_t *outDataNum,
-                    bool  inReuireRGB = false,
-                    ibc::Log *inLog = IBC_DEFAULT_LOG)
+                    bool  inReuireRGB = false)
     {
       UNUSED(inReuireRGB);  // TODO : Clean up
       bool  hasRGB = false;
@@ -1064,22 +1059,22 @@ namespace ibc { namespace gl { namespace file
       
       if (inHeader.findElementIndex(PLYHeader::ELEMENT_TYPE_VERTEX, &index) == false)
       {
-          IBC_LOG_ERROR(inLog, "Can't find the vertex element");
+          IBC_LOG_ERROR("Can't find the vertex element");
           return false;
       }
       if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_X, &x_offset) == false)
       {
-          IBC_LOG_ERROR(inLog, "Can't find the property x in the vertex element");
+          IBC_LOG_ERROR("Can't find the property x in the vertex element");
           return false;
       }
       if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_Y, &y_offset) == false)
       {
-          IBC_LOG_ERROR(inLog, "Can't find the property y in the vertex element");
+          IBC_LOG_ERROR("Can't find the property y in the vertex element");
           return false;
       }
       if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_Z, &z_offset) == false)
       {
-          IBC_LOG_ERROR(inLog, "Can't find the property z in the vertex element");
+          IBC_LOG_ERROR("Can't find the property z in the vertex element");
           return false;
       }
       //
@@ -1093,21 +1088,21 @@ namespace ibc { namespace gl { namespace file
       unsigned char *srcDataPtr = (unsigned char *)inHeader.getElementDataPtr(index, inDataPtr, inDataSize);
       if (srcDataPtr == NULL)
       {
-        IBC_LOG_ERROR(inLog, "getElementDataPtr() returned NULL");
+        IBC_LOG_ERROR("getElementDataPtr() returned NULL");
         return false;
       }
       bool  containsList;
       size_t  elementSize = inHeader.getElementSize(index, &containsList);
       if (containsList)
       {
-        IBC_LOG_ERROR(inLog, "Vertex element contains a property list");
+        IBC_LOG_ERROR("Vertex element contains a property list");
         return false;
       }
       *outDataNum = inHeader.getElements()[index].num;
       *outDataPtr = new ibc::gl::glXYZf_RGBAub[*outDataNum];
       if (*outDataPtr == NULL)
       {
-        IBC_LOG_ERROR(inLog, "*outDataPtr == NULL");
+        IBC_LOG_ERROR("*outDataPtr == NULL");
         return false;
       }
       ibc::gl::glXYZf_RGBAub *dstDataPtr = *outDataPtr;
