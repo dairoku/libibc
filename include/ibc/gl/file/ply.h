@@ -37,6 +37,7 @@
 #define IBC_GL_FILE_PLY_H_
 
 // Includes --------------------------------------------------------------------
+#include <iostream>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -44,6 +45,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "ibc/base/types.h"
+#include "ibc/base/endian.h"
 #include "ibc/base/log.h"
 #include "ibc/gl/data.h"
 #include "ibc/gl/file/common.h"
@@ -200,14 +203,14 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getFormat
     // -------------------------------------------------------------------------
-    DataFormat  getFormat()
+    DataFormat  getFormat() const
     {
       return mDataFormat;
     }
     // -------------------------------------------------------------------------
     // getFormatVersionStr
     // -------------------------------------------------------------------------
-    const std::string &getFormatVersionStr()
+    const std::string &getFormatVersionStr() const
     {
       return mFormatVersionStr;
     }
@@ -223,7 +226,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getCommentStr
     // -------------------------------------------------------------------------
-    const std::string &getCommentStr()
+    const std::string &getCommentStr() const
     {
       return mCommentStr;
     }
@@ -239,7 +242,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getObjInfoStr
     // -------------------------------------------------------------------------
-    const std::string &getObjInfoStr()
+    const std::string &getObjInfoStr() const
     {
       return mObjInfoStr;
     }
@@ -259,14 +262,14 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getElements
     // -------------------------------------------------------------------------
-    const std::vector<Element> &getElements()
+    const std::vector<Element> &getElements() const
     {
       return mElements;
     }
     // -------------------------------------------------------------------------
     // findElementIndex
     // -------------------------------------------------------------------------
-    bool findElementIndex(ElementType inType, size_t *outIndex)
+    bool findElementIndex(ElementType inType, size_t *outIndex) const
     {
       for (size_t i = 0; i < mElements.size(); i++)
       {
@@ -315,14 +318,14 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getProperties
     // -------------------------------------------------------------------------
-    const std::vector<Property> &getProperties()
+    const std::vector<Property> &getProperties() const
     {
       return mProperties;
     }
     // -------------------------------------------------------------------------
     // getElementProperties
     // -------------------------------------------------------------------------
-    size_t getElementProperties(size_t inElementIndex, std::vector<Property> *outProperties)
+    size_t getElementProperties(size_t inElementIndex, std::vector<Property> *outProperties) const
     {
       for (size_t i = 0; i < mProperties.size(); i++)
         if (mProperties[i].elementIndex == inElementIndex)
@@ -332,7 +335,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getElementSize
     // -------------------------------------------------------------------------
-    size_t getElementSize(size_t inElementIndex, bool *outContainsList)
+    size_t getElementSize(size_t inElementIndex, bool *outContainsList) const
     {
       size_t  elementSize = 0;
       *outContainsList = false;
@@ -349,7 +352,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getElementDataPtr
     // -------------------------------------------------------------------------
-    const void *getElementDataPtr(size_t inElementIndex, const void *inDataPtr, size_t inDataSize)
+    const void *getElementDataPtr(size_t inElementIndex, const void *inDataPtr, size_t inDataSize) const
     {
       UNUSED(inDataSize); // TODO : Remove this
       //
@@ -373,8 +376,11 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getPropertyOffset
     // -------------------------------------------------------------------------
-    bool  getPropertyOffset(size_t inElementIndex, PropertyType inType, size_t *outOffset)
+    bool  getPropertyOffset(size_t inElementIndex, PropertyType inType, 
+                            size_t *outOffset, DataType *outDataType) const
     {
+      if (inType == PROPERTY_TYPE_NOT_SPECIFIED)
+        return false;
       if (mDataFormat == DATA_FORMAT_ASCII)
         return false;
       *outOffset = 0;
@@ -384,10 +390,61 @@ namespace ibc { namespace gl { namespace file
           if (mProperties[i].isList)  // We can't calculate the offset here in this case
             return false;
           if (mProperties[i].type == inType)
+          {
+            *outDataType = mProperties[i].dataType;
             return true;
+          }
           (*outOffset) += sizeofDataType(mProperties[i].dataType);
         }
       return false;
+    }
+    // Debug Functions ---------------------------------------------------------
+    void  debugDumpHeader(std::ostream *outStream) const
+    {
+      *outStream << "PLY Header Object Debug Dump" << std::endl;
+      *outStream << "Format : ";
+      *outStream << std::string_view(getDataFormatWord(mDataFormat));
+      *outStream << " " << mFormatVersionStr << std::endl;
+      *outStream << "[Comments]" << std::endl; // TODO revise this
+      *outStream << mCommentStr << std::endl;
+      *outStream << "[ObjInfos]" << std::endl; // TODO revise this
+      *outStream << mObjInfoStr << std::endl;
+      size_t  processedNum = 0;
+      for (size_t i = 0; i < mElements.size(); i++)
+      {
+        *outStream << "Element : ";
+        *outStream << std::string_view(getElementTypeWord(mElements[i].type));
+        *outStream << " ";
+        *outStream << mElements[i].name;
+        *outStream << " ";
+        *outStream << mElements[i].num << std::endl;
+        for (size_t j = 0; j < mProperties.size(); j++)
+        {
+          if (mProperties[j].elementIndex == i)
+          {
+            if (mProperties[j].isList == false)
+            {
+              *outStream << " Property : ";
+              *outStream << std::string_view(getDataTypeWord(mProperties[j].dataType));
+            }
+            else
+            {
+              *outStream << " Property List: ";
+              *outStream << std::string_view(getDataTypeWord(mProperties[j].listNumType));
+              *outStream << " ";
+              *outStream << std::string_view(getDataTypeWord(mProperties[j].dataType));
+            }
+            *outStream << " ";
+            *outStream << std::string_view(getPropertyTypeWord(mProperties[j].type));
+            *outStream << std::endl;
+            processedNum++;
+          }
+        }
+      }
+      if (processedNum != mProperties.size())
+      {
+        *outStream << "<ERROR> : There are unreferenced properties" << std::endl;
+      }
     }
 
     // Static Functions --------------------------------------------------------
@@ -835,9 +892,9 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // sizeofDataType
     // -------------------------------------------------------------------------
-    static size_t sizeofDataType(DataType inFormat)
+    static size_t sizeofDataType(DataType inType)
     {
-      switch (inFormat)
+      switch (inType)
       {
         case DATA_TYPE_INT8:
         case DATA_TYPE_UINT8:
@@ -863,6 +920,59 @@ namespace ibc { namespace gl { namespace file
           break;
       }
       return 0;
+    }
+    // -------------------------------------------------------------------------
+    // clipToDataTypeRange
+    // -------------------------------------------------------------------------
+    static void clipToDataTypeRange(DataType inType, double *ioValue)
+    {
+      switch (inType)
+      {
+        case DATA_TYPE_INT8:
+        case DATA_TYPE_CHAR:
+          if (*ioValue < -128)
+            *ioValue = -128;
+          if (*ioValue > 127)
+            *ioValue = 127;
+          return;
+        case DATA_TYPE_UINT8:
+        case DATA_TYPE_UCHAR:
+          if (*ioValue < 0)
+            *ioValue = 0;
+          if (*ioValue > 255)
+            *ioValue = 255;
+          return;
+        case DATA_TYPE_INT16:
+        case DATA_TYPE_SHORT:
+          if (*ioValue < -32768)
+            *ioValue = -32768;
+          if (*ioValue > 32767)
+            *ioValue = 32767;
+          return;
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_USHORT:
+          if (*ioValue < 0)
+            *ioValue = 0;
+          if (*ioValue > 65535)
+            *ioValue = 65535;
+          return;
+        case DATA_TYPE_INT32:
+        case DATA_TYPE_INT:
+          if (*ioValue < -2147483648)
+            *ioValue = -2147483648;
+          if (*ioValue > 2147483647)
+            *ioValue = 2147483647;
+          return;
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_UINT:
+          if (*ioValue < 0)
+            *ioValue = 0;
+          if (*ioValue > 4294967295)
+            *ioValue = 4294967295;
+          return;
+        default:
+          break;
+      }
     }
     // -------------------------------------------------------------------------
     // getElementTypeWord
@@ -966,6 +1076,9 @@ namespace ibc { namespace gl { namespace file
       //
       return PROPERTY_TYPE_USER;
     }
+
+    // Friend classes ----------------------------------------------------------
+    friend class PLYFile;
   };
 
   // ---------------------------------------------------------------------------
@@ -1045,90 +1158,47 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // get_glXYZf_RGBub
     // -------------------------------------------------------------------------
-    static bool get_glXYZf_RGBub(PLYHeader &inHeader,
+    static bool get_glXYZf_RGBub(const PLYHeader &inHeader,
                     const void *inDataPtr, size_t inDataSize,
-                    ibc::gl::glXYZf_RGBAub **outDataPtr, size_t *outDataNum,
-                    bool  inReuireRGB = false)
+                    ibc::gl::glXYZf_RGBAub **outDataPtr, size_t *outDataNum)
     {
-      UNUSED(inReuireRGB);  // TODO : Clean up
-      bool  hasRGB = false;
-      UNUSED(hasRGB);
-      size_t  index;
-      size_t  x_offset, y_offset, z_offset;
-      size_t  r_offset, g_offset, b_offset;
-      
-      if (inHeader.findElementIndex(PLYHeader::ELEMENT_TYPE_VERTEX, &index) == false)
-      {
-          IBC_LOG_ERROR("Can't find the vertex element");
-          return false;
-      }
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_X, &x_offset) == false)
-      {
-          IBC_LOG_ERROR("Can't find the property x in the vertex element");
-          return false;
-      }
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_Y, &y_offset) == false)
-      {
-          IBC_LOG_ERROR("Can't find the property y in the vertex element");
-          return false;
-      }
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_Z, &z_offset) == false)
-      {
-          IBC_LOG_ERROR("Can't find the property z in the vertex element");
-          return false;
-      }
+      DestinationInfo infos[] = {
+        { PLYHeader::PROPERTY_X, PLYHeader::DATA_TYPE_FLOAT32,
+          offsetof(ibc::gl::glXYZf_RGBAub, x),
+          true, 0.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_Y, PLYHeader::DATA_TYPE_FLOAT32,
+          offsetof(ibc::gl::glXYZf_RGBAub, y),
+          true, 0.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_Z, PLYHeader::DATA_TYPE_FLOAT32,
+          offsetof(ibc::gl::glXYZf_RGBAub, z),
+          true, 0.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_RED, PLYHeader::DATA_TYPE_UINT8,
+          offsetof(ibc::gl::glXYZf_RGBAub, r),
+          false, 255.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_GREEN, PLYHeader::DATA_TYPE_UINT8,
+          offsetof(ibc::gl::glXYZf_RGBAub, g),
+          false, 255.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_BLUE, PLYHeader::DATA_TYPE_UINT8,
+          offsetof(ibc::gl::glXYZf_RGBAub, b),
+          false, 255.0, false, 1.0, 0.0, false, 0, 0 },
+        { PLYHeader::PROPERTY_TYPE_NOT_SPECIFIED, PLYHeader::DATA_TYPE_UINT8,
+          offsetof(ibc::gl::glXYZf_RGBAub, a),
+          false, 255.0, false, 1.0, 0.0, false, 0, 0 }};
       //
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_RED, &r_offset) == false)
-        hasRGB = false;
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_GREEN, &g_offset) == false)
-        hasRGB = false;
-      if (inHeader.getPropertyOffset(index, PLYHeader::PROPERTY_BLUE, &b_offset) == false)
-        hasRGB = false;
-      //
-      unsigned char *srcDataPtr = (unsigned char *)inHeader.getElementDataPtr(index, inDataPtr, inDataSize);
-      if (srcDataPtr == NULL)
-      {
-        IBC_LOG_ERROR("getElementDataPtr() returned NULL");
-        return false;
-      }
-      bool  containsList;
-      size_t  elementSize = inHeader.getElementSize(index, &containsList);
-      if (containsList)
-      {
-        IBC_LOG_ERROR("Vertex element contains a property list");
-        return false;
-      }
-      *outDataNum = inHeader.getElements()[index].num;
-      *outDataPtr = new ibc::gl::glXYZf_RGBAub[*outDataNum];
-      if (*outDataPtr == NULL)
-      {
-        IBC_LOG_ERROR("*outDataPtr == NULL");
-        return false;
-      }
-      ibc::gl::glXYZf_RGBAub *dstDataPtr = *outDataPtr;
-      for (size_t i = 0; i < *outDataNum ;i++)
-      {
-        dstDataPtr->x = *((float *)&(srcDataPtr[x_offset]));
-        dstDataPtr->y = *((float *)&(srcDataPtr[y_offset]));
-        dstDataPtr->z = *((float *)&(srcDataPtr[z_offset]));
-        //
-        // if (hasRGB)
-        dstDataPtr->r = *((unsigned char *)&(srcDataPtr[r_offset]));
-        dstDataPtr->g = *((unsigned char *)&(srcDataPtr[g_offset]));
-        dstDataPtr->b = *((unsigned char *)&(srcDataPtr[g_offset]));
-        dstDataPtr++;
-        //
-        srcDataPtr += elementSize;
-      }
-      return true;
+      return parseData(inHeader, PLYHeader::ELEMENT_TYPE_VERTEX,
+                infos, sizeof(infos)/sizeof(DestinationInfo),
+                sizeof(ibc::gl::glXYZf_RGBAub),
+                inDataPtr, inDataSize,
+                (void **)outDataPtr, outDataNum);
     }
 
   protected:
     // Static Functions --------------------------------------------------------
     typedef struct
     {
-      PLYHeader::Property   sourceProperty;
-      PLYHeader::DataType   targetDataType;
+      PLYHeader::PropertyType sourcePropertyType;
+      PLYHeader::DataType     destinationDataType;
+      size_t  destinationDataOffset;
       //
       bool        mandatory;
       double      defaultValue;
@@ -1141,6 +1211,227 @@ namespace ibc { namespace gl { namespace file
       double      min;
       double      max;
     } DestinationInfo;
+    //
+    typedef struct
+    {
+      bool    exist;
+      size_t  offset;
+      PLYHeader::DataType type;
+    } SourceInfo;
+
+    // -------------------------------------------------------------------------
+    // parseData
+    // -------------------------------------------------------------------------
+    static bool parseData(const PLYHeader &inHeader, PLYHeader::ElementType inType,
+                    const DestinationInfo *inDstInfoPtr, size_t inDstInfoNum,
+                    size_t inDstDataStructSize, 
+                    const void *inSrcDataPtr, size_t inSrcDataSize,
+                    void **outDstDataPtr, size_t *outDstDataNum)
+    {
+      size_t  index;
+      std::vector<SourceInfo> sourceInfos;
+      bool  flipEndian = false; // TODO: Need to adjust this!
+
+      if (inHeader.findElementIndex(inType, &index) == false)
+      {
+          IBC_LOG_ERROR("Can't find the %s element",
+                        PLYHeader::getElementTypeWord(inType));
+          return false;
+      }
+      sourceInfos.resize(inDstInfoNum);
+      for (size_t i = 0; i < inDstInfoNum; i++)
+      {
+        sourceInfos[i].exist = inHeader.getPropertyOffset(
+                                  index, inDstInfoPtr[i].sourcePropertyType,
+                                  &sourceInfos[i].offset, &sourceInfos[i].type);
+        if (sourceInfos[i].exist == false && inDstInfoPtr[i].mandatory == true)
+        {
+            IBC_LOG_ERROR("Can't find the property %s in the %s element",
+                PLYHeader::getPropertyTypeWord(inDstInfoPtr[i].sourcePropertyType),
+                PLYHeader::getElementTypeWord(inType));
+            return false;
+        }
+      }
+      //
+      const unsigned char *srcDataPtr = (unsigned char *)inHeader.getElementDataPtr(
+                                            index, inSrcDataPtr, inSrcDataSize);
+      if (srcDataPtr == NULL)
+      {
+        IBC_LOG_ERROR("getElementDataPtr() returned NULL");
+        return false;
+      }
+      bool  containsList;
+      size_t  elementSize = inHeader.getElementSize(index, &containsList);
+      if (containsList)
+      {
+        IBC_LOG_ERROR("The specified element contains a property list");
+        return false;
+      }
+      *outDstDataNum = inHeader.getElements()[index].num;
+      *outDstDataPtr = new unsigned char[inDstDataStructSize * (*outDstDataNum)];
+      if (*outDstDataPtr == NULL)
+      {
+        IBC_LOG_ERROR("*outDstDataPtr == NULL");
+        return false;
+      }
+      unsigned char *dstDataPtr = (unsigned char *)*outDstDataPtr;
+      for (size_t i = 0; i < *outDstDataNum; i++)
+      {
+        for (size_t j = 0; j < inDstInfoNum; j++)
+        {
+          double v;
+          if (sourceInfos[j].exist == false)
+            v = inDstInfoPtr[j].defaultValue;
+          else
+          {
+            v = getValue(srcDataPtr, sourceInfos[j].offset,
+                         sourceInfos[j].type, flipEndian);
+            if (inDstInfoPtr[j].convert)
+            {
+              v = v * inDstInfoPtr[j].gain;
+              v = v + inDstInfoPtr[j].offset;
+            }
+            if (inDstInfoPtr[j].clip)
+            {
+              if (v < inDstInfoPtr[j].min)
+                v = inDstInfoPtr[j].min;
+              if (v > inDstInfoPtr[j].max)
+                v = inDstInfoPtr[j].max;
+            }
+            PLYHeader::clipToDataTypeRange(inDstInfoPtr[j].destinationDataType, &v);
+          }
+          setValue(v, dstDataPtr, inDstInfoPtr[j].destinationDataOffset,
+                   inDstInfoPtr[j].destinationDataType, false);
+        }
+        srcDataPtr += elementSize;
+        dstDataPtr += inDstDataStructSize;
+      }
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // getValue
+    // -------------------------------------------------------------------------
+    static double getValue(const unsigned char *inDataPtr, size_t inOffset,
+                            PLYHeader::DataType inType, bool inFlipEndian)
+    {
+      unsigned char data[8];
+      // We need to do this to avoid the data alignment issue
+      ::memcpy(data, &(inDataPtr[inOffset]), PLYHeader::sizeofDataType(inType));
+      //
+      if (inFlipEndian)
+        flipEndian(data, inType);
+      //
+      switch (inType)
+      {
+        case PLYHeader::DATA_TYPE_INT8:
+        case PLYHeader::DATA_TYPE_CHAR:
+          return (double )(*((int8 *)data));
+        case PLYHeader::DATA_TYPE_UINT8:
+        case PLYHeader::DATA_TYPE_UCHAR:
+          return (double )(*((uint8 *)data));
+        case PLYHeader::DATA_TYPE_INT16:
+        case PLYHeader::DATA_TYPE_SHORT:
+          return (double )(*((int16 *)data));
+        case PLYHeader::DATA_TYPE_UINT16:
+        case PLYHeader::DATA_TYPE_USHORT:
+          return (double )(*((uint16 *)data));
+        case PLYHeader::DATA_TYPE_INT32:
+        case PLYHeader::DATA_TYPE_INT:
+          return (double )(*((int32  *)data));
+        case PLYHeader::DATA_TYPE_UINT32:
+        case PLYHeader::DATA_TYPE_UINT:
+          return (double )(*((uint32  *)data));
+        case PLYHeader::DATA_TYPE_FLOAT32:
+        case PLYHeader::DATA_TYPE_FLOAT:
+          return (double )(*((float  *)data));
+        case PLYHeader::DATA_TYPE_FLOAT64:
+        case PLYHeader::DATA_TYPE_DOUBLE:
+          return (double )(*((double  *)data));
+        default:
+          break;
+      }
+      return 0;
+    }
+    // -------------------------------------------------------------------------
+    // setValue
+    // -------------------------------------------------------------------------
+    static void setValue(double inValue, unsigned char *outDataPtr, size_t inOffset,
+                          PLYHeader::DataType inType, bool inFlipEndian)
+    {
+      unsigned char data[8];
+
+      switch (inType)
+      {
+        case PLYHeader::DATA_TYPE_INT8:
+        case PLYHeader::DATA_TYPE_CHAR:
+          *((int8 *)data) = (int8 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_UINT8:
+        case PLYHeader::DATA_TYPE_UCHAR:
+          *((uint8 *)data) = (uint8 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_INT16:
+        case PLYHeader::DATA_TYPE_SHORT:
+          *((int16 *)data) = (int16 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_UINT16:
+        case PLYHeader::DATA_TYPE_USHORT:
+          *((uint16 *)data) = (uint16 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_INT32:
+        case PLYHeader::DATA_TYPE_INT:
+          *((int32 *)data) = (int32 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_UINT32:
+        case PLYHeader::DATA_TYPE_UINT:
+          *((uint32 *)data) = (uint32 )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_FLOAT32:
+        case PLYHeader::DATA_TYPE_FLOAT:
+          *((float *)data) = (float )inValue;
+          break;
+        case PLYHeader::DATA_TYPE_FLOAT64:
+        case PLYHeader::DATA_TYPE_DOUBLE:
+          *((double *)data) = (double )inValue;
+          break;
+        default:
+          break;
+      }
+      if (inFlipEndian)
+        flipEndian(data, inType);
+      //
+      // We need to do this to avoid the data alignment issue
+      ::memcpy(&(outDataPtr[inOffset]), data, PLYHeader::sizeofDataType(inType));
+    }
+    // -------------------------------------------------------------------------
+    // flipEndian
+    // -------------------------------------------------------------------------
+    static void flipEndian(unsigned char *ioDataPtr, PLYHeader::DataType inType)
+    {
+      switch (inType)
+      {
+        case PLYHeader::DATA_TYPE_INT16:
+        case PLYHeader::DATA_TYPE_UINT16:
+        case PLYHeader::DATA_TYPE_SHORT:
+        case PLYHeader::DATA_TYPE_USHORT:
+          ibc::Endian::swapBytes(ioDataPtr, 2);
+          break;
+        case PLYHeader::DATA_TYPE_INT32:
+        case PLYHeader::DATA_TYPE_UINT32:
+        case PLYHeader::DATA_TYPE_FLOAT32:
+        case PLYHeader::DATA_TYPE_INT:
+        case PLYHeader::DATA_TYPE_UINT:
+        case PLYHeader::DATA_TYPE_FLOAT:
+          ibc::Endian::swapBytes(ioDataPtr, 4);
+          break;
+        case PLYHeader::DATA_TYPE_FLOAT64:
+        case PLYHeader::DATA_TYPE_DOUBLE:
+          ibc::Endian::swapBytes(ioDataPtr, 8);
+          break;
+        default:
+          break;
+      }
+    }
   };
 };};};
 

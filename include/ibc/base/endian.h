@@ -147,6 +147,21 @@ namespace ibc
       u.value_uint64 = swap(u.value_uint64);
       return u.value_double;
     }
+    // -------------------------------------------------------------------------
+    // swapBytes
+    // -------------------------------------------------------------------------
+    //
+    static void swapBytes(void *inBytes, size_t inSize)
+    {
+      unsigned char *dataPtr = (unsigned char *)inBytes;
+      unsigned char t;
+      for (size_t i = 0; i < inSize / 2; i++)
+      {
+        t = dataPtr[i];
+        dataPtr[i] = dataPtr[inSize - i - 1];
+        dataPtr[inSize - i - 1] = t;
+      }
+    }
   };
 };
 
