@@ -1156,9 +1156,9 @@ namespace ibc { namespace gl { namespace file
       return true;
     }
     // -------------------------------------------------------------------------
-    // get_glXYZf_RGBub
+    // get_glXYZf_RGBAub
     // -------------------------------------------------------------------------
-    static bool get_glXYZf_RGBub(const PLYHeader &inHeader,
+    static bool get_glXYZf_RGBAub(const PLYHeader &inHeader,
                     const void *inDataPtr, size_t inDataSize,
                     ibc::gl::glXYZf_RGBAub **outDataPtr, size_t *outDataNum)
     {
@@ -1190,6 +1190,54 @@ namespace ibc { namespace gl { namespace file
                 sizeof(ibc::gl::glXYZf_RGBAub),
                 inDataPtr, inDataSize,
                 (void **)outDataPtr, outDataNum);
+    }
+    // -------------------------------------------------------------------------
+    // calcFitParam_glXYZf_RGBAub
+    // -------------------------------------------------------------------------
+    static void calcFitParam_glXYZf_RGBAub(
+                    const ibc::gl::glXYZf_RGBAub *inDataPtr, size_t inDataNum,
+                    GLfloat outParam[4])
+    {
+      GLfloat x_min, y_min, z_min;
+      GLfloat x_max, y_max, z_max;
+      x_min = inDataPtr->x;
+      y_min = inDataPtr->y;
+      z_min = inDataPtr->z;
+      x_max = inDataPtr->x;
+      y_max = inDataPtr->y;
+      z_max = inDataPtr->z;
+      for (size_t i = 0; i < inDataNum; i++)
+      {
+        if (inDataPtr[i].x < x_min)
+          x_min = inDataPtr[i].x;
+        if (inDataPtr[i].y < y_min)
+          y_min = inDataPtr[i].y;
+        if (inDataPtr[i].z < z_min)
+          z_min = inDataPtr[i].z;
+        //
+        if (inDataPtr[i].x > x_max)
+          x_max = inDataPtr[i].x;
+        if (inDataPtr[i].y > y_max)
+          y_max = inDataPtr[i].y;
+        if (inDataPtr[i].z > z_max)
+          z_max = inDataPtr[i].z;
+      }
+      GLfloat size_x = x_max - x_min;
+      GLfloat size_y = y_max - y_min;
+      GLfloat size_z = z_max - z_min;
+      GLfloat size_max = size_x;
+      if (size_y > size_max)
+        size_max = size_y;
+      if (size_z > size_max)
+        size_max = size_z;
+      //
+      outParam[0] = -1.0 * (x_min + size_x / 2.0);
+      outParam[1] = -1.0 * (y_min + size_y / 2.0);
+      outParam[2] = -1.0 * (z_min + size_z / 2.0);
+      if (size_max != 0)
+        outParam[3] = 2.0 / size_max;
+      else
+        outParam[3] = 1.0;
     }
 
   protected:

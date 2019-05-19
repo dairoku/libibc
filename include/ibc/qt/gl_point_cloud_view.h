@@ -46,9 +46,9 @@
 #include "ibc/qt/image_data.h"
 //#include "ibc/qt/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
-#include "ibc/gl/model/points.h"
+#include "ibc/gl/model/points_rgba8.h"
 #include "ibc/gl/shader/simple.h"
-#include "ibc/gl/shader/point_cloud.h"
+#include "ibc/gl/shader/point_cloud_rgba8.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -94,13 +94,20 @@ namespace ibc
       mDataModel.setDataPtr(inDataPtr, inDataNum);
       update();
     }
+    // -------------------------------------------------------------------------
+    // setModelFitParam
+    // -------------------------------------------------------------------------
+    void setModelFitParam(const GLfloat inModelFitParam[4])
+    {
+      mDataModel.setModelFitParam(inModelFitParam);
+    }
 
   protected:
     // Member variables --------------------------------------------------------
     ibc::gl::shader::Simple  mShader;
-    ibc::gl::shader::PointCloud  mPointCloudShader;
+    ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
     ibc::gl::model::ColorCube  mModel;
-    ibc::gl::model::Points  mDataModel;
+    ibc::gl::model::PointsRGBA8  mDataModel;
   };
  };
 };
