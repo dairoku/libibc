@@ -43,8 +43,9 @@
 #include "ibc/image/image_converter_interface.h"
 #include "ibc/image/image_exception.h"
 
-// Namespace -------------------------------------------------------------------
-namespace ibc::image::converter // <- nested namespace (C++17)
+// Namespace ------------------------------------------------------------------
+//namespace ibc::image::converter // <- nested namespace (C++17)
+namespace ibc { namespace image { namespace converter
 {
   // ---------------------------------------------------------------------------
   // RGB_to_RGB class
@@ -533,6 +534,6 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       }
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_IMAGE_CONVERTER_MONO_TO_RGB_H_

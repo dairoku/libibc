@@ -41,7 +41,8 @@
 #include "ibc/image/image_converter_interface.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::image::converter // <- nested namespace (C++17)
+//namespace ibc::image::converter // <- nested namespace (C++17)
+namespace ibc { namespace image { namespace converter
 {
   // ---------------------------------------------------------------------------
   // RGB_to_RGB class
@@ -240,6 +241,6 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       std::memcpy(outImage, inImage, inObj->mPixelAreaSize);
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_IMAGE_CONVERTER_RGB_TO_RGB_H_
