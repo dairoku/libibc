@@ -81,7 +81,7 @@ namespace ibc { namespace gl { namespace file
       DATA_FORMAT_ASCII                 = 1,
       DATA_FORMAT_BINARY_LITTLE_ENDIAN,
       DATA_FORMAT_BINARY_BIG_ENDIAN,
-      DATA_FORMAT__ANY                  = 32767
+      DATA_FORMAT_ANY                   = 32767
     };
     enum  DataType
     {
@@ -333,9 +333,9 @@ namespace ibc { namespace gl { namespace file
       return outProperties->size();
     }
     // -------------------------------------------------------------------------
-    // getElementSize
+    // getElementSingleDataSize
     // -------------------------------------------------------------------------
-    size_t getElementSize(size_t inElementIndex, bool *outContainsList) const
+    size_t getElementSingleDataSize(size_t inElementIndex, bool *outContainsList) const
     {
       size_t  elementSize = 0;
       *outContainsList = false;
@@ -350,28 +350,70 @@ namespace ibc { namespace gl { namespace file
       return elementSize;
     }
     // -------------------------------------------------------------------------
-    // getElementDataPtr
+    // getElementTotalSize
     // -------------------------------------------------------------------------
-    const void *getElementDataPtr(size_t inElementIndex, const void *inDataPtr, size_t inDataSize) const
+    size_t getElementTotalSize(size_t inElementIndex, const void *inDataPtr, size_t inDataSize) const
     {
-      UNUSED(inDataSize); // TODO : Remove this
-      //
-      if (inElementIndex >= mElements.size())
-        return NULL;
-      if (mDataFormat == DATA_FORMAT_ASCII)
-        return NULL; // TODO : Need to implement this path
-      size_t  offset = 0;
       bool  containsList = false;
+      size_t elementSize = getElementSingleDataSize(inElementIndex, &containsList);
+      if (containsList == false)
+        return elementSize * mElements[inElementIndex].num;
+      //
+      size_t offset = 0;
+      bool  flipEndian = doesNeedToFlipEndian(mDataFormat);
+      for (size_t i = 0; i < mElements[inElementIndex].num; i++)
+        for (size_t j = 0; j < mProperties.size(); j++)
+          if (mProperties[j].elementIndex == inElementIndex)
+          {
+            if (mProperties[j].isList == false)
+              offset += sizeofDataType(mProperties[j].dataType);
+            else
+            {
+              double num = getValue((const unsigned char *)inDataPtr, offset,
+                                    mProperties[j].listNumType, flipEndian);
+              offset += sizeofDataType(mProperties[j].listNumType);
+              offset += sizeofDataType(mProperties[j].dataType) * num;
+            }
+            if (offset > inDataSize)
+              return 0;
+          }
+      return offset;
+    }
+    // -------------------------------------------------------------------------
+    // getElementDataOffset
+    // -------------------------------------------------------------------------
+    bool getElementDataOffset(size_t inElementIndex, const void *inDataPtr,
+                                    size_t inDataSize, size_t *outOffset) const
+    {
+      *outOffset = 0;
+      if (inElementIndex >= mElements.size())
+        return false;
+      if (mDataFormat != DATA_FORMAT_ASCII)
+      {
+        unsigned char *elementDataPtr = (unsigned char *)inDataPtr;
+        for (size_t i = 0; i < inElementIndex; i++)
+        {
+          size_t elementSize = getElementTotalSize(i, elementDataPtr, inDataSize);
+          if (elementSize == 0)
+            return false;
+          inDataSize -= elementSize;
+          (*outOffset) += elementSize;
+          elementDataPtr += elementSize;
+        }
+        return true;
+      }
+      char *elementStrPtr = (char *)inDataPtr;
       for (size_t i = 0; i < inElementIndex; i++)
       {
-        size_t elementSize = getElementSize(i, &containsList);
-        if (containsList) // TODO : Need to implement this path
-          return NULL;
-        offset += elementSize * mElements[i].num;
+        size_t offset;
+        if (Common::skipLines(elementStrPtr, inDataSize,
+                              mElements[inElementIndex].num, &offset) == false)
+          return false;
+        elementStrPtr += offset;
+        (*outOffset) += offset;
+        inDataSize -= offset;
       }
-      const unsigned char *elementDataPtr = (const unsigned char *)inDataPtr;
-      // TODO : Need to check memory size
-      return (void *)(elementDataPtr + offset);
+      return true;
     }
     // -------------------------------------------------------------------------
     // getPropertyOffset
@@ -380,8 +422,6 @@ namespace ibc { namespace gl { namespace file
                             size_t *outOffset, DataType *outDataType) const
     {
       if (inType == PROPERTY_TYPE_NOT_SPECIFIED)
-        return false;
-      if (mDataFormat == DATA_FORMAT_ASCII)
         return false;
       *outOffset = 0;
       for (size_t i = 0; i < mProperties.size(); i++)
@@ -394,7 +434,10 @@ namespace ibc { namespace gl { namespace file
             *outDataType = mProperties[i].dataType;
             return true;
           }
-          (*outOffset) += sizeofDataType(mProperties[i].dataType);
+          if (mDataFormat != DATA_FORMAT_ASCII)
+            (*outOffset) += sizeofDataType(mProperties[i].dataType);
+          else
+            (*outOffset) += 1;
         }
       return false;
     }
@@ -710,6 +753,204 @@ namespace ibc { namespace gl { namespace file
         }
       }
       return pos+sizeOfEOLMaker;
+    }
+    // -------------------------------------------------------------------------
+    // isAsciiFormat
+    // -------------------------------------------------------------------------
+    static bool isAsciiFormat(DataFormat inFormat)
+    {
+      if (inFormat == DATA_FORMAT_ASCII)
+        return false;
+      return false;
+    }
+    // -------------------------------------------------------------------------
+    // doesNeedToFlipEndian
+    // -------------------------------------------------------------------------
+    static bool doesNeedToFlipEndian(DataFormat inFormat)
+    {
+    #ifdef __LITTLE_ENDIAN__
+      if (inFormat == DATA_FORMAT_BINARY_BIG_ENDIAN)
+        return true;
+    #endif
+    #ifdef __BIG_ENDIAN__
+      if (inFormat == DATA_FORMAT_BINARY_LITTLE_ENDIAN)
+        return false;
+    #endif
+      return false;
+    }
+    // -------------------------------------------------------------------------
+    // getValue
+    // -------------------------------------------------------------------------
+    static double getValue(const unsigned char *inDataPtr, size_t inOffset,
+                            PLYHeader::DataType inType, bool inFlipEndian)
+    {
+      unsigned char data[8];
+      // We need to do this to avoid the data alignment issue
+      ::memcpy(data, &(inDataPtr[inOffset]), PLYHeader::sizeofDataType(inType));
+      //
+      if (inFlipEndian)
+        flipEndian(data, inType);
+      //
+      switch (inType)
+      {
+        case DATA_TYPE_INT8:
+        case DATA_TYPE_CHAR:
+          return (double )(*((int8 *)data));
+        case DATA_TYPE_UINT8:
+        case DATA_TYPE_UCHAR:
+          return (double )(*((uint8 *)data));
+        case DATA_TYPE_INT16:
+        case DATA_TYPE_SHORT:
+          return (double )(*((int16 *)data));
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_USHORT:
+          return (double )(*((uint16 *)data));
+        case DATA_TYPE_INT32:
+        case DATA_TYPE_INT:
+          return (double )(*((int32  *)data));
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_UINT:
+          return (double )(*((uint32  *)data));
+        case DATA_TYPE_FLOAT32:
+        case DATA_TYPE_FLOAT:
+          return (double )(*((float  *)data));
+        case DATA_TYPE_FLOAT64:
+        case DATA_TYPE_DOUBLE:
+          return (double )(*((double  *)data));
+        default:
+          break;
+      }
+      return 0;
+    }
+    // -------------------------------------------------------------------------
+    // setValue
+    // -------------------------------------------------------------------------
+    static void setValue(double inValue, unsigned char *outDataPtr, size_t inOffset,
+                          DataType inType, bool inFlipEndian)
+    {
+      unsigned char data[8];
+
+      switch (inType)
+      {
+        case DATA_TYPE_INT8:
+        case DATA_TYPE_CHAR:
+          *((int8 *)data) = (int8 )inValue;
+          break;
+        case DATA_TYPE_UINT8:
+        case DATA_TYPE_UCHAR:
+          *((uint8 *)data) = (uint8 )inValue;
+          break;
+        case DATA_TYPE_INT16:
+        case DATA_TYPE_SHORT:
+          *((int16 *)data) = (int16 )inValue;
+          break;
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_USHORT:
+          *((uint16 *)data) = (uint16 )inValue;
+          break;
+        case DATA_TYPE_INT32:
+        case DATA_TYPE_INT:
+          *((int32 *)data) = (int32 )inValue;
+          break;
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_UINT:
+          *((uint32 *)data) = (uint32 )inValue;
+          break;
+        case DATA_TYPE_FLOAT32:
+        case DATA_TYPE_FLOAT:
+          *((float *)data) = (float )inValue;
+          break;
+        case DATA_TYPE_FLOAT64:
+        case DATA_TYPE_DOUBLE:
+          *((double *)data) = (double )inValue;
+          break;
+        default:
+          break;
+      }
+      if (inFlipEndian)
+        flipEndian(data, inType);
+      //
+      // We need to do this to avoid the data alignment issue
+      ::memcpy(&(outDataPtr[inOffset]), data, sizeofDataType(inType));
+    }
+    // -------------------------------------------------------------------------
+    // flipEndian
+    // -------------------------------------------------------------------------
+    static void flipEndian(unsigned char *ioDataPtr, DataType inType)
+    {
+      switch (inType)
+      {
+        case DATA_TYPE_INT16:
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_SHORT:
+        case DATA_TYPE_USHORT:
+          ibc::Endian::swapBytes(ioDataPtr, 2);
+          break;
+        case DATA_TYPE_INT32:
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_FLOAT32:
+        case DATA_TYPE_INT:
+        case DATA_TYPE_UINT:
+        case DATA_TYPE_FLOAT:
+          ibc::Endian::swapBytes(ioDataPtr, 4);
+          break;
+        case DATA_TYPE_FLOAT64:
+        case DATA_TYPE_DOUBLE:
+          ibc::Endian::swapBytes(ioDataPtr, 8);
+          break;
+        default:
+          break;
+      }
+    }
+    // -------------------------------------------------------------------------
+    // getValueFromStr
+    // -------------------------------------------------------------------------
+    static double getValueFromStr(const char *inDataStrPtr, size_t inDataSize,
+                            PLYHeader::DataType inType)
+    {
+      std::string str(inDataStrPtr, inDataSize);
+      double  v = 0;
+
+      switch (inType)
+      {
+        case DATA_TYPE_INT8:
+        case DATA_TYPE_CHAR:
+          v = (double )std::stol(str);
+          break;
+        case DATA_TYPE_UINT8:
+        case DATA_TYPE_UCHAR:
+          v = (double )std::stoul(str);
+          break;
+        case DATA_TYPE_INT16:
+        case DATA_TYPE_SHORT:
+          v = (double )std::stol(str);
+          break;
+        case DATA_TYPE_UINT16:
+        case DATA_TYPE_USHORT:
+          v = (double )std::stoul(str);
+          break;
+        case DATA_TYPE_INT32:
+        case DATA_TYPE_INT:
+          v = (double )std::stol(str);
+          break;
+        case DATA_TYPE_UINT32:
+        case DATA_TYPE_UINT:
+          v = (double )std::stoul(str);
+          break;
+        case DATA_TYPE_FLOAT32:
+        case DATA_TYPE_FLOAT:
+          v = (double )std::stof(str);
+          break;
+        case DATA_TYPE_FLOAT64:
+        case DATA_TYPE_DOUBLE:
+          v = std::stod(str);
+          break;
+        default:
+          break;
+      }
+
+      clipToDataTypeRange(inType, &v);
+      return v;
     }
 
   protected:
@@ -1278,7 +1519,7 @@ namespace ibc { namespace gl { namespace file
     {
       size_t  index;
       std::vector<SourceInfo> sourceInfos;
-      bool  flipEndian = false; // TODO: Need to adjust this!
+      bool  flipEndian = PLYHeader::doesNeedToFlipEndian(inHeader.mDataFormat);
 
       if (inHeader.findElementIndex(inType, &index) == false)
       {
@@ -1301,20 +1542,20 @@ namespace ibc { namespace gl { namespace file
         }
       }
       //
-      const unsigned char *srcDataPtr = (unsigned char *)inHeader.getElementDataPtr(
-                                            index, inSrcDataPtr, inSrcDataSize);
-      if (srcDataPtr == NULL)
-      {
-        IBC_LOG_ERROR("getElementDataPtr() returned NULL");
-        return false;
-      }
       bool  containsList;
-      size_t  elementSize = inHeader.getElementSize(index, &containsList);
+      size_t  elementSize = inHeader.getElementSingleDataSize(index, &containsList);
       if (containsList)
       {
         IBC_LOG_ERROR("The specified element contains a property list");
         return false;
       }
+      size_t  offset;
+      if (inHeader.getElementDataOffset(index, inSrcDataPtr, inSrcDataSize, &offset) == false)
+      {
+        IBC_LOG_ERROR("getElementDataOffset() returned false");
+        return false;
+      }
+      //
       *outDstDataNum = inHeader.getElements()[index].num;
       *outDstDataPtr = new unsigned char[inDstDataStructSize * (*outDstDataNum)];
       if (*outDstDataPtr == NULL)
@@ -1322,9 +1563,69 @@ namespace ibc { namespace gl { namespace file
         IBC_LOG_ERROR("*outDstDataPtr == NULL");
         return false;
       }
+      //
+      if (inHeader.mDataFormat != PLYHeader::DATA_FORMAT_ASCII)
+      {
+        inSrcDataSize -= offset;
+        if (inSrcDataSize < elementSize * (*outDstDataNum))
+        {
+          IBC_LOG_ERROR("The source data buffer is smaller than needed");
+          delete ((unsigned char *)*outDstDataPtr);
+          *outDstDataPtr = NULL;
+          return false;
+        }
+        const unsigned char *srcDataPtr = ((unsigned char *)inSrcDataPtr) + offset;
+        unsigned char *dstDataPtr = (unsigned char *)*outDstDataPtr;
+        for (size_t i = 0; i < *outDstDataNum; i++)
+        {
+          for (size_t j = 0; j < inDstInfoNum; j++)
+          {
+            double v;
+            if (sourceInfos[j].exist == false)
+              v = inDstInfoPtr[j].defaultValue;
+            else
+            {
+              v = PLYHeader::getValue(srcDataPtr, sourceInfos[j].offset,
+                          sourceInfos[j].type, flipEndian);
+              if (inDstInfoPtr[j].convert)
+              {
+                v = v * inDstInfoPtr[j].gain;
+                v = v + inDstInfoPtr[j].offset;
+              }
+              if (inDstInfoPtr[j].clip)
+              {
+                if (v < inDstInfoPtr[j].min)
+                  v = inDstInfoPtr[j].min;
+                if (v > inDstInfoPtr[j].max)
+                  v = inDstInfoPtr[j].max;
+              }
+              PLYHeader::clipToDataTypeRange(inDstInfoPtr[j].destinationDataType, &v);
+            }
+            PLYHeader::setValue(v, dstDataPtr, inDstInfoPtr[j].destinationDataOffset,
+                    inDstInfoPtr[j].destinationDataType, false);
+          }
+          srcDataPtr += elementSize;
+          dstDataPtr += inDstDataStructSize;
+        }
+        return true;
+      }
+      //
+      const char *linePtr = ((char *)inSrcDataPtr) + offset;
       unsigned char *dstDataPtr = (unsigned char *)*outDstDataPtr;
+      inSrcDataSize -= offset;
+      std::vector<Common::Range>  words;
       for (size_t i = 0; i < *outDstDataNum; i++)
       {
+        size_t  lineLen;
+        if (Common::getLineLength(linePtr, inSrcDataSize, &lineLen) == false)
+        {
+          IBC_LOG_ERROR("Can't find line");
+          delete ((unsigned char *)*outDstDataPtr);
+          *outDstDataPtr = NULL;
+          return false;
+        }
+        words.clear();
+        Common::findWords(linePtr, lineLen, &words);
         for (size_t j = 0; j < inDstInfoNum; j++)
         {
           double v;
@@ -1332,8 +1633,18 @@ namespace ibc { namespace gl { namespace file
             v = inDstInfoPtr[j].defaultValue;
           else
           {
-            v = getValue(srcDataPtr, sourceInfos[j].offset,
-                         sourceInfos[j].type, flipEndian);
+            size_t index = sourceInfos[j].offset;
+            if (index > words.size())
+            {
+              IBC_LOG_ERROR("Can't find element data");
+              delete ((unsigned char *)*outDstDataPtr);
+              *outDstDataPtr = NULL;
+              return false;
+            }
+            v = PLYHeader::getValueFromStr(
+                    &(linePtr[words[index].from]),
+                    words[index].len,
+                    sourceInfos[j].type);
             if (inDstInfoPtr[j].convert)
             {
               v = v * inDstInfoPtr[j].gain;
@@ -1348,137 +1659,14 @@ namespace ibc { namespace gl { namespace file
             }
             PLYHeader::clipToDataTypeRange(inDstInfoPtr[j].destinationDataType, &v);
           }
-          setValue(v, dstDataPtr, inDstInfoPtr[j].destinationDataOffset,
-                   inDstInfoPtr[j].destinationDataType, false);
+          PLYHeader::setValue(v, dstDataPtr, inDstInfoPtr[j].destinationDataOffset,
+                  inDstInfoPtr[j].destinationDataType, false);
         }
-        srcDataPtr += elementSize;
+        linePtr += lineLen;
         dstDataPtr += inDstDataStructSize;
       }
-      return true;
-    }
-    // -------------------------------------------------------------------------
-    // getValue
-    // -------------------------------------------------------------------------
-    static double getValue(const unsigned char *inDataPtr, size_t inOffset,
-                            PLYHeader::DataType inType, bool inFlipEndian)
-    {
-      unsigned char data[8];
-      // We need to do this to avoid the data alignment issue
-      ::memcpy(data, &(inDataPtr[inOffset]), PLYHeader::sizeofDataType(inType));
-      //
-      if (inFlipEndian)
-        flipEndian(data, inType);
-      //
-      switch (inType)
-      {
-        case PLYHeader::DATA_TYPE_INT8:
-        case PLYHeader::DATA_TYPE_CHAR:
-          return (double )(*((int8 *)data));
-        case PLYHeader::DATA_TYPE_UINT8:
-        case PLYHeader::DATA_TYPE_UCHAR:
-          return (double )(*((uint8 *)data));
-        case PLYHeader::DATA_TYPE_INT16:
-        case PLYHeader::DATA_TYPE_SHORT:
-          return (double )(*((int16 *)data));
-        case PLYHeader::DATA_TYPE_UINT16:
-        case PLYHeader::DATA_TYPE_USHORT:
-          return (double )(*((uint16 *)data));
-        case PLYHeader::DATA_TYPE_INT32:
-        case PLYHeader::DATA_TYPE_INT:
-          return (double )(*((int32  *)data));
-        case PLYHeader::DATA_TYPE_UINT32:
-        case PLYHeader::DATA_TYPE_UINT:
-          return (double )(*((uint32  *)data));
-        case PLYHeader::DATA_TYPE_FLOAT32:
-        case PLYHeader::DATA_TYPE_FLOAT:
-          return (double )(*((float  *)data));
-        case PLYHeader::DATA_TYPE_FLOAT64:
-        case PLYHeader::DATA_TYPE_DOUBLE:
-          return (double )(*((double  *)data));
-        default:
-          break;
-      }
-      return 0;
-    }
-    // -------------------------------------------------------------------------
-    // setValue
-    // -------------------------------------------------------------------------
-    static void setValue(double inValue, unsigned char *outDataPtr, size_t inOffset,
-                          PLYHeader::DataType inType, bool inFlipEndian)
-    {
-      unsigned char data[8];
 
-      switch (inType)
-      {
-        case PLYHeader::DATA_TYPE_INT8:
-        case PLYHeader::DATA_TYPE_CHAR:
-          *((int8 *)data) = (int8 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_UINT8:
-        case PLYHeader::DATA_TYPE_UCHAR:
-          *((uint8 *)data) = (uint8 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_INT16:
-        case PLYHeader::DATA_TYPE_SHORT:
-          *((int16 *)data) = (int16 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_UINT16:
-        case PLYHeader::DATA_TYPE_USHORT:
-          *((uint16 *)data) = (uint16 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_INT32:
-        case PLYHeader::DATA_TYPE_INT:
-          *((int32 *)data) = (int32 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_UINT32:
-        case PLYHeader::DATA_TYPE_UINT:
-          *((uint32 *)data) = (uint32 )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_FLOAT32:
-        case PLYHeader::DATA_TYPE_FLOAT:
-          *((float *)data) = (float )inValue;
-          break;
-        case PLYHeader::DATA_TYPE_FLOAT64:
-        case PLYHeader::DATA_TYPE_DOUBLE:
-          *((double *)data) = (double )inValue;
-          break;
-        default:
-          break;
-      }
-      if (inFlipEndian)
-        flipEndian(data, inType);
-      //
-      // We need to do this to avoid the data alignment issue
-      ::memcpy(&(outDataPtr[inOffset]), data, PLYHeader::sizeofDataType(inType));
-    }
-    // -------------------------------------------------------------------------
-    // flipEndian
-    // -------------------------------------------------------------------------
-    static void flipEndian(unsigned char *ioDataPtr, PLYHeader::DataType inType)
-    {
-      switch (inType)
-      {
-        case PLYHeader::DATA_TYPE_INT16:
-        case PLYHeader::DATA_TYPE_UINT16:
-        case PLYHeader::DATA_TYPE_SHORT:
-        case PLYHeader::DATA_TYPE_USHORT:
-          ibc::Endian::swapBytes(ioDataPtr, 2);
-          break;
-        case PLYHeader::DATA_TYPE_INT32:
-        case PLYHeader::DATA_TYPE_UINT32:
-        case PLYHeader::DATA_TYPE_FLOAT32:
-        case PLYHeader::DATA_TYPE_INT:
-        case PLYHeader::DATA_TYPE_UINT:
-        case PLYHeader::DATA_TYPE_FLOAT:
-          ibc::Endian::swapBytes(ioDataPtr, 4);
-          break;
-        case PLYHeader::DATA_TYPE_FLOAT64:
-        case PLYHeader::DATA_TYPE_DOUBLE:
-          ibc::Endian::swapBytes(ioDataPtr, 8);
-          break;
-        default:
-          break;
-      }
+      return true;
     }
   };
 };};};

@@ -70,6 +70,48 @@ namespace ibc { namespace gl { namespace file
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
+    // skipLines
+    // -------------------------------------------------------------------------
+    static bool skipLines(const char *inStr, size_t inLen, size_t inLines, size_t *outOffset)
+    {
+      *outOffset = 0;
+      while (inLines != 0)
+      {
+        size_t  len;
+        if (getLineLength(inStr, inLen, &len) == false)
+          return false;
+        inStr += len;
+        inLen -= len;
+        (*outOffset) += len;
+        inLines--;
+      }
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // getLineLength
+    // -------------------------------------------------------------------------
+    static bool getLineLength(const char *inStr, size_t inLen, size_t *outLen)
+    {
+      *outLen = 0;
+      while (inLen != 0)
+      {
+        (*outLen)++;
+        if (*inStr == CHAR_LF_CODE)
+          return true;
+        if (*inStr == CHAR_CR_CODE)
+        {
+          if (inLen == 1)
+            return true;
+          if (inStr[1] == CHAR_LF_CODE)
+            (*outLen)++;
+          return true;
+        }
+        inStr++;
+        inLen--;
+      }
+      return false;
+    }
+    // -------------------------------------------------------------------------
     // findLines
     // -------------------------------------------------------------------------
     static size_t findLines(const char *inStr, size_t inLen, std::vector<Range> *outLines)
