@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/20
-  \brief    Format file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Format file for handling the display buffer
 */
 
 #ifndef IBC_IMAGE_DISPLAY_BUFFER_H_
@@ -103,8 +101,10 @@ namespace ibc
       if (mActiveConverter != NULL)
         mActiveConverter->dispose();
       mActiveConverter = findSupportedConverter(inSrcFormat, inDstFormat);
-      if (mActiveConverter != NULL)
-        mActiveConverter->init(inSrcFormat, inDstFormat);
+      if (mActiveConverter == NULL)
+        return false;
+      mActiveConverter->init(inSrcFormat, inDstFormat);
+      return true;
     }
 
   private:

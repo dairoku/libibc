@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the Triangle model
 */
 // -----------------------------------------------------------------------------
 // Appendix
@@ -43,16 +41,16 @@
 #define IBC_GL_MODEL_TRIANGLE_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/model_interface.h"
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model/model_base.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // triangle class
   // ---------------------------------------------------------------------------
-  class Triangle : public virtual ibc::gl::ModelInterface
+  class Triangle : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -71,24 +69,13 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // setShader
-    // -------------------------------------------------------------------------
-    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
-    {
-      mShaderInterface = inShaderInterface;
-    }
-    // -------------------------------------------------------------------------
-    // getShader
-    // -------------------------------------------------------------------------
-    virtual ibc::gl::ShaderInterface *getShader()
-    {
-      return mShaderInterface;
-    }
-    // -------------------------------------------------------------------------
     // initModel
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
+      if (ModelBase::initModel() == false)
+        return false;
+
       static GLfloat points[] = { 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f, -0.5f, -0.5f, 0.0f };
 
       mShaderProgram = mShaderInterface->getShaderProgram();
@@ -117,6 +104,9 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
+      UNUSED(inModelView);
+      UNUSED(inProjection);
+      //
       glUseProgram(mShaderProgram);
       glBindVertexArray(mVertexArrayObject);
       glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -124,12 +114,10 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 
   protected:
     // Member variables --------------------------------------------------------
-    ibc::gl::ShaderInterface *mShaderInterface;
-
+    GLuint mShaderProgram;
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
-    GLuint mShaderProgram;
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_TRIANGLE_H_

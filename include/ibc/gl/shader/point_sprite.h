@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/31
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the PointSprite shader (for the SurfacePlot)
 */
 
 #ifndef IBC_GL_SHADER_POINT_SPRITE_H_
@@ -41,7 +39,8 @@
 
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::shader // <- nested namespace (C++17)
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
   // ---------------------------------------------------------------------------
   // Simple
@@ -127,11 +126,13 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool initShader()
     {
-      ShaderBase::initShader();
+      if (ShaderBase::initShader() == false)
+        return false;
       glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-      //glEnable(GL_POINT_SPRITE);
+      glEnable(GL_POINT_SPRITE);
+      return true;
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_SHADER_POINT_SPRITE_H_

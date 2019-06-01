@@ -29,9 +29,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/06
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the ImageViewBase widget
 */
 
 #ifndef IBC_GTKMM_IMAGE_VIEW_BASE_H_

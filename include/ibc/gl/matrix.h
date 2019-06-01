@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/02/24
-  \brief    Header file for handling the image
-
-  This file defines the quaternion class for the IBC Library
+  \brief    Header file for the Matrix (4x4) class
 */
 
 #ifndef IBC_MATRIX_H_
@@ -816,6 +814,10 @@ namespace ibc
   typedef MatrixBase<double>  Matrix;
   typedef MatrixBase<float>  MatrixF;
   typedef MatrixBase<int>  MatrixI;
+  //
+  typedef MatrixBase<GLdouble>  glMatrix4d;
+  typedef MatrixBase<GLfloat>   glMatrix4f;
+  typedef MatrixBase<GLint>     glMatrix4i;
  };
 };
 

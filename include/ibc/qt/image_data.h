@@ -24,22 +24,22 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gtkmm/image_data.h
+  \file     ibc/qt/image_data.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/01/14
+  \date     2019/04/28
   \brief    Header file for the ImageData class (MVC : model)
 */
 
-#ifndef IBC_GTKMM_IMAGE_DATA_H_
-#define IBC_GTKMM_IMAGE_DATA_H_
+#ifndef IBC_QT_IMAGE_DATA_H_
+#define IBC_QT_IMAGE_DATA_H_
 
 // Includes --------------------------------------------------------------------
 #include <cstring>
 #include <vector>
-#include <gtkmm.h>
+#include <QImage>
 #include "ibc/image/display_buffer.h"
-#include "ibc/gtkmm/view_data_interface.h"
+#include "ibc/qt/view_data_interface.h"
 //
 #include "ibc/image/converter/rgb_to_rgb.h"
 #include "ibc/image/converter/mono_to_rgb.h"
@@ -47,7 +47,7 @@
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
- namespace gtkmm
+ namespace qt
  {
   // ---------------------------------------------------------------------------
   // ImageData class
@@ -55,12 +55,16 @@ namespace ibc
    class  ImageData : public ibc::image::DisplayBuffer
   {
   public:
+    // Member variables --------------------------------------------------------
+    QImage  *mQImage;
+
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // ImageData
     // -------------------------------------------------------------------------
     ImageData()
     {
+      mQImage = NULL;
       addImageConverter(&mRGB_to_RGB);
       addImageConverter(&mMono_to_RGB);
     }
@@ -69,6 +73,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~ImageData()
     {
+      disposeQImage();
     }
 
     // Member functions --------------------------------------------------------
@@ -77,14 +82,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     bool  checkImageData() const
     {
-      if (checkImageBufferPtr() == false || !mPixbuf || mImageFormatPtr == NULL)
+      if (checkImageBufferPtr() == false || mQImage == NULL || mImageFormatPtr == NULL)
         return false;
       return true;
     }
    // -------------------------------------------------------------------------
-    // updatePixbuf
+    // updateQImage
     // -------------------------------------------------------------------------
-    virtual bool  updatePixbuf(bool inForceUpdate = false)
+    virtual bool  updateQImage(bool inForceUpdate = false)
     {
       if (inForceUpdate == false && isImageModified() == false)
         return false;
@@ -93,12 +98,12 @@ namespace ibc
         return false;
 
       // Sanity check here
-      if (mPixbuf->get_width() != mImageFormatPtr->mWidth ||
-          mPixbuf->get_height() != mImageFormatPtr->mHeight ||
+      if ((unsigned int )mQImage->width()  != mImageFormatPtr->mWidth ||
+          (unsigned int )mQImage->height() != mImageFormatPtr->mHeight ||
           mActiveConverter == NULL)
         return false; // Should throw exception?
 
-      mActiveConverter->convert(getImageBufferPixelPtr(), mPixbuf->get_pixels());
+      mActiveConverter->convert(getImageBufferPixelPtr(), mQImage->bits());
       clearIsImageModifiedFlag();
       return true;
     }
@@ -136,9 +141,6 @@ namespace ibc
         (*it)->markAsImageSizeChanged();
     }
 
-    // Member variables --------------------------------------------------------
-    Glib::RefPtr<Gdk::Pixbuf>  mPixbuf;
-
   protected:
     // Member variables --------------------------------------------------------
     std::vector<ViewDataInterface *>  mWidgetList;
@@ -152,8 +154,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  parameterModified()
     {
-      mPixbuf = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB , false, 8, // does not have alpha and 8bit
-                                    mImageFormatPtr->mWidth, mImageFormatPtr->mHeight);
+      disposeQImage();
+      mQImage = new QImage(mImageFormatPtr->mWidth, mImageFormatPtr->mHeight,
+                           QImage::Format_RGB888);
 
       ibc::image::ImageType   imageType(ibc::image::ImageType::PIXEL_TYPE_RGB,
                                         ibc::image::ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
@@ -164,8 +167,18 @@ namespace ibc
       markAsImageModified();
       markAllWidgetsAsImageSizeChanged();
     }
+    // -------------------------------------------------------------------------
+    // disposeQImage
+    // -------------------------------------------------------------------------
+    virtual void  disposeQImage()
+    {
+      if (mQImage == NULL)
+        return;
+      delete mQImage;
+      mQImage = NULL;
+    }
   };
  };
 };
 
-#endif  // #ifdef IBC_GTKMM_IMAGE_DATA_H_
+#endif  // #ifdef IBC_QT_IMAGE_DATA_H_

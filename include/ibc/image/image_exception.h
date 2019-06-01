@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/10
-  \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
+  \brief    Header file for handling the image related exception
 */
 
 #ifndef IBC_IMAGE_EXCEPTION_H_

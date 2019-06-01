@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the ShaderBase class
 */
 
 #ifndef IBC_GL_SHADER_SHADER_BASE_H_
@@ -41,12 +39,18 @@
 
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::shader // <- nested namespace (C++17)
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
   // ---------------------------------------------------------------------------
   // ShaderBase
   // ---------------------------------------------------------------------------
+#ifndef QT_VERSION
   class ShaderBase : public virtual ibc::gl::ShaderInterface
+#else
+//class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLExtraFunctions
+  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLFunctions_4_5_Core
+#endif
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -65,6 +69,10 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
       mVertexShaderStr     = inVetexShaderStr;
       mFragmentShaderStr  = inFragmentShaderStr;
       mGeometryShaderStr = inGeometoryShaderStr;
+
+#ifdef QT_VERSION
+      mOpenGLFunctionsInitialized = false;
+#endif
     }
     // -------------------------------------------------------------------------
     // ~ShaderBase
@@ -78,6 +86,13 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     virtual bool initShader()
     {
+#ifdef QT_VERSION
+      if (mOpenGLFunctionsInitialized == false)
+      {
+        initializeOpenGLFunctions();
+        mOpenGLFunctionsInitialized = true;
+      }
+#endif
       if (initCheck() == false)
         return false;
 
@@ -199,6 +214,9 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     GLuint mGeometryShader;
     const char  *mGeometryShaderStr;
     GLuint mShaderProgram;
+#ifdef QT_VERSION
+    bool  mOpenGLFunctionsInitialized;
+#endif
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -278,6 +296,6 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
       return log;
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_SHADER_SHADER_BASE_H_

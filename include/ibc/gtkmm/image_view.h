@@ -23,15 +23,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
-
 /*!
   \file     ibc/gtkmm/image_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/06
   \brief    Header file for ImageView widget
-
-  This file defines the class for the image widget
 */
 
 #ifndef IBC_GTKMM_IMAGE_VIEW_H_
@@ -73,6 +70,7 @@ namespace ibc
     {
     }
 
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // setImageDataPtr
     // -------------------------------------------------------------------------
@@ -106,6 +104,11 @@ namespace ibc
     }
 
   protected:
+    // Member variables --------------------------------------------------------
+    ImageData *mImageDataPtr;
+    bool      mIsImageSizeChanged;
+
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // updateSizeUsingImageData
     // -------------------------------------------------------------------------
@@ -171,10 +174,6 @@ namespace ibc
     
       return true;
     }
-
-    // Member variables --------------------------------------------------------
-    ImageData *mImageDataPtr;
-    bool      mIsImageSizeChanged;
   };
  };
 };

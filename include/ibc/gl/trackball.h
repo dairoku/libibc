@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/10
-  \brief    Header file for handling the image
-
-  This file defines the quaternion class for the IBC Library
+  \brief    Header file for trackball view interface
 */
 
 #ifndef IBC_TRACKBALL_H_
@@ -151,6 +149,9 @@ namespace ibc
     //
     void mouseWheel(int inDirection, TrackballType inDeltaX, TrackballType inDeltaY)
     {
+      UNUSED(inDeltaX);
+      UNUSED(inDeltaY);
+      //
       if (inDirection == 0)
         mScaleFactor /= 1.1;
       else

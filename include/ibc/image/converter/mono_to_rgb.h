@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/22
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Header file for converting the monochrome to rgb
 */
 
 #ifndef IBC_IMAGE_CONVERTER_MONO_TO_RGB_H_
@@ -38,13 +36,14 @@
 
 // Includes ------------------------------------------------------ --------------
 #include <cstring>
-#include <arpa/inet.h>  // <- for byte swapping
+//#include <arpa/inet.h>  // <- for byte swapping
 #include "ibc/image/image.h"
 #include "ibc/image/image_converter_interface.h"
 #include "ibc/image/image_exception.h"
 
-// Namespace -------------------------------------------------------------------
-namespace ibc::image::converter // <- nested namespace (C++17)
+// Namespace ------------------------------------------------------------------
+//namespace ibc::image::converter // <- nested namespace (C++17)
+namespace ibc { namespace image { namespace converter
 {
   // ---------------------------------------------------------------------------
   // RGB_to_RGB class
@@ -199,9 +198,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChGains
     // -------------------------------------------------------------------------
-    virtual void  setChGains(const std::vector<double> &inGain)
+    virtual void  setChGains(const std::vector<double> &inGains)
     {
-      //
+      mGain = inGains[0];
       mIsColorMapModified = true;
     }
     // -------------------------------------------------------------------------
@@ -230,9 +229,9 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     // setChOffsets
     // -------------------------------------------------------------------------
-    virtual void  setChOffsets(const std::vector<double> &inGain)
+    virtual void  setChOffsets(const std::vector<double> &inOffsets)
     {
-      //
+      mOffset = inOffsets[0];
       mIsColorMapModified = true;
     }
     // -------------------------------------------------------------------------
@@ -318,6 +317,8 @@ namespace ibc::image::converter // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     static void  (*findConvertFunction(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat, ColorMap::ColorMapIndex inIndex))(Mono_to_RGB *, const void *, void *)
     {
+      UNUSED(inDstFormat);
+      //
       if (inSrcFormat->mType.checkType( ImageType::PIXEL_TYPE_MONO,
                                         ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
                                         ImageType::DATA_TYPE_8BIT))
@@ -531,6 +532,6 @@ namespace ibc::image::converter // <- nested namespace (C++17)
       }
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_IMAGE_CONVERTER_MONO_TO_RGB_H_

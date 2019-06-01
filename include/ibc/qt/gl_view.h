@@ -24,30 +24,21 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gtkmm/gl_view.h
+  \file     ibc/qt/gl_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/16
+  \date     2019/04/29
   \brief    Header file for ImageViewBase widget
 */
-// -----------------------------------------------------------------------------
-// Appendix
-//
-// Note that we can't use legacy OpenGL function like glVertex2d()
-//
-// https://www.bassi.io/articles/2015/02/17/using-opengl-with-gtk/
-// http://antongerdelan.net/opengl/index.html
-// -----------------------------------------------------------------------------
 
-#ifndef IBC_GTKMM_IMAGE_GL_VIEW_H_
-#define IBC_GTKMM_IMAGE_GL_VIEW_H_
+#ifndef IBC_QT_GL_VIEW_H_
+#define IBC_QT_GL_VIEW_H_
 
 // Includes --------------------------------------------------------------------
-#include <vector>
-#include <math.h>
-#include <cstring>
-#include <epoxy/gl.h>
-#include <gtkmm.h>
+#include <QtWidgets>
+#include <QOpenGLWidget>
+//#include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions_4_5_Core>
 #include "ibc/gl/matrix.h"
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
@@ -55,20 +46,23 @@
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
- namespace gtkmm
+ namespace qt
  {
   // ---------------------------------------------------------------------------
   // GLView class
   // ---------------------------------------------------------------------------
-  class GLView : virtual public Gtk::GLArea
+//class GLView : public QOpenGLWidget, protected QOpenGLExtraFunctions
+  class GLView : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
   {
+    Q_OBJECT
+
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // GLView
     // -------------------------------------------------------------------------
-    GLView() :
-      Glib::ObjectBase("GLView")
+    GLView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
+      : QOpenGLWidget(parent, f)
     {
       // Initialize mModelView and mProjection (Set identity matrix)
       ibc::gl::MatrixBase<GLfloat> matrix;
@@ -81,7 +75,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~GLView()
     {
+      disopseGL();
     }
+
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // addModel
@@ -119,60 +115,25 @@ namespace ibc
     }
 
   protected:
-    // Member functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // on_realize
-    // -------------------------------------------------------------------------
-    virtual void  on_realize()
-    {
-      Gtk::GLArea::on_realize();
+    // Member variables --------------------------------------------------------
+    const GLubyte *mRendererStr;
+    const GLubyte *mVersionStr;
 
-      make_current();
-      glInit();
-    }
-    // -------------------------------------------------------------------------
-    // on_unrealize
-    // -------------------------------------------------------------------------
-    virtual void  on_unrealize()
-    {
-      glDispose();
-      Gtk::GLArea::on_unrealize();
-    }
-    // -------------------------------------------------------------------------
-    // on_create_context
-    // -------------------------------------------------------------------------
-    virtual Glib::RefPtr<Gdk::GLContext>  on_create_context()
-    {
-      Glib::RefPtr<Gdk::GLContext> context = Gtk::GLArea::on_create_context();
+    std::vector<ibc::gl::ShaderInterface *>   mShaderList;
+    std::vector<ibc::gl::ModelInterface *>    mModelList;
 
-      // Surprisingly depth buffer will not be created by the default setting
-      // We need to change this
-      set_has_depth_buffer(true);
-      return context;
-    }
-    // -------------------------------------------------------------------------
-    // on_resize
-    // -------------------------------------------------------------------------
-    virtual void 	on_resize (int width, int height)
-    {
-      //Gtk::GLArea::on_resize(width, height);
-      glResize(width, height);
-    }
-    // -------------------------------------------------------------------------
-    // on_render
-    // -------------------------------------------------------------------------
-    virtual bool  on_render(const Glib::RefPtr<Gdk::GLContext> &context)
-    {
-      glDisplay();
-      return true;
-    }
+    GLfloat mGLModelView[16], mGLProjection[16];
+
 
     // OpenGL related functions ------------------------------------------------
     // -------------------------------------------------------------------------
-    // glInit
+    // initializeGL (inherited from QOpenGLWidget)
     // -------------------------------------------------------------------------
-    virtual void  glInit()
+    virtual void  initializeGL()
     {
+      makeCurrent();
+      initializeOpenGLFunctions();
+
       mRendererStr = glGetString(GL_RENDERER);
       mVersionStr = glGetString(GL_VERSION);
       printf("Renderer: %s\n", mRendererStr);
@@ -184,7 +145,7 @@ namespace ibc
       glEnable(GL_CULL_FACE);
       glCullFace(GL_BACK);
 
-      glClearDepth(1.0);
+      glClearDepthf(1.0);
       glDepthFunc(GL_LESS);
       glEnable(GL_DEPTH_TEST);
 
@@ -195,10 +156,12 @@ namespace ibc
         (*it)->initModel();
     }
     // -------------------------------------------------------------------------
-    // glDispose
+    // disopseGL
     // -------------------------------------------------------------------------
-    virtual void  glDispose()
+    virtual void  disopseGL()
     {
+      makeCurrent();
+
       for (auto it = mModelList.begin(); it != mModelList.end(); it++)
         (*it)->disposeModel();
 
@@ -206,42 +169,30 @@ namespace ibc
         (*it)->disposeShader();
     }
     // -------------------------------------------------------------------------
-    // glResize
+    // resizeGL (inherited from QOpenGLWidget)
     // -------------------------------------------------------------------------
-    virtual void  glResize(int inWidth, int inHeight)
+    virtual void  resizeGL(int w, int h)
     {
-      make_current();
+      makeCurrent();
 
-      glViewport(0, 0, inWidth, inHeight);
-      glLoadIdentity();
-      glOrtho(-inWidth/300.0, inWidth/300.0, -inHeight/300.0, inHeight/300.0, -1.0, 1.0);
+      glViewport(0, 0, w, h);
+      //glLoadIdentity();
+      //glOrtho(-w/300.0, w/300.0, -h/300.0, h/300.0, -1.0, 1.0);
     }
     // -------------------------------------------------------------------------
-    // glDisplay
+    // paintGL (inherited from QOpenGLWidget)
     // -------------------------------------------------------------------------
-    virtual void  glDisplay()
+    virtual void  paintGL()
     {
-      make_current();
+      makeCurrent();
 
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       for (auto it = mModelList.begin(); it != mModelList.end(); it++)
         (*it)->drawModel(mGLModelView, mGLProjection);
     }
-
-    // Member variables --------------------------------------------------------
-    const GLubyte *mRendererStr;
-    const GLubyte *mVersionStr;
-
-    std::vector<ibc::gl::ShaderInterface *>   mShaderList;
-    std::vector<ibc::gl::ModelInterface *>    mModelList;
-
-    GLfloat mGLModelView[16], mGLProjection[16];
-
-  private:
-    // Member functions --------------------------------------------------------
   };
  };
 };
 
-#endif  // #ifdef IBC_GTKMM_IMAGE_GL_VIEW_H_
+#endif  // #ifdef IBC_QT_IMAGE_VIEW_H_
 

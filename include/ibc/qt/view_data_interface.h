@@ -24,15 +24,15 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gtkmm/view_data_interface.h
+  \file     ibc/qt/view_data_interface.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/01/19
+  \date     2019/04/28
   \brief    Header file for the MVC view and model (view) inteface deinition
 */
 
-#ifndef IBC_GTKMM_VIEW_DATA_INTERFACE_H_
-#define IBC_GTKMM_VIEW_DATA_INTERFACE_H_
+#ifndef IBC_QT_VIEW_DATA_INTERFACE_H_
+#define IBC_QT_VIEW_DATA_INTERFACE_H_
 
 // Includes --------------------------------------------------------------------
 #include <cstring>
@@ -40,7 +40,7 @@
 // Namespace -------------------------------------------------------------------
 namespace ibc
 {
- namespace gtkmm
+ namespace qt
  {
   // ---------------------------------------------------------------------------
   // ViewDataInterface interface class
@@ -55,4 +55,4 @@ namespace ibc
  };
 };
 
-#endif  // #ifdef IBC_GTKMM_VIEW_DATA_INTERFACE_H_
+#endif  // #ifdef IBC_QT_VIEW_DATA_INTERFACE_H_

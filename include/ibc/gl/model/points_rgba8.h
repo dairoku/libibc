@@ -1,5 +1,5 @@
 // =============================================================================
-//  points.h
+//  points_rgba8.h
 //
 //  MIT License
 //
@@ -24,15 +24,15 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/points.h
+  \file     ibc/gl/models/points_rgba8.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/31
-  \brief    Header file for the Points model
+  \date     2019/05/19
+  \brief    Header file for the Points model (RGBA8 version)
 */
 
-#ifndef IBC_GL_MODEL_POINTS_H_
-#define IBC_GL_MODEL_POINTS_H_
+#ifndef IBC_GL_MODEL_POINTS_RGBA8H_
+#define IBC_GL_MODEL_POINTS_RGBA8H_
 
 // Includes --------------------------------------------------------------------
 #include "ibc/gl/model/model_base.h"
@@ -45,14 +45,14 @@ namespace ibc { namespace gl { namespace model
   // ---------------------------------------------------------------------------
   // Points
   // ---------------------------------------------------------------------------
-  class Points : public virtual ibc::gl::model::ModelBase
+  class PointsRGBA8 : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // Points
+    // PointsRGBA8
     // -------------------------------------------------------------------------
-    Points()
+    PointsRGBA8()
     {
       mIsDataNumUpdated = false;
       mIsDataModified   = false;
@@ -60,11 +60,16 @@ namespace ibc { namespace gl { namespace model
 
       mDataNum = 0;
       mDataSize = 0;
+
+      mModelFitParam[0] = 0.0;
+      mModelFitParam[1] = 0.0;
+      mModelFitParam[2] = 0.0;
+      mModelFitParam[3] = 1.0;
     }
     // -------------------------------------------------------------------------
-    // ~Points
+    // ~PointsRGBA8
     // -------------------------------------------------------------------------
-    virtual ~Points()
+    virtual ~PointsRGBA8()
     {
     }
     // Member functions --------------------------------------------------------
@@ -72,7 +77,8 @@ namespace ibc { namespace gl { namespace model
     // setDataPtr
     // -------------------------------------------------------------------------
     // The data format should be
-    // { float x, float y, float z}, {float r, float g, float b}
+    // { GLfloat x, GLfloat y, GLfloat z},
+    //  {GLubyte r, GLubyte g, GLubyte b, GLubyte a}
     //
     void setDataPtr(float *inDataPtr, size_t inDataNum)
     {
@@ -81,8 +87,16 @@ namespace ibc { namespace gl { namespace model
 
       mDataPtr  = inDataPtr;
       mDataNum  = inDataNum;
-      mDataSize = sizeof(float) * mDataNum * 6;
+      mDataSize = sizeof(vertex_info) * mDataNum;
       mIsDataModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // setModelFitParam
+    // -------------------------------------------------------------------------
+    void setModelFitParam(const GLfloat inModelFitParam[4])
+    {
+      for (int i = 0; i < 4; i++)
+        mModelFitParam[i] = inModelFitParam[i];
     }
     // -------------------------------------------------------------------------
     // markAsDataModified
@@ -101,6 +115,7 @@ namespace ibc { namespace gl { namespace model
 
       // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
+      mModelFitLocation   = glGetUniformLocation(mShaderProgram, "fit");
       mModelViewLocation  = glGetUniformLocation(mShaderProgram, "modelview");
       mProjectionLocation = glGetUniformLocation(mShaderProgram, "projection");
       mPositionLocation   = glGetAttribLocation (mShaderProgram, "position");
@@ -146,6 +161,7 @@ namespace ibc { namespace gl { namespace model
 
       glUseProgram(mShaderProgram);
 
+      glUniform4fv(mModelFitLocation, 1, &(mModelFitParam[0]));
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
       glBindVertexArray(mVertexArrayObject);
@@ -160,7 +176,7 @@ namespace ibc { namespace gl { namespace model
     struct vertex_info
     {
       GLfloat position[3];
-      GLfloat color[3];
+      GLubyte color[4];
     };
 
     // Member variables --------------------------------------------------------
@@ -172,10 +188,13 @@ namespace ibc { namespace gl { namespace model
     size_t  mDataNum;
     size_t  mDataSize;
 
+    GLfloat mModelFitParam[4];
+
     GLuint mShaderProgram;
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
 
+    GLint mModelFitLocation;
     GLint mModelViewLocation;
     GLint mProjectionLocation;
     GLint mPositionLocation;
@@ -205,7 +224,7 @@ namespace ibc { namespace gl { namespace model
                             sizeof (struct vertex_info),
                             (const GLvoid *)offsetof(struct vertex_info, position));
       glEnableVertexAttribArray(mColorLocation);
-      glVertexAttribPointer(mColorLocation, 3, GL_FLOAT, GL_FALSE,
+      glVertexAttribPointer(mColorLocation, 4, GL_UNSIGNED_BYTE, GL_FALSE,
                             sizeof (struct vertex_info),
                             (const GLvoid *)offsetof(struct vertex_info, color));
     }
@@ -234,4 +253,4 @@ namespace ibc { namespace gl { namespace model
   };
 };};};
 
-#endif  // #ifdef IBC_GL_MODEL_POINTS_H_
+#endif  // #ifdef IBC_GL_MODEL_POINTS_RGBA8H_

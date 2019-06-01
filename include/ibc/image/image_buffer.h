@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2018/03/10
   \brief    Format file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
 */
 
 #ifndef IBC_IMAGE_IMAGE_BUFFER_H_

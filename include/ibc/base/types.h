@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/11
-  \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
+  \brief    Header file for basic types
 */
 
 #ifndef IBC_TYPES_H_
@@ -70,5 +68,7 @@ typedef unsigned int          uint32;
   typedef unsigned long long  uint64;
  #endif
 #endif
+
+#define UNUSED(x)   (void)(x)
 
 #endif  // IBC_TYPES_H_

@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2018/03/10
   \brief    Header file for handling the color map
-
-  This file defines the color map class for the IBC Library
 */
 
 #ifndef IBC_IMAGE_COLOR_MAP_H_
@@ -81,7 +79,7 @@ namespace ibc
       CMIndex_BlueDarkYellow,
       CMIndex_GreenRed,
 
-      CMIndex_ANY            = 32765,
+      CMIndex_ANY            = 32767,
 
       // For Internal use only
       CMIndex_End         = -1
@@ -96,14 +94,14 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getColorMap
     // -------------------------------------------------------------------------
-    static void  getColorMap(ColorMapIndex inIndex, int inColorNum, unsigned char *outColorMap,
-                             int inMultiNum = 1,
+    static void  getColorMap(ColorMapIndex inIndex, unsigned int inColorNum, unsigned char *outColorMap,
+                             unsigned int inMultiNum = 1,
                              double inGain = 1.0, int inOffset = 0)
     {
-      int  i, index, num, total, offset, numAll;
+      unsigned int  i, index, num, total, offset, numAll;
       std::vector<ColorMapData> colorMapData;
-      double  ratio0, ratio1, offsetRatio, prevRatio;
-      const unsigned char    *rgb0, *rgb1;
+      double  ratio0, ratio1, offsetRatio;
+      const unsigned char    *rgb0 = NULL, *rgb1 = NULL;
 
       getMultiColorMapData(inIndex, inMultiNum, colorMapData);
       if (colorMapData.size() < 2 || inGain <= 0.0 || inColorNum == 0)
@@ -114,6 +112,7 @@ namespace ibc
 
       total = 0;
       index = 0;
+      num = 0;
       offsetRatio = (double )inOffset / (double )inColorNum;
       ratio0 = colorMapData[index].ratio / inGain - offsetRatio;
       if (ratio0 > 0)
@@ -513,11 +512,15 @@ namespace ibc
       const ColorMapIndexTable  *tablePtr = getColorMapIndexTable();
       while (tablePtr->index != CMIndex_NOT_SPECIFIED)
       {
+#ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
           return tablePtr->index;
         tablePtr++;
       }
-      return tablePtr->index;
+      return inDefault;
     }
 
   private:
@@ -579,10 +582,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getMultiColorMapData
     // -------------------------------------------------------------------------
-    static void getMultiColorMapData(ColorMapIndex inIndex, int inMultiNum, std::vector<ColorMapData> &outData)
+    static void getMultiColorMapData(ColorMapIndex inIndex, unsigned int inMultiNum, std::vector<ColorMapData> &outData)
     {
       const ColorMapData  *colorMapData;
-      int i, j, dataNum;
+      unsigned int i, j, dataNum;
       double singleRatio;
 
       colorMapData = getColorMapData(inIndex);

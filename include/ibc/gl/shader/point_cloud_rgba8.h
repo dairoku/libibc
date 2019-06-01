@@ -1,5 +1,5 @@
 // =============================================================================
-//  point_cloud.h
+//  point_cloud_rgba8.h
 //
 //  MIT License
 //
@@ -24,15 +24,15 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/point_cloud.h
+  \file     ibc/gl/models/point_cloud_rgba8.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/31
-  \brief    Header file for PointCloud shader
+  \date     2019/05/19
+  \brief    Header file for PointCloud RGBA8 shader
 */
 
-#ifndef IBC_GL_SHADER_POINT_CLOUD_H_
-#define IBC_GL_SHADER_POINT_CLOUD_H_
+#ifndef IBC_GL_SHADER_POINT_CLOUD_RGBA8_H_
+#define IBC_GL_SHADER_POINT_CLOUD_RGBA8_H_
 
 // Includes --------------------------------------------------------------------
 #include "ibc/gl/shader/shader_base.h"
@@ -45,29 +45,32 @@ namespace ibc { namespace gl { namespace shader
   // ---------------------------------------------------------------------------
   // PointCloud
   // ---------------------------------------------------------------------------
-  class PointCloud : public virtual ibc::gl::shader::ShaderBase
+  class PointCloudRGBA8 : public virtual ibc::gl::shader::ShaderBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
     // Simple
     // -------------------------------------------------------------------------
-    PointCloud()
+    PointCloudRGBA8()
     {
       static const char *vertexShaderStr =
         "#version 330\n"
         "in vec3 position;"
-        "in vec3 color;"
+        "in vec4 color;"
+        "uniform vec4 fit;"
         "uniform mat4 modelview;"
         "uniform mat4 projection;"
         "smooth out vec4 vertexColor;"
         "varying out vec3 light;"
         "const vec4 lightSource = vec4(0.0, 0.0, 100.0, 1.0);"
         "void main() {"
-        "  gl_Position = projection * modelview * vec4(position, 1.0);"
+        "  vec3 scaled;"
+        "  scaled = (position + vec3(fit.x, fit.y, fit.z)) * fit.w;"
+        "  gl_Position = projection * modelview * vec4(scaled, 1.0);"
         "  gl_PointSize = 25 / gl_Position.w;"
         "  light = normalize(vec3(lightSource - modelview * vec4(position, 1.0)));"
-        "  vertexColor = vec4(color, 1.0);"
+        "  vertexColor = color / 255.0;"
         "}";
       static const char *fragmentShaderStr =
         "#version 330\n"
@@ -92,7 +95,7 @@ namespace ibc { namespace gl { namespace shader
     // -------------------------------------------------------------------------
     // ~PointSprite
     // -------------------------------------------------------------------------
-    virtual ~PointCloud()
+    virtual ~PointCloudRGBA8()
     {
     }
     // Member functions -------------------------------------------------------
@@ -111,4 +114,4 @@ namespace ibc { namespace gl { namespace shader
   };
 };};};
 
-#endif  // #ifdef IBC_GL_SHADER_POINT_CLOUD_H_
+#endif  // #ifdef IBC_GL_SHADER_POINT_CLOUD_RGBA8_H_

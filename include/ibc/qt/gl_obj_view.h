@@ -1,9 +1,9 @@
 // =============================================================================
-//  image_scroll_area.h
+//  gl_obj_view.h
 //
 //  MIT License
 //
-//  Copyright (c) 2018 Dairoku Sekiguchi
+//  Copyright (c) 2019 Dairoku Sekiguchi
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +24,22 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/qt/image_scroll_area.h
+  \file     ibc/qt/gl_obj_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2018/03/21
-  \brief    Header file for the ImageScrollArea widget
+  \date     2019/04/30
+  \brief    Header file for the OpenGL Object Viewer widget
 */
 
-#ifndef IBC_QT_IMAGE_SCROLL_AREA_H_
-#define IBC_QT_IMAGE_SCROLL_AREA_H_
+#ifndef IBC_QT_GL_OBJ_VIEW_H_
+#define IBC_QT_GL_OBJ_VIEW_H_
 
 // Includes --------------------------------------------------------------------
 #include <QtWidgets>
-#include <QImage>
-#include "ibc/qt/image_view.h"
+#include "ibc/gl/matrix.h"
+#include "ibc/gl/utils.h"
+#include "ibc/gl/trackball.h"
+#include "ibc/qt/gl_view.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc
@@ -45,37 +47,38 @@ namespace ibc
  namespace qt
  {
   // ---------------------------------------------------------------------------
-  // ImageScrollArea class
+  // GLView class
   // ---------------------------------------------------------------------------
-  class ImageScrollArea : public QScrollArea
+  class GLObjView : virtual public GLView
   {
     Q_OBJECT
 
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // ImageScrollArea
+    // GLObjView
     // -------------------------------------------------------------------------
-    ImageScrollArea(ImageView *image, QWidget *parent = Q_NULLPTR)
-      : QScrollArea(parent)
+    GLObjView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
+      : GLView(parent, f)
     {
-      mImageView = image;
+      mProjection.setIdentity();
 
-      setBackgroundRole(QPalette::Dark);
-      setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-      setWidget(mImageView);
+      mCameraFoV = 30.0;
     }
     // -------------------------------------------------------------------------
-    // ~ImageScrollArea
+    // ~GLObjView
     // -------------------------------------------------------------------------
-    virtual ~ImageScrollArea()
+    virtual ~GLObjView()
     {
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    ImageView *mImageView;
-    QPoint  mMousePreviousPos;
+    GLfloat mWidth, mHeight;
+    GLfloat mCameraFoV;
+
+    ibc::gl::TrackballBase<GLfloat> mTrackball;
+    ibc::gl::MatrixBase<GLfloat> mProjection;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -83,20 +86,12 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  mousePressEvent(QMouseEvent *event)
     {
+      unsigned int  button = 0;
       if (event->button() == Qt::LeftButton)
-      {
-        mMousePreviousPos = event->pos();
-      }
-    }
-    // -------------------------------------------------------------------------
-    // mouseMoveEvent
-    // -------------------------------------------------------------------------
-    virtual void  mouseMoveEvent(QMouseEvent *event)
-    {
-      QPoint  diff = mMousePreviousPos - event->pos();
-      setScrollBarValueDiff(horizontalScrollBar(), diff.x());
-      setScrollBarValueDiff(verticalScrollBar(), diff.y());
-      mMousePreviousPos = event->pos();
+        button = 1;
+
+      mTrackball.startTrackingMouse(event->pos().x(), event->pos().y(),
+                                    mWidth, mHeight, button);
     }
     // -------------------------------------------------------------------------
     // mouseReleaseEvent
@@ -104,6 +99,16 @@ namespace ibc
     virtual void  mouseReleaseEvent(QMouseEvent *event)
     {
       UNUSED(event);
+      //
+      mTrackball.stopTrackingMouse();
+    }
+    // -------------------------------------------------------------------------
+    // mouseMoveEvent
+    // -------------------------------------------------------------------------
+    virtual void  mouseMoveEvent(QMouseEvent *event)
+    {
+      mTrackball.trackMouse(event->pos().x(), event->pos().y());
+      update();
     }
     // -------------------------------------------------------------------------
     // wheelEvent
@@ -111,44 +116,52 @@ namespace ibc
     void wheelEvent(QWheelEvent *wEvent) override
     {
       QPoint delta = wEvent->angleDelta();
-      QPoint pos = mImageView->mapFromGlobal(wEvent->globalPos());
-      QSize size = mImageView->size();
-      double hOffset = pos.x() * (1.0 / mImageView->getZoomScale()); // Offset from the origin
-      double vOffset = pos.y() * (1.0 / mImageView->getZoomScale());
-      int x_offset = pos.x() - horizontalScrollBar()->value();  // Offset on the display
-      int y_offset = pos.y() - verticalScrollBar()->value();
-
-      int step = delta.y() / ImageView::MOUSE_WHEEL_ZOOM_STEP;
-      double scale = mImageView->calcZoomScale(step);
-      mImageView->setZoomScale(scale);
-
-      if (pos.x() >= 0 && pos.x() < size.width() &&
-        pos.y() >= 0 && pos.y() < size.height())
-      {
-        int h = (int)(hOffset * mImageView->getZoomScale()) - x_offset;
-        int v = (int)(vOffset * mImageView->getZoomScale()) - y_offset;
-        setScrollBarValue(horizontalScrollBar(), h);
-        setScrollBarValue(verticalScrollBar(), v);
-      }
+      int direction = 1;
+      if (delta.x() < 0 || delta.y() < 0)
+        direction = 0;
+      mTrackball.mouseWheel(direction, delta.x(), delta.y());
+      glUpdaetProjection();
+      update();
     }
+    // OpenGL related functions ------------------------------------------------
+    // -------------------------------------------------------------------------
+    // resizeGL (inherited from QOpenGLWidget)
+    // -------------------------------------------------------------------------
+    virtual void  resizeGL(int w, int h)
+    {
+      makeCurrent();
 
-  private:
-    // Member functions --------------------------------------------------------
-    void  setScrollBarValue(QScrollBar *inBar, int inNewValue)
-    {
-      if (inNewValue < inBar->minimum())
-        inNewValue = inBar->minimum();
-      if (inNewValue > inBar->maximum())
-        inNewValue = inBar->maximum();
-      inBar->setValue(inNewValue);
+      mWidth = w;
+      mHeight = h;
+      glViewport(0, 0, mWidth, mHeight);
+      glUpdaetProjection();
     }
-    void  setScrollBarValueDiff(QScrollBar *inBar, int inDiff)
+    // -------------------------------------------------------------------------
+    // glUpdaetProjection
+    // -------------------------------------------------------------------------
+    virtual void  glUpdaetProjection()
     {
-      setScrollBarValue(inBar, inBar->value() + inDiff);
+      mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 1.0, 100);
+      ibc::gl::MatrixBase<GLfloat>  translate, scale;
+      translate.setTranslationMatrix(0.0, 0.0, -5);
+      mProjection *= translate;
+      //scale.setScaleMatrix(mScaleFactor, mScaleFactor, mScaleFactor);
+      //mProjection *= scale;
+    }
+    // -------------------------------------------------------------------------
+    // paintGL (inherited from QOpenGLWidget)
+    // -------------------------------------------------------------------------
+    virtual void  paintGL()
+    {
+      // Update ModelView and Projection matrix
+      mTrackball.getGLRotationMatrix(mGLModelView);
+      mProjection.getTransposedMatrix(mGLProjection);
+
+      ibc::qt::GLView::paintGL();
     }
   };
  };
 };
 
-#endif  // #ifdef IBC_QT_IMAGE_SCROLL_AREA_H_
+#endif  // #ifdef IBC_QT_GL_OBJ_VIEW_H_
 

@@ -1,5 +1,5 @@
 // =============================================================================
-//  point_cloud.h
+//  gl_point_cloud_view.h
 //
 //  MIT License
 //
@@ -24,91 +24,90 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/point_cloud.h
+  \file     ibc/qt/gl_point_cloud_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/31
-  \brief    Header file for PointCloud shader
+  \date     2019/05/01
+  \brief    Header file for the OpenGL Point Cloud Viewer widget
 */
 
-#ifndef IBC_GL_SHADER_POINT_CLOUD_H_
-#define IBC_GL_SHADER_POINT_CLOUD_H_
+#ifndef IBC_QT_GL_POINT_CLOUD_VIEW_H_
+#define IBC_QT_GL_POINT_CLOUD_VIEW_H_
 
 // Includes --------------------------------------------------------------------
-#include "ibc/gl/shader/shader_base.h"
-
+#include <QtWidgets>
+#include "ibc/gl/matrix.h"
+#include "ibc/gl/utils.h"
+#include "ibc/gl/trackball.h"
+#include "ibc/qt/gl_obj_view.h"
+#include "ibc/qt/image_data.h"
+//#include "ibc/qt/view_data_interface.h"
+#include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/model/points_rgba8.h"
+#include "ibc/gl/shader/simple.h"
+#include "ibc/gl/shader/point_cloud_rgba8.h"
 
 // Namespace -------------------------------------------------------------------
-//namespace ibc::gl::shader // <- nested namespace (C++17)
-namespace ibc { namespace gl { namespace shader
+namespace ibc
 {
+ namespace qt
+ {
   // ---------------------------------------------------------------------------
-  // PointCloud
+  // GLPointCloudView class
   // ---------------------------------------------------------------------------
-  class PointCloud : public virtual ibc::gl::shader::ShaderBase
+//class GLPointCloudView : virtual public GLObjView, virtual public ViewDataInterface
+  class GLPointCloudView : virtual public GLObjView
   {
+    Q_OBJECT
+
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // Simple
+    // GLPointCloudView
     // -------------------------------------------------------------------------
-    PointCloud()
+    GLPointCloudView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
+      : GLObjView(parent, f)
     {
-      static const char *vertexShaderStr =
-        "#version 330\n"
-        "in vec3 position;"
-        "in vec3 color;"
-        "uniform mat4 modelview;"
-        "uniform mat4 projection;"
-        "smooth out vec4 vertexColor;"
-        "varying out vec3 light;"
-        "const vec4 lightSource = vec4(0.0, 0.0, 100.0, 1.0);"
-        "void main() {"
-        "  gl_Position = projection * modelview * vec4(position, 1.0);"
-        "  gl_PointSize = 25 / gl_Position.w;"
-        "  light = normalize(vec3(lightSource - modelview * vec4(position, 1.0)));"
-        "  vertexColor = vec4(color, 1.0);"
-        "}";
-      static const char *fragmentShaderStr =
-        "#version 330\n"
-        "smooth in vec4 vertexColor;"
-        "varying in vec3 light;"
-        "out vec4 outputColor;"
-        "void main() {"
-        "  vec3 n;"
-        "  n.xy = gl_PointCoord * 2.0 - 1.0;"
-        "  n.z = 1.0 - dot(n.xy, n.xy);"
-        "  if (n.z < 0.0) discard;"
-        "  n.z = sqrt(n.z);"
-        "  vec3 m = normalize(n);"
-        "  float d = dot(light, m);"
-        //"  outputColor = vertexColor * d;"
-        "  outputColor = vertexColor;"
-        "}";
+      mModel.setShader(&mShader);
+      mDataModel.setShader(&mPointCloudShader);
 
-      mVertexShaderStr = vertexShaderStr;
-      mFragmentShaderStr = fragmentShaderStr;
+      addShader(&mShader);
+      addShader(&mPointCloudShader);
+      addModel(&mModel);
+      addModel(&mDataModel);
     }
     // -------------------------------------------------------------------------
-    // ~PointSprite
+    // ~GLPointCloudView
     // -------------------------------------------------------------------------
-    virtual ~PointCloud()
+    virtual ~GLPointCloudView()
     {
     }
-    // Member functions -------------------------------------------------------
+    // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // initShader
+    // setDataPtr
     // -------------------------------------------------------------------------
-    virtual bool initShader()
+    void  setDataPtr(float *inDataPtr, size_t inDataNum)
     {
-      if (ShaderBase::initShader() == false)
-        return false;
-      ShaderBase::initShader();
-      glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-      glEnable(GL_POINT_SPRITE);
-      return true;
+      mDataModel.setDataPtr(inDataPtr, inDataNum);
+      update();
     }
+    // -------------------------------------------------------------------------
+    // setModelFitParam
+    // -------------------------------------------------------------------------
+    void setModelFitParam(const GLfloat inModelFitParam[4])
+    {
+      mDataModel.setModelFitParam(inModelFitParam);
+    }
+
+  protected:
+    // Member variables --------------------------------------------------------
+    ibc::gl::shader::Simple  mShader;
+    ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
+    ibc::gl::model::ColorCube  mModel;
+    ibc::gl::model::PointsRGBA8  mDataModel;
   };
-};};};
+ };
+};
 
-#endif  // #ifdef IBC_GL_SHADER_POINT_CLOUD_H_
+#endif  // #ifdef IBC_QT_GL_POINT_CLOUD_VIEW_H_
+

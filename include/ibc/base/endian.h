@@ -24,13 +24,11 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/base/types.h
+  \file     ibc/base/endian.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/26
-  \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
+  \brief    Header file for handling endian
 */
 
 #ifndef IBC_ENDIAN_H_
@@ -45,7 +43,7 @@
 #endif
 
 // Macros ----------------------------------------------------------------------
-#if !defined(__LITTLE_ENDIAN__) and !defined(__BIG_ENDIAN__) 
+#if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)
   #if __BYTE_ORDER == __LITTLE_ENDIAN
     #define __LITTLE_ENDIAN__
   #else
@@ -122,9 +120,14 @@ namespace ibc
     //
     static float  swap(float inValue)
     {
-      uint32  *valuePtr = (uint32 *)(&inValue);
-      uint32  result = swap(*valuePtr);
-      return *((float *)(&result));
+      union
+      {
+       float  value_float;
+       uint32 value_uint32;
+      } u;
+      u.value_float = inValue;
+      u.value_uint32 = swap(u.value_uint32);
+      return u.value_float;
     }
     // -------------------------------------------------------------------------
     // swap
@@ -133,9 +136,29 @@ namespace ibc
     //
     static double  swap(double inValue)
     {
-      uint64  *valuePtr = (uint64 *)(&inValue);
-      uint64  result = swap(*valuePtr);
-      return *((double *)(&result));
+      union
+      {
+       double  value_double;
+       uint64 value_uint64;
+      } u;
+      u.value_double = inValue;
+      u.value_uint64 = swap(u.value_uint64);
+      return u.value_double;
+    }
+    // -------------------------------------------------------------------------
+    // swapBytes
+    // -------------------------------------------------------------------------
+    //
+    static void swapBytes(void *inBytes, size_t inSize)
+    {
+      unsigned char *dataPtr = (unsigned char *)inBytes;
+      unsigned char t;
+      for (size_t i = 0; i < inSize / 2; i++)
+      {
+        t = dataPtr[i];
+        dataPtr[i] = dataPtr[inSize - i - 1];
+        dataPtr[inSize - i - 1] = t;
+      }
     }
   };
 };

@@ -23,15 +23,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
-
 /*!
   \file     ibc/gtkmm/gl_obj_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/16
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the OpenGL Object Viewer widget
 */
 
 #ifndef IBC_GTKMM_IMAGE_GL_OBJ_VIEW_H_

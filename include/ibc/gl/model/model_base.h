@@ -1,5 +1,5 @@
 // =============================================================================
-//  gl_surface_plot.h
+//  model_base.h
 //
 //  MIT License
 //
@@ -24,118 +24,105 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gtkmm/gl_surface_plot.h
+  \file     ibc/gl/models/model_base.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/03/24
-  \brief    Header file for the OpenGL Surface Plotting widget
+  \date     2019/04/30
+  \brief    Header file for the ModelBase class
 */
 
-#ifndef IBC_GTKMM_GL_SURFACE_PLOT_H_
-#define IBC_GTKMM_GL_SURFACE_PLOT_H_
+#ifndef IBC_GL_MODEL_BASE_H_
+#define IBC_GL_MODEL_BASE_H_
 
 // Includes --------------------------------------------------------------------
-#include <math.h>
-#include <cstring>
-#include <gtkmm.h>
-#include "ibc/gl/matrix.h"
-#include "ibc/gl/utils.h"
-#include "ibc/gl/trackball.h"
-#include "ibc/gtkmm/gl_obj_view.h"
-#include "ibc/gtkmm/image_data.h"
-#include "ibc/gtkmm/view_data_interface.h"
-#include "ibc/gl/model/color_cube.h"
-#include "ibc/gl/model/surface_points.h"
-#include "ibc/gl/shader/simple.h"
-#include "ibc/gl/shader/point_sprite.h"
+#include "ibc/base/types.h"
+#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model_interface.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
- namespace gtkmm
- {
   // ---------------------------------------------------------------------------
-  // GLSurfacePlot class
+  // ModelBase class
   // ---------------------------------------------------------------------------
-  class GLSurfacePlot : virtual public GLObjView, virtual public ViewDataInterface
+#ifndef QT_VERSION
+  class ModelBase : public virtual ibc::gl::ModelInterface
+#else
+//class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLExtraFunctions
+  class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLFunctions_4_5_Core
+#endif
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // GLSurfacePlot
+    // ModelBase
     // -------------------------------------------------------------------------
-    GLSurfacePlot() :
-      Glib::ObjectBase("GLSurfacePlot")
+    ModelBase()
     {
-      mImageDataPtr = NULL;
-      mIsImageSizeChanged = false;
-      
-      mModel.setShader(&mShader);
-      mDataModel.setShader(&mPointSpriteShader);
+      mShaderInterface = NULL;
 
-      addShader(&mShader);
-      addShader(&mPointSpriteShader);
-      addModel(&mModel);
-      addModel(&mDataModel);
+#ifdef QT_VERSION
+      mOpenGLFunctionsInitialized = false;
+#endif
     }
     // -------------------------------------------------------------------------
-    // ~GLSurfacePlot
+    // ~ModelBase
     // -------------------------------------------------------------------------
-    virtual ~GLSurfacePlot()
+    virtual ~ModelBase()
     {
-    }
-    // ViewDataInterface -------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // queueRedrawWidget
-    // -------------------------------------------------------------------------
-    virtual void  queueRedrawWidget()
-    {
-      queue_render();
-    }
-    // -------------------------------------------------------------------------
-    // markAsImageSizeChanged
-    // -------------------------------------------------------------------------
-    virtual void  markAsImageSizeChanged()
-    {
-      mIsImageSizeChanged = true;
-      queue_render();
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // setImageDataPtr
+    // setShader
     // -------------------------------------------------------------------------
-    void  setImageDataPtr(ibc::gtkmm::ImageData *inImageDataPtr)
+    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
     {
-      mImageDataPtr = inImageDataPtr;
-      mImageDataPtr->addWidget(this);
-      markAsImageSizeChanged();
-
-      GLenum type = ibc::gl::Utils::toGLDataType(mImageDataPtr->getImageType().mDataType);
-      mDataModel.setDataPtr(mImageDataPtr->getImageBufferPtr(),
-                            mImageDataPtr->getWidth(),
-                            mImageDataPtr->getHeight(),
-                            type);
+      mShaderInterface = inShaderInterface;
     }
     // -------------------------------------------------------------------------
-    // isImageSizeChanged
+    // getShader
     // -------------------------------------------------------------------------
-    bool  isImageSizeChanged() const
+    virtual ibc::gl::ShaderInterface *getShader()
     {
-      return mIsImageSizeChanged;
+      return mShaderInterface;
+    }
+    // -------------------------------------------------------------------------
+    // initModel
+    // -------------------------------------------------------------------------
+    virtual bool initModel()
+    {
+#ifdef QT_VERSION
+      if (mOpenGLFunctionsInitialized == false)
+      {
+        initializeOpenGLFunctions();
+        mOpenGLFunctionsInitialized = true;
+      }
+#endif
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // disposeModel
+    // -------------------------------------------------------------------------
+    virtual void disposeModel()
+    {
+    }
+    // -------------------------------------------------------------------------
+    // drawModel
+    // -------------------------------------------------------------------------
+    virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
+    {
+      UNUSED(inModelView);
+      UNUSED(inProjection);
     }
 
   protected:
     // Member variables --------------------------------------------------------
-    ibc::gl::shader::Simple  mShader;
-    ibc::gl::shader::PointSprite  mPointSpriteShader;
-    ibc::gl::model::ColorCube  mModel;
-    ibc::gl::model::SurfacePoints  mDataModel;
-
-    ImageData *mImageDataPtr;
-    bool      mIsImageSizeChanged;
+    ibc::gl::ShaderInterface *mShaderInterface;
+#ifdef QT_VERSION
+    bool  mOpenGLFunctionsInitialized;
+#endif
   };
- };
-};
+};};};
 
-#endif  // #ifdef IBC_GTKMM_GL_SURFACE_PLOT_H_
-
+#endif  // #ifdef IBC_GL_MODEL_BASE_H_

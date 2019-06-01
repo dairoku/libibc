@@ -1,5 +1,5 @@
 // =============================================================================
-//  shader_base.h
+//  minimum.h
 //
 //  MIT License
 //
@@ -24,13 +24,11 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/shader_base.h
+  \file     ibc/gl/models/minimum.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the Minimum shader (no model view /projection matrix)
 */
 
 #ifndef IBC_GL_SHADER_MINIMUM_H_
@@ -41,7 +39,8 @@
 
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::shader // <- nested namespace (C++17)
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
   // ---------------------------------------------------------------------------
   // Minimum
@@ -80,6 +79,6 @@ namespace ibc::gl::shader // <- nested namespace (C++17)
     {
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_SHADER_MINIMUM_H_

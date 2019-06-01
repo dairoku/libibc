@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/31
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the SurfacePoints model
 */
 
 #ifndef IBC_GL_MODEL_SURFACE_PLOT_H_
@@ -38,18 +36,18 @@
 
 // Includes --------------------------------------------------------------------
 #include <math.h>
-#include "ibc/gl/model_interface.h"
-#include "ibc/gl/shader_interface.h"
+#include "ibc/gl/model/model_base.h"
 #include "ibc/gl/utils.h"
 #include "ibc/image/color_map.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc::gl::model // <- nested namespace (C++17)
+//namespace ibc::gl::model // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
   // SurfacePoints
   // ---------------------------------------------------------------------------
-  class SurfacePoints : public virtual ibc::gl::ModelInterface
+  class SurfacePoints : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
@@ -58,7 +56,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
     // -------------------------------------------------------------------------
     SurfacePoints()
     {
-      mShaderInterface = NULL;
       mVertexData = NULL;
 
       mIsDataFormatUpdated  = false;
@@ -121,24 +118,13 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mIsDataModified = true;
     }
     // -------------------------------------------------------------------------
-    // setShader
-    // -------------------------------------------------------------------------
-    virtual void setShader(ibc::gl::ShaderInterface *inShaderInterface)
-    {
-      mShaderInterface = inShaderInterface;
-    }
-    // -------------------------------------------------------------------------
-    // getShader
-    // -------------------------------------------------------------------------
-    virtual ibc::gl::ShaderInterface *getShader()
-    {
-      return mShaderInterface;
-    }
-    // -------------------------------------------------------------------------
     // initModel
     // -------------------------------------------------------------------------
     virtual bool initModel()
     {
+      if (ModelBase::initModel() == false)
+        return false;
+
       // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
       mDataSizeLocation         = glGetUniformLocation(mShaderProgram, "dataSize");
@@ -153,7 +139,7 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mMaterialLocation         = glGetUniformLocation(mShaderProgram, "material");
       mModelViewLocation        = glGetUniformLocation(mShaderProgram, "modelview");
       mProjectionLocation       = glGetUniformLocation(mShaderProgram, "projection");
-      guint intensityLocation   = glGetAttribLocation(mShaderProgram, "intensity");
+      GLint intensityLocation   = glGetAttribLocation(mShaderProgram, "intensity");
 
       // Initialze Vertex Array Object
       glGenVertexArrays(1, &mVertexArrayObject);
@@ -248,7 +234,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
 
     unsigned char  *mVertexData;
 
-    ibc::gl::ShaderInterface *mShaderInterface;
     GLuint mShaderProgram;
 
     GLuint  mVertexArrayObject;
@@ -344,6 +329,6 @@ namespace ibc::gl::model // <- nested namespace (C++17)
       mIsColoMapTextureInitialized = false;
     }
   };
-};
+};};};
 
 #endif  // #ifdef IBC_GL_MODEL_SURFACE_PLOT_H_
