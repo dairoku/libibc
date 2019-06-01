@@ -23,15 +23,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
-
 /*!
   \file     ibc/qt/gl_point_cloud_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/05/01
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the ibc Library
+  \brief    Header file for the OpenGL Point Cloud Viewer widget
 */
 
 #ifndef IBC_QT_GL_POINT_CLOUD_VIEW_H_

@@ -24,13 +24,11 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/base/types.h
+  \file     ibc/base/endian.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/26
-  \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
+  \brief    Header file for handling endian
 */
 
 #ifndef IBC_ENDIAN_H_

@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/05/19
-  \brief    Header file for PointCloud shader
-
-  This file defines the class for the point cloud shader
+  \brief    Header file for PointCloud RGBA8 shader
 */
 
 #ifndef IBC_GL_SHADER_POINT_CLOUD_RGBA8_H_

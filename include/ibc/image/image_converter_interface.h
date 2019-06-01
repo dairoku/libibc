@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/19
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Header file for defining the image converter interface
 */
 
 #ifndef IBC_IMAGE_IMAGE_CONVERTER_INTERFACE_H_

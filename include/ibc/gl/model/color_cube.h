@@ -1,5 +1,5 @@
 // =============================================================================
-//  model_interface.h
+//  color_cube.h
 //
 //  MIT License
 //
@@ -24,13 +24,11 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/color_triangle.h
+  \file     ibc/gl/models/color_cube.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for ColorCube model
 */
 
 #ifndef IBC_GL_MODEL_COLOR_CUBE_H_

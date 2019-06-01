@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2018/03/10
   \brief    Header file for handling the color map
-
-  This file defines the color map class for the IBC Library
 */
 
 #ifndef IBC_IMAGE_COLOR_MAP_H_

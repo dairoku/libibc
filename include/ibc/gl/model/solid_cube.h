@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/04/06
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the SolidCube object
 */
 
 #ifndef IBC_GL_MODEL_SOLID_CUBE_H_

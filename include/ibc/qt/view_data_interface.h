@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/04/28
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Header file for the MVC view and model (view) inteface deinition
 */
 
 #ifndef IBC_QT_VIEW_DATA_INTERFACE_H_

@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/05/03
-  \brief    Header file for handling the exception
-
-  This file defines log classes for the IBC Library
+  \brief    Header file for handling a message logging
 */
 
 #ifndef IBC_LOG_H_

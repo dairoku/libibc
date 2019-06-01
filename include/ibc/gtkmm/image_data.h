@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/14
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Header file for the ImageData class (MVC : model)
 */
 
 #ifndef IBC_GTKMM_IMAGE_DATA_H_

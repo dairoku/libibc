@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2019/03/16
   \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
 */
 // -----------------------------------------------------------------------------
 // Appendix

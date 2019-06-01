@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/10
-  \brief    Header file for handling the image
-
-  This file defines the quaternion class for the IBC Library
+  \brief    Header file for Quaternion
 */
 
 #ifndef IBC_QUATERNION_H_

@@ -23,15 +23,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 // =============================================================================
-
 /*!
   \file     ibc/qt/image_view.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/18
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the ibc Library
+  \brief    Header file for the ImageView widget
 */
 
 #ifndef IBC_QT_IMAGE_VIEW_H_

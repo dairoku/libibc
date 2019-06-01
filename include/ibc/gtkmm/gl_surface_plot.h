@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/03/24
-  \brief    Header file for ImageViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the OpenGL Surface Plotting widget
 */
 
 #ifndef IBC_GTKMM_GL_SURFACE_PLOT_H_

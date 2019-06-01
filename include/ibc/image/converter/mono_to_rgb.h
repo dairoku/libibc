@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/22
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Header file for converting the monochrome to rgb
 */
 
 #ifndef IBC_IMAGE_CONVERTER_MONO_TO_RGB_H_

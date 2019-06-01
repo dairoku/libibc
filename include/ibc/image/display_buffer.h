@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/01/20
-  \brief    Format file for handling the image buffer
-
-  This file defines the image buffer class for the IBC Library
+  \brief    Format file for handling the display buffer
 */
 
 #ifndef IBC_IMAGE_DISPLAY_BUFFER_H_

@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/04/30
-  \brief    Header file for ModelViewBase widget
-
-  This file defines the class for the image widget
+  \brief    Header file for the ModelBase class
 */
 
 #ifndef IBC_GL_MODEL_BASE_H_

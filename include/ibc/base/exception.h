@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2018/03/10
   \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
 */
 
 #ifndef IBC_EXCEPTION_H_

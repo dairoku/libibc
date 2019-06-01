@@ -29,8 +29,6 @@
   \version  1.0.0
   \date     2019/03/31
   \brief    Header file for PointCloud shader
-
-  This file defines the class for the point cloud shader
 */
 
 #ifndef IBC_GL_SHADER_POINT_CLOUD_H_

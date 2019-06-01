@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/11
-  \brief    Header file for handling the exception
-
-  This file defines exception classes for the IBC Library
+  \brief    Header file for basic types
 */
 
 #ifndef IBC_TYPES_H_

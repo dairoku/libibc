@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/04/30
-  \brief    Header file for the PLY file
-
-  This file defines the class for handling the PLY polygon file format.
+  \brief    Header file for handling the PLY format file
 */
 
 #ifndef IBC_GL_FILE_PLY_H_

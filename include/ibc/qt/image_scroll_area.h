@@ -28,9 +28,7 @@
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2018/03/21
-  \brief    Header file for handling the image buffer
-
-  This file defines the image buffer class for the ibc Library
+  \brief    Header file for the ImageScrollArea widget
 */
 
 #ifndef IBC_QT_IMAGE_SCROLL_AREA_H_
