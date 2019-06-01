@@ -88,13 +88,13 @@
 #ifndef IBC_LOG_TRACE_DISABLE
 #define IBC_LOG_TRACE(outstr, ...) { IBC_LOG_OUT(ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr, ##__VA_ARGS__); }
 #define IBC_LOG_TRACE_ONCE(outstr, ...) { IBC_LOG_OUT_ONCE(ibc::Log::TRACE_MSG, ibc::Log::NORMAL_LEVEL, outstr); }
-#define IBC_TRACE(log) { IBC_LOG_TRACE(""); }
-#define IBC_TRACE_ONCE(log) { IBC_LOG_TRACE_ONCE(""); }
+#define IBC_TRACE() { IBC_LOG_TRACE(""); }
+#define IBC_TRACE_ONCE() { IBC_LOG_TRACE_ONCE(""); }
 #else
 #define IBC_LOG_TRACE(outstr, ...)
 #define IBC_LOG_TRACE_ONCE(outstr, ...)
-#define IBC_TRACE(log)
-#define IBC_TRACE_ONCE(log)
+#define IBC_TRACE()
+#define IBC_TRACE_ONCE()
 #endif
 
 #ifndef IBC_LOG_DEBUG_DISABLE

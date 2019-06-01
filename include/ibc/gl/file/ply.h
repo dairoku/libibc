@@ -51,6 +51,15 @@
 #include "ibc/gl/data.h"
 #include "ibc/gl/file/common.h"
 
+// Macros ----------------------------------------------------------------------
+#ifdef IBC_GL_FILE_PLY_TRACE_ENABLE
+#define IBC_GL_FILE_PLY_TRACE() { IBC_TRACE(); }
+#define IBC_GL_FILE_PLY_TRACE_ONCE() { IBC_TRACE_ONCE(); }
+#else
+#define IBC_GL_FILE_PLY_TRACE()
+#define IBC_GL_FILE_PLY_TRACE_ONCE()
+#endif
+
 // Namespace -------------------------------------------------------------------
 //namespace ibc::gl::file // <- nested namespace (C++17)
 namespace ibc { namespace gl { namespace file
@@ -171,6 +180,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     PLYHeader()
     {
+      IBC_GL_FILE_PLY_TRACE();
       mDataFormat = DATA_FORMAT_NOT_SPECIFIED;
     }
     // -------------------------------------------------------------------------
@@ -178,6 +188,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     virtual ~PLYHeader()
     {
+      IBC_GL_FILE_PLY_TRACE();
     }
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -185,6 +196,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     void clear()
     {
+      IBC_GL_FILE_PLY_TRACE();
       mDataFormat = DATA_FORMAT_NOT_SPECIFIED;
       mFormatVersionStr.clear();
       mCommentStr.clear();
@@ -197,6 +209,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     void  setFormat(DataFormat inFormat, const char *inVersionStr, size_t inVersionStrLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       mDataFormat = inFormat;
       mFormatVersionStr.assign(inVersionStr, inVersionStrLen);
     }
@@ -205,6 +218,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     DataFormat  getFormat() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mDataFormat;
     }
     // -------------------------------------------------------------------------
@@ -212,6 +226,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     const std::string &getFormatVersionStr() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mFormatVersionStr;
     }
     // -------------------------------------------------------------------------
@@ -219,6 +234,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     void  addComment(const char *inStr, size_t inStrLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       if (inStr != NULL && inStrLen != 0)
         mCommentStr.append(inStr, inStrLen);
       mCommentStr.append(1, Common::CHAR_EOL_CODE);
@@ -228,6 +244,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     const std::string &getCommentStr() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mCommentStr;
     }
     // -------------------------------------------------------------------------
@@ -235,6 +252,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     void  addObjInfo(const char *inStr, size_t inStrLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       if (inStr != NULL && inStrLen != 0)
         mObjInfoStr.append(inStr, inStrLen);
       mObjInfoStr.append(1, Common::CHAR_EOL_CODE);
@@ -244,6 +262,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     const std::string &getObjInfoStr() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mObjInfoStr;
     }
     // -------------------------------------------------------------------------
@@ -251,6 +270,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     size_t  addElement(const char *inNameStr, size_t inNameStrLen, size_t inElementNum)
     {
+      IBC_GL_FILE_PLY_TRACE();
       size_t  index = mElements.size();
       mElements.resize(index + 1);
       mElements[index].type = findElementTypetWord(inNameStr, inNameStrLen);
@@ -264,6 +284,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     const std::vector<Element> &getElements() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mElements;
     }
     // -------------------------------------------------------------------------
@@ -271,6 +292,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     bool findElementIndex(ElementType inType, size_t *outIndex) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       for (size_t i = 0; i < mElements.size(); i++)
       {
         if (mElements[i].type == inType)
@@ -287,6 +309,7 @@ namespace ibc { namespace gl { namespace file
     size_t  addProperty(size_t inElementIndex, const char *inNameStr, size_t inNameStrLen,
                         DataType inDataType)
     {
+      IBC_GL_FILE_PLY_TRACE();
       size_t  index = mProperties.size();
       mProperties.resize(index + 1);
       mProperties[index].elementIndex = inElementIndex;
@@ -304,6 +327,7 @@ namespace ibc { namespace gl { namespace file
     size_t  addPropertyList(size_t inElementIndex, const char *inNameStr, size_t inNameStrLen,
                             DataType inDataType, DataType inListNumType)
     {
+      IBC_GL_FILE_PLY_TRACE();
       size_t  index = mProperties.size();
       mProperties.resize(index + 1);
       mProperties[index].elementIndex = inElementIndex;
@@ -320,6 +344,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     const std::vector<Property> &getProperties() const
     {
+      IBC_GL_FILE_PLY_TRACE();
       return mProperties;
     }
     // -------------------------------------------------------------------------
@@ -327,6 +352,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     size_t getElementProperties(size_t inElementIndex, std::vector<Property> *outProperties) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       for (size_t i = 0; i < mProperties.size(); i++)
         if (mProperties[i].elementIndex == inElementIndex)
           outProperties->push_back(mProperties[i]);
@@ -337,6 +363,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     size_t getElementSingleDataSize(size_t inElementIndex, bool *outContainsList) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       size_t  elementSize = 0;
       *outContainsList = false;
       for (size_t i = 0; i < mProperties.size(); i++)
@@ -354,6 +381,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     size_t getElementTotalSize(size_t inElementIndex, const void *inDataPtr, size_t inDataSize) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       bool  containsList = false;
       size_t elementSize = getElementSingleDataSize(inElementIndex, &containsList);
       if (containsList == false)
@@ -385,6 +413,7 @@ namespace ibc { namespace gl { namespace file
     bool getElementDataOffset(size_t inElementIndex, const void *inDataPtr,
                                     size_t inDataSize, size_t *outOffset) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       *outOffset = 0;
       if (inElementIndex >= mElements.size())
         return false;
@@ -421,6 +450,7 @@ namespace ibc { namespace gl { namespace file
     bool  getPropertyOffset(size_t inElementIndex, PropertyType inType, 
                             size_t *outOffset, DataType *outDataType) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       if (inType == PROPERTY_TYPE_NOT_SPECIFIED)
         return false;
       *outOffset = 0;
@@ -444,6 +474,7 @@ namespace ibc { namespace gl { namespace file
     // Debug Functions ---------------------------------------------------------
     void  debugDumpHeader(std::ostream *outStream) const
     {
+      IBC_GL_FILE_PLY_TRACE();
       *outStream << "PLY Header Object Debug Dump" << std::endl;
       *outStream << "Format : ";
       *outStream << std::string_view(getDataFormatWord(mDataFormat));
@@ -497,6 +528,7 @@ namespace ibc { namespace gl { namespace file
     static PLYHeader *create(const char *inHeaderStr, size_t inLen,
                              size_t *outHeaderSize)
     {
+      IBC_GL_FILE_PLY_TRACE();
       *outHeaderSize = findPLYHeader(inHeaderStr, inLen);
       if (*outHeaderSize == 0)
         return NULL;
@@ -514,6 +546,7 @@ namespace ibc { namespace gl { namespace file
     static bool parseHeader(const char *inHeaderStr, size_t inLen,
                             PLYHeader *outHeader)
     {
+      IBC_GL_FILE_PLY_TRACE();
       bool  foundStart    = false;
       bool  foundEnd      = false;
       bool  foundFormat   = false;
@@ -703,6 +736,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static size_t findPLYHeader(const char *inHeaderStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       if (inLen < MIN_HEADER_LEN)
       {
         IBC_LOG_ERROR("inLen < MIN_HEADER_LEN");
@@ -759,6 +793,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static bool isAsciiFormat(DataFormat inFormat)
     {
+      IBC_GL_FILE_PLY_TRACE();
       if (inFormat == DATA_FORMAT_ASCII)
         return false;
       return false;
@@ -768,6 +803,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static bool doesNeedToFlipEndian(DataFormat inFormat)
     {
+      IBC_GL_FILE_PLY_TRACE();
     #ifdef __LITTLE_ENDIAN__
       if (inFormat == DATA_FORMAT_BINARY_BIG_ENDIAN)
         return true;
@@ -784,6 +820,7 @@ namespace ibc { namespace gl { namespace file
     static double getValue(const unsigned char *inDataPtr, size_t inOffset,
                             PLYHeader::DataType inType, bool inFlipEndian)
     {
+      IBC_GL_FILE_PLY_TRACE_ONCE();
       unsigned char data[8];
       // We need to do this to avoid the data alignment issue
       ::memcpy(data, &(inDataPtr[inOffset]), PLYHeader::sizeofDataType(inType));
@@ -828,6 +865,7 @@ namespace ibc { namespace gl { namespace file
     static void setValue(double inValue, unsigned char *outDataPtr, size_t inOffset,
                           DataType inType, bool inFlipEndian)
     {
+      IBC_GL_FILE_PLY_TRACE_ONCE();
       unsigned char data[8];
 
       switch (inType)
@@ -878,6 +916,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static void flipEndian(unsigned char *ioDataPtr, DataType inType)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inType)
       {
         case DATA_TYPE_INT16:
@@ -908,6 +947,7 @@ namespace ibc { namespace gl { namespace file
     static double getValueFromStr(const char *inDataStrPtr, size_t inDataSize,
                             PLYHeader::DataType inType)
     {
+      IBC_GL_FILE_PLY_TRACE_ONCE();
       std::string str(inDataStrPtr, inDataSize);
       double  v = 0;
 
@@ -971,6 +1011,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static const char *getReservedWord(LineType inLine)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inLine)
       {
         case LINE_TYPE_START:
@@ -999,13 +1040,15 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static LineType findReservedWord(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       const LineType  wordIndex[] = {
         LINE_TYPE_START, LINE_TYPE_END, LINE_TYPE_FORMAT,
         LINE_TYPE_COMMENT, LINE_TYPE_OBJ_INFO, LINE_TYPE_ELEMENT,
         LINE_TYPE_PROPERTY, LINE_TYPE_PROPERTY_LIST};
       //
       std::string_view  strView(inStr, inLen);
-      for (size_t i = 0; i < sizeof(wordIndex); i++)
+      size_t num = sizeof(wordIndex) / sizeof(PropertyType);
+      for (size_t i = 0; i < num; i++)
         if (strView == getReservedWord(wordIndex[i]))
           return wordIndex[i];
       //
@@ -1016,6 +1059,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static bool isPropertyList(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       std::string_view  strView(inStr, inLen);
       if (strView == getReservedWord(LINE_TYPE_PROPERTY_LIST))
         return true;
@@ -1026,6 +1070,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static const char *getDataFormatWord(DataFormat inFormat)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inFormat)
       {
         case DATA_FORMAT_ASCII:
@@ -1044,13 +1089,15 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static DataFormat findDataFormatWord(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       const DataFormat  wordIndex[] = {
         DATA_FORMAT_ASCII,
         DATA_FORMAT_BINARY_LITTLE_ENDIAN,
         DATA_FORMAT_BINARY_BIG_ENDIAN};
       //
       std::string_view  strView(inStr, inLen);
-      for (size_t i = 0; i < sizeof(wordIndex); i++)
+      size_t num = sizeof(wordIndex) / sizeof(PropertyType);
+      for (size_t i = 0; i < num; i++)
         if (strView == getDataFormatWord(wordIndex[i]))
           return wordIndex[i];
       //
@@ -1061,6 +1108,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static const char *getDataTypeWord(DataType inFormat)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inFormat)
       {
         case DATA_TYPE_INT8:
@@ -1106,6 +1154,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static DataType findDataTypeWord(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       const DataType  wordIndex[] = {
         DATA_TYPE_INT8,     DATA_TYPE_UINT8,
         DATA_TYPE_INT16,    DATA_TYPE_UINT16,
@@ -1118,7 +1167,8 @@ namespace ibc { namespace gl { namespace file
         DATA_TYPE_FLOAT,    DATA_TYPE_DOUBLE};
       //
       std::string_view  strView(inStr, inLen);
-      for (size_t i = 0; i < sizeof(wordIndex); i++)
+      size_t num = sizeof(wordIndex) / sizeof(PropertyType);
+      for (size_t i = 0; i < num; i++)
         if (strView == getDataTypeWord(wordIndex[i]))
         {
           if (wordIndex[i] <  DATA_TYPE_CHAR)
@@ -1135,6 +1185,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static size_t sizeofDataType(DataType inType)
     {
+      IBC_GL_FILE_PLY_TRACE_ONCE();
       switch (inType)
       {
         case DATA_TYPE_INT8:
@@ -1167,6 +1218,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static void clipToDataTypeRange(DataType inType, double *ioValue)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inType)
       {
         case DATA_TYPE_INT8:
@@ -1220,6 +1272,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static const char *getElementTypeWord(ElementType inType)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inType)
       {
         case ELEMENT_TYPE_VERTEX:
@@ -1240,12 +1293,14 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static ElementType findElementTypetWord(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       const ElementType  wordIndex[] = {
         ELEMENT_TYPE_VERTEX, ELEMENT_TYPE_FACE,
         ELEMENT_TYPE_EDGE, ELEMENT_TYPE_MATERIAL};
       //
       std::string_view  strView(inStr, inLen);
-      for (size_t i = 0; i < sizeof(wordIndex); i++)
+      size_t num = sizeof(wordIndex) / sizeof(PropertyType);
+      for (size_t i = 0; i < num; i++)
         if (strView == getElementTypeWord(wordIndex[i]))
           return wordIndex[i];
       //
@@ -1256,6 +1311,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static const char *getPropertyTypeWord(PropertyType inType)
     {
+      IBC_GL_FILE_PLY_TRACE();
       switch (inType)
       {
         case PROPERTY_X:
@@ -1301,6 +1357,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static PropertyType findPropertyTypeWord(const char *inStr, size_t inLen)
     {
+      IBC_GL_FILE_PLY_TRACE();
       const PropertyType  wordIndex[] = {
         PROPERTY_X,   PROPERTY_Y,     PROPERTY_Z,
         PROPERTY_NX,  PROPERTY_NY,    PROPERTY_NZ,
@@ -1311,9 +1368,12 @@ namespace ibc { namespace gl { namespace file
         PROPERTY_EDGE_VERTEX1, PROPERTY_EDGE_VERTEX2};
       //
       std::string_view  strView(inStr, inLen);
-      for (size_t i = 0; i < sizeof(wordIndex); i++)
+      size_t num = sizeof(wordIndex) / sizeof(PropertyType);
+      for (size_t i = 0; i < num; i++)
+      {
         if (strView == getPropertyTypeWord(wordIndex[i]))
           return wordIndex[i];
+      }
       //
       return PROPERTY_TYPE_USER;
     }
@@ -1336,6 +1396,7 @@ namespace ibc { namespace gl { namespace file
                     void **outDataPtr, size_t *outDataSize,
                     char **outHeaderStrBufPtr = NULL)
     {
+      IBC_GL_FILE_PLY_TRACE();
       int fd = ::open(inFileName, O_RDONLY);
       if (fd == -1)
       {
@@ -1403,6 +1464,7 @@ namespace ibc { namespace gl { namespace file
                     const void *inDataPtr, size_t inDataSize,
                     ibc::gl::glXYZf_RGBAub **outDataPtr, size_t *outDataNum)
     {
+      IBC_GL_FILE_PLY_TRACE();
       DestinationInfo infos[] = {
         { PLYHeader::PROPERTY_X, PLYHeader::DATA_TYPE_FLOAT32,
           offsetof(ibc::gl::glXYZf_RGBAub, x),
@@ -1439,6 +1501,7 @@ namespace ibc { namespace gl { namespace file
                     const ibc::gl::glXYZf_RGBAub *inDataPtr, size_t inDataNum,
                     GLfloat outParam[4])
     {
+      IBC_GL_FILE_PLY_TRACE();
       GLfloat x_min, y_min, z_min;
       GLfloat x_max, y_max, z_max;
       x_min = inDataPtr->x;
@@ -1517,6 +1580,7 @@ namespace ibc { namespace gl { namespace file
                     const void *inSrcDataPtr, size_t inSrcDataSize,
                     void **outDstDataPtr, size_t *outDstDataNum)
     {
+      IBC_GL_FILE_PLY_TRACE();
       size_t  index;
       std::vector<SourceInfo> sourceInfos;
       bool  flipEndian = PLYHeader::doesNeedToFlipEndian(inHeader.mDataFormat);
