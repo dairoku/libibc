@@ -141,14 +141,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  glUpdaetProjection()
     {
-//      mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 1.0, 100);
       mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 0.1, 100);
       ibc::gl::MatrixBase<GLfloat>  translate, scale;
       translate.setTranslationMatrix(0.0, 0.0, -5);
-      //translate.setTranslationMatrix(0.0, 0.0, -2);
       mProjection *= translate;
-      //scale.setScaleMatrix(mScaleFactor, mScaleFactor, mScaleFactor);
-      //mProjection *= scale;
     }
     // -------------------------------------------------------------------------
     // paintGL (inherited from QOpenGLWidget)
