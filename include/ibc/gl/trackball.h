@@ -59,7 +59,7 @@ namespace ibc
       mIsMouseButtonDown = false;
       mRotationSensitivity = inRotationSensitivity;
 
-      mScaleFactor = 1.0;
+      mZoomOffset = 0.0;
       mModelView.setIdentity();
       mOffset.setZero();
     }
@@ -134,8 +134,8 @@ namespace ibc
         ibc::gl::VectorBase<TrackballType> offset;
         ibc::gl::MatrixBase<TrackballType> mat = mModelView;
         mat.inverse();
-        offset[0] = -2.0 * (mPrevMouseX - inMouseX) / mClientHeight / mScaleFactor;
-        offset[1] =  2.8 * (mPrevMouseY - inMouseY) / mClientHeight / mScaleFactor;
+        offset[0] = -2.0 * (mPrevMouseX - inMouseX) / mClientHeight;
+        offset[1] =  2.0 * (mPrevMouseY - inMouseY) / mClientHeight;
         offset[2] = 0.0;
         offset = mat * offset;
         mOffset += offset;
@@ -151,11 +151,11 @@ namespace ibc
     {
       UNUSED(inDeltaX);
       UNUSED(inDeltaY);
-      //
+
       if (inDirection == 0)
-        mScaleFactor /= 1.1;
+        mZoomOffset -= 0.1;
       else
-        mScaleFactor *= 1.1;
+        mZoomOffset += 0.1;
     }
     // -------------------------------------------------------------------------
     // getGLRotationMatrix
@@ -165,11 +165,9 @@ namespace ibc
     {
       ibc::gl::VectorBase<TrackballType>  vec = mModelView * mOffset;
       ibc::gl::MatrixBase<TrackballType>  mat = mModelView;
-      ibc::gl::MatrixBase<TrackballType>  scale;
 
-      scale.setScaleMatrix(mScaleFactor, mScaleFactor, mScaleFactor);
+      vec[3] += mZoomOffset;
       mat.setTranslation(vec);
-      mat = scale * mat;
       mat.getTransposedMatrix(outMat);
     }
 
@@ -229,7 +227,7 @@ namespace ibc
     TrackballType mPrevMouseX, mPrevMouseY, mClientWidth, mClientHeight;
     unsigned int  mMouseButton;
 
-    TrackballType mScaleFactor;
+    TrackballType mZoomOffset;
     ibc::gl::VectorBase<TrackballType> mOffset;
     ibc::gl::MatrixBase<TrackballType> mModelView;
   };

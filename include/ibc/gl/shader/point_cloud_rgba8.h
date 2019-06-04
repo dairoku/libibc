@@ -68,7 +68,7 @@ namespace ibc { namespace gl { namespace shader
         "  vec3 scaled;"
         "  scaled = (position + vec3(fit.x, fit.y, fit.z)) * fit.w;"
         "  gl_Position = projection * modelview * vec4(scaled, 1.0);"
-        "  gl_PointSize = 25 / gl_Position.w;"
+        "  gl_PointSize = 5 / gl_Position.w;"
         "  light = normalize(vec3(lightSource - modelview * vec4(position, 1.0)));"
         "  vertexColor = color / 255.0;"
         "}";
