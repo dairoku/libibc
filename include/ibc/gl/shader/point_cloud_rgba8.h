@@ -61,6 +61,7 @@ namespace ibc { namespace gl { namespace shader
         "uniform vec4 fit;"
         "uniform mat4 modelview;"
         "uniform mat4 projection;"
+        "uniform highp sampler1D colorMapTexture;"
         "smooth out vec4 vertexColor;"
         "varying out vec3 light;"
         "const vec4 lightSource = vec4(0.0, 0.0, 100.0, 1.0);"
@@ -70,7 +71,10 @@ namespace ibc { namespace gl { namespace shader
         "  gl_Position = projection * modelview * vec4(scaled, 1.0);"
         "  gl_PointSize = 5 / gl_Position.w;"
         "  light = normalize(vec3(lightSource - modelview * vec4(position, 1.0)));"
-        "  vertexColor = color / 255.0;"
+        "  float colorIndex = (scaled.z + 1) / 2;"
+        "  vec4 mappedColor = texture(colorMapTexture, colorIndex);"
+        "  vertexColor = mappedColor;"
+//      "  vertexColor = color / 255.0;"
         "}";
       static const char *fragmentShaderStr =
         "#version 330\n"
