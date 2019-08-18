@@ -82,29 +82,15 @@ namespace ibc
     virtual ~GLPointCloudView()
     {
     }
-    // Member functions --------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // setDataPtr
-    // -------------------------------------------------------------------------
-    void  setDataPtr(float *inDataPtr, size_t inDataNum)
-    {
-      mDataModel.setDataPtr(inDataPtr, inDataNum);
-      update();
-    }
-    // -------------------------------------------------------------------------
-    // setModelFitParam
-    // -------------------------------------------------------------------------
-    void setModelFitParam(const GLfloat inModelFitParam[4])
-    {
-      mDataModel.setModelFitParam(inModelFitParam);
-    }
+
+    // Member variables --------------------------------------------------------
+    ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
+    ibc::gl::model::PointsRGBA8  mDataModel;
 
   protected:
     // Member variables --------------------------------------------------------
     ibc::gl::shader::Simple  mShader;
-    ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
     ibc::gl::model::ColorCube  mModel;
-    ibc::gl::model::PointsRGBA8  mDataModel;
   };
  };
 };

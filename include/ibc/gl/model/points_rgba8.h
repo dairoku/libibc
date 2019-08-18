@@ -57,17 +57,31 @@ namespace ibc { namespace gl { namespace model
       mIsDataNumUpdated = false;
       mIsDataModified   = false;
       mIsVBOInitialized = false;
+      mIsColorMapIndexModified = false;
 
       mDataNum = 0;
       mDataSize = 0;
 
+      mPointSize = 5.0;
+      mColorMode = 0;
+      mSingleColor[0] = 1.0;
+      mSingleColor[1] = 1.0;
+      mSingleColor[2] = 1.0;
+      mSingleColor[3] = 1.0;
+
       mColorMapIndex = ibc::image::ColorMap::CMIndex_SpectrumWide;
+      mColorMapRepeatNum = 1;
       mColorMapSize = 1024; // =2^10
 
       mModelFitParam[0] = 0.0;
       mModelFitParam[1] = 0.0;
       mModelFitParam[2] = 0.0;
       mModelFitParam[3] = 1.0;
+
+      mColorMapParam[0] = 2.0;
+      mColorMapParam[1] = 0.0;
+      mColorMapParam[2] = 1.0;
+      mColorMapParam[3] = 0.0;
     }
     // -------------------------------------------------------------------------
     // ~PointsRGBA8
@@ -94,14 +108,6 @@ namespace ibc { namespace gl { namespace model
       mIsDataModified = true;
     }
     // -------------------------------------------------------------------------
-    // setModelFitParam
-    // -------------------------------------------------------------------------
-    void setModelFitParam(const GLfloat inModelFitParam[4])
-    {
-      for (int i = 0; i < 4; i++)
-        mModelFitParam[i] = inModelFitParam[i];
-    }
-    // -------------------------------------------------------------------------
     // markAsDataModified
     // -------------------------------------------------------------------------
     void markAsDataModified()
@@ -118,11 +124,16 @@ namespace ibc { namespace gl { namespace model
 
       // Shader program related initialization
       mShaderProgram = mShaderInterface->getShaderProgram();
-      mModelFitLocation   = glGetUniformLocation(mShaderProgram, "fit");
-      mModelViewLocation  = glGetUniformLocation(mShaderProgram, "modelview");
-      mProjectionLocation = glGetUniformLocation(mShaderProgram, "projection");
-      mPositionLocation   = glGetAttribLocation(mShaderProgram, "position");
-      mColorLocation      = glGetAttribLocation(mShaderProgram, "color");
+      mModelFitLocation     = glGetUniformLocation(mShaderProgram, "fit");
+      mModelViewLocation    = glGetUniformLocation(mShaderProgram, "modelview");
+      mProjectionLocation   = glGetUniformLocation(mShaderProgram, "projection");
+      mPositionLocation     = glGetAttribLocation(mShaderProgram, "position");
+      mColorLocation        = glGetAttribLocation(mShaderProgram, "color");
+      //
+      mPointSizeLocation    = glGetUniformLocation(mShaderProgram, "pointSize");
+      mColorModeLocation    = glGetUniformLocation(mShaderProgram, "colorMode");
+      mColorMapParamLocation = glGetUniformLocation(mShaderProgram, "colorMapParam");
+      mSingleColorLocation  = glGetUniformLocation(mShaderProgram, "singleColor");
 
       // Initialze Vertex Array Object
       glGenVertexArrays(1, &mVertexArrayObject);
@@ -165,10 +176,18 @@ namespace ibc { namespace gl { namespace model
           updateVBO();
       }
 
+      if (mIsColorMapIndexModified)
+        updateTexture();
+
       glUseProgram(mShaderProgram);
-      glUniform4fv(mModelFitLocation, 1, &(mModelFitParam[0]));
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
+
+      glUniform4fv(mModelFitLocation, 1, mModelFitParam);
+      glUniform1f(mPointSizeLocation, mPointSize);
+      glUniform1i(mColorModeLocation, mColorMode);
+      glUniform4fv(mColorMapParamLocation, 1, mColorMapParam);
+      glUniform4fv(mSingleColorLocation, 1, mSingleColor);
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_1D, mColorMapTexture);
@@ -179,6 +198,160 @@ namespace ibc { namespace gl { namespace model
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_1D, 0);
     }
+    // -------------------------------------------------------------------------
+    // getModelFitParam
+    // -------------------------------------------------------------------------
+    const float *getModelFitParam()
+    {
+      return mModelFitParam;
+    }
+    // -------------------------------------------------------------------------
+    // setModelFitParam
+    // -------------------------------------------------------------------------
+    void setModelFitParam(const GLfloat inParm[4])
+    {
+      for (int i = 0; i < 4; i++)
+        mModelFitParam[i] = inParm[i];
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapAxis
+    // -------------------------------------------------------------------------
+    int getColorMapAxis()
+    {
+      return mColorMapParam[0];
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapAxis
+    // -------------------------------------------------------------------------
+    void setColorMapAxis(int inMapAxis)
+    {
+      mColorMapParam[0] = inMapAxis;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapOffset
+    // -------------------------------------------------------------------------
+    float getColorMapOffset()
+    {
+      return mColorMapParam[1];
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapOffset
+    // -------------------------------------------------------------------------
+    void setColorMapOffset(float inOffset)
+    {
+      mColorMapParam[1] = inOffset;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapGain
+    // -------------------------------------------------------------------------
+    float getColorMapGain()
+    {
+      return mColorMapParam[2];
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapGain
+    // -------------------------------------------------------------------------
+    void setColorMapGain(float inGain)
+    {
+      mColorMapParam[2] = inGain;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapUnmapMode
+    // -------------------------------------------------------------------------
+    // Mode = 0 : display nothing when the colormap is out of range (un-mapped)
+    // Mode = 1 : display using single color when the colormap is out of range
+    //
+    int getColorMapUnmapMode()
+    {
+      return mColorMapParam[3];
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapUnmapMode
+    // -------------------------------------------------------------------------
+    void setColorMapUnmapMode(int inMode)
+    {
+      mColorMapParam[3] = inMode;
+    }
+    // -------------------------------------------------------------------------
+    // getPointSize
+    // -------------------------------------------------------------------------
+    float getPointSize()
+    {
+      return mPointSize;
+    }
+    // -------------------------------------------------------------------------
+    // setPointSize
+    // -------------------------------------------------------------------------
+    void setPointSize(float inSize)
+    {
+      mPointSize = inSize;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMode
+    // -------------------------------------------------------------------------
+    float getColorMode()
+    {
+      return mColorMode;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMode
+    // -------------------------------------------------------------------------
+    void setColorMode(int inMode)
+    {
+      if (inMode < 0)
+        inMode = 0;
+      if (inMode > 2)
+        inMode = 2;
+      mColorMode = inMode;
+    }
+    // -------------------------------------------------------------------------
+    // getSingleColor
+    // -------------------------------------------------------------------------
+    const float *getSingleColor()
+    {
+      return mSingleColor;
+    }
+    // -------------------------------------------------------------------------
+    // setSingleColor
+    // -------------------------------------------------------------------------
+    void setSingleColor(const float inColor[])
+    {
+      mSingleColor[0] = inColor[0];
+      mSingleColor[1] = inColor[1];
+      mSingleColor[2] = inColor[2];
+      mSingleColor[3] = inColor[3];
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapIndex
+    // -------------------------------------------------------------------------
+    ibc::image::ColorMap::ColorMapIndex getColorMapIndex()
+    {
+      return mColorMapIndex;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapIndex
+    // -------------------------------------------------------------------------
+    void setColorMapIndex(ibc::image::ColorMap::ColorMapIndex inIndex)
+    {
+      mColorMapIndex = inIndex;
+      mIsColorMapIndexModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getColorMapRepeatNum
+    // -------------------------------------------------------------------------
+    int getColorMapRepeatNum()
+    {
+      return mColorMapRepeatNum;
+    }
+    // -------------------------------------------------------------------------
+    // setColorMapRepeatNum
+    // -------------------------------------------------------------------------
+    void setColorMapRepeatNum(int inNum)
+    {
+      mColorMapRepeatNum = inNum;
+      mIsColorMapIndexModified = true;
+    }
+
 
   protected:
     // structs -----------------------------------------------------------------
@@ -195,16 +368,23 @@ namespace ibc { namespace gl { namespace model
     bool  mIsDataNumUpdated;
     bool  mIsDataModified;
     bool  mIsVBOInitialized;
+    bool  mIsColorMapIndexModified;
 
     void  *mDataPtr;
     size_t  mDataNum;
     size_t  mDataSize;
 
+    float mPointSize;
+    GLint  mColorMode;
+    GLfloat mSingleColor[4];
+
     ibc::image::ColorMap::ColorMapIndex mColorMapIndex;
+    int   mColorMapRepeatNum;
     size_t  mColorMapSize;
     GLuint  mColorMapTexture;
 
     GLfloat mModelFitParam[4];
+    GLfloat mColorMapParam[4];
 
     GLuint mShaderProgram;
     GLuint mVertexArrayObject;
@@ -215,6 +395,11 @@ namespace ibc { namespace gl { namespace model
     GLint mProjectionLocation;
     GLint mPositionLocation;
     GLint mColorLocation;
+    GLint mColorModeLocation;
+    GLint mColorMapParamLocation;
+    GLint mSingleColorLocation;
+
+    GLint mPointSizeLocation;
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -247,13 +432,14 @@ namespace ibc { namespace gl { namespace model
       unsigned char *colorMap = new unsigned char[mColorMapSize * 3];
       //getMonoMap <- gamma
       ibc::image::ColorMap::getColorMap(mColorMapIndex, mColorMapSize, colorMap,
-                              1, 1.0, 0);
+                              mColorMapRepeatNum, 1.0, 0);
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_1D, mColorMapTexture);
       glTexSubImage1D(GL_TEXTURE_1D, 0, 0, mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
       glBindTexture(GL_TEXTURE_1D, 0);
       delete colorMap;
+      mIsColorMapIndexModified = false;
     }
     // -------------------------------------------------------------------------
     // disposeTexture
