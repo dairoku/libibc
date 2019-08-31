@@ -45,6 +45,7 @@
 #include "ibc/gtkmm/image_data.h"
 #include "ibc/gtkmm/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/model/xyz_axis.h"
 #include "ibc/gl/model/surface_points.h"
 #include "ibc/gl/shader/simple.h"
 #include "ibc/gl/shader/point_sprite.h"
@@ -71,11 +72,13 @@ namespace ibc
       mIsImageSizeChanged = false;
       
       mModel.setShader(&mShader);
+      mAxis.setShader(&mShader);
       mDataModel.setShader(&mPointSpriteShader);
 
       addShader(&mShader);
       addShader(&mPointSpriteShader);
       addModel(&mModel);
+      addModel(&mAxis);
       addModel(&mDataModel);
     }
     // -------------------------------------------------------------------------
@@ -129,6 +132,7 @@ namespace ibc
     ibc::gl::shader::Simple  mShader;
     ibc::gl::shader::PointSprite  mPointSpriteShader;
     ibc::gl::model::ColorCube  mModel;
+    ibc::gl::model::XYZAxis  mAxis;
     ibc::gl::model::SurfacePoints  mDataModel;
 
     ImageData *mImageDataPtr;
