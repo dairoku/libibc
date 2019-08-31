@@ -1,5 +1,5 @@
 // =============================================================================
-//  gl_point_cloud_view.h
+//  backdrop.h
 //
 //  MIT License
 //
@@ -24,86 +24,66 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/qt/gl_point_cloud_view.h
+  \file     ibc/gl/models/backdrop.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
-  \date     2019/05/01
-  \brief    Header file for the OpenGL Point Cloud Viewer widget
+  \date     2019/03/24
+  \brief    Header file for the Simple shader
 */
 
-#ifndef IBC_QT_GL_POINT_CLOUD_VIEW_H_
-#define IBC_QT_GL_POINT_CLOUD_VIEW_H_
+#ifndef IBC_GL_SHADER_BACKDROP_H_
+#define IBC_GL_SHADER_BACKDROP_H_
 
 // Includes --------------------------------------------------------------------
-#include <QtWidgets>
-#include "ibc/gl/matrix.h"
-#include "ibc/gl/utils.h"
-#include "ibc/gl/trackball.h"
-#include "ibc/qt/gl_obj_view.h"
-#include "ibc/qt/image_data.h"
-//#include "ibc/qt/view_data_interface.h"
-#include "ibc/gl/model/color_cube.h"
-#include "ibc/gl/model/points_rgba8.h"
-#include "ibc/gl/shader/simple.h"
-#include "ibc/gl/shader/point_cloud_rgba8.h"
+#include "ibc/gl/shader/shader_base.h"
 
-#include "ibc/gl/model/solid_square.h"
-#include "ibc/gl/shader/backdrop.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+//namespace ibc::gl::shader // <- nested namespace (C++17)
+namespace ibc { namespace gl { namespace shader
 {
- namespace qt
- {
   // ---------------------------------------------------------------------------
-  // GLPointCloudView class
+  // Backdrop
   // ---------------------------------------------------------------------------
-//class GLPointCloudView : virtual public GLObjView, virtual public ViewDataInterface
-  class GLPointCloudView : virtual public GLObjView
+  class Backdrop : public virtual ibc::gl::shader::ShaderBase
   {
-    Q_OBJECT
-
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // GLPointCloudView
+    // Backdrop
     // -------------------------------------------------------------------------
-    GLPointCloudView(QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags())
-      : GLObjView(parent, f)
+    Backdrop()
     {
-      mBackdropModel.setShader(&mBackdropShader);
-      mModel.setShader(&mShader);
-      mDataModel.setShader(&mPointCloudShader);
+      static const char *vertexShaderStr =
+        "#version 330\n"
+        "in vec3 position;"
+        "in vec3 color;"
+        "uniform mat4 modelview;"
+        "uniform mat4 projection;"
+        "smooth out vec4 vertexColor;"
+        "void main() {"
+        "  gl_Position = vec4(position.xy, 0.999999, 1.0);"
+        //"  vertexColor = vec4(0.2, 0.1, 0.1, 1.0);"
+        "  vertexColor = vec4(color, 1.0);"
+        "}";
+      static const char *fragmentShaderStr =
+        "#version 330\n"
+        "smooth in vec4 vertexColor;"
+        "out vec4 outputColor;"
+        "void main() {"
+        "  outputColor = vertexColor;"
+        "}";
 
-      addShader(&mBackdropShader);
-      addShader(&mShader);
-      addShader(&mPointCloudShader);
-
-      addModel(&mModel);
-      addModel(&mDataModel);
-      addModel(&mBackdropModel);
+      mVertexShaderStr = vertexShaderStr;
+      mFragmentShaderStr = fragmentShaderStr;
     }
     // -------------------------------------------------------------------------
-    // ~GLPointCloudView
+    // ~Backdrop
     // -------------------------------------------------------------------------
-    virtual ~GLPointCloudView()
+    virtual ~Backdrop()
     {
     }
-
-    // Member variables --------------------------------------------------------
-    ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
-    ibc::gl::model::PointsRGBA8  mDataModel;
-
-  protected:
-    // Member variables --------------------------------------------------------
-    ibc::gl::shader::Simple  mShader;
-    ibc::gl::model::ColorCube  mModel;
-
-    ibc::gl::model::SolidSquare  mBackdropModel;
-    ibc::gl::shader::Backdrop  mBackdropShader;
   };
- };
-};
+};};};
 
-#endif  // #ifdef IBC_QT_GL_POINT_CLOUD_VIEW_H_
-
+#endif  // #ifdef IBC_GL_SHADER_BACKDROP_H_
