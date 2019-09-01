@@ -24,15 +24,15 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/gl/models/solid_square.h
+  \file     ibc/gl/models/backdrop_square.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2019/08/18
-  \brief    Header file for SolidSquare model
+  \brief    Header file for BackdropSquare model
 */
 
-#ifndef IBC_GL_MODEL_SOLID_SQUARE_H_
-#define IBC_GL_MODEL_SOLID_SQUARE_H_
+#ifndef IBC_GL_MODEL_BACKDROP_SQUARE_H_
+#define IBC_GL_MODEL_BACKDROP_SQUARE_H_
 
 // Includes --------------------------------------------------------------------
 #include "ibc/gl/model/model_base.h"
@@ -42,23 +42,24 @@
 namespace ibc { namespace gl { namespace model
 {
   // ---------------------------------------------------------------------------
-  // SolidSquare class
+  // BackdropSquare class
   // ---------------------------------------------------------------------------
-  class SolidSquare : public virtual ibc::gl::model::ModelBase
+  class BackdropSquare : public virtual ibc::gl::model::ModelBase
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // SolidSquare
+    // BackdropSquare
     // -------------------------------------------------------------------------
-    SolidSquare()
+    BackdropSquare()
     {
       mShaderInterface = NULL;
+      mIsBackdropColorModified = false;
     }
     // -------------------------------------------------------------------------
-    // ~SolidSquare
+    // ~BackdropSquare
     // -------------------------------------------------------------------------
-    virtual ~SolidSquare()
+    virtual ~BackdropSquare()
     {
     }
     // Member functions --------------------------------------------------------
@@ -70,13 +71,6 @@ namespace ibc { namespace gl { namespace model
       if (ModelBase::initModel() == false)
         return false;
 
-      static const struct vertex_info vertexData[] =
-      {
-        { { -1.0f, -1.0f,  0.0f }, { 0.6f, 0.6f, 0.6f } },
-        { { -1.0f,  1.0f,  0.0f }, { 0.1f, 0.0f, 0.3f } },
-        { {  1.0f,  1.0f,  0.0f }, { 0.1f, 0.0f, 0.3f } },
-        { {  1.0f, -1.0f,  0.0f }, { 0.6f, 0.6f, 0.6f } }
-      };
       static const GLuint indexData[] =
       {
         2, 1, 0,
@@ -90,7 +84,8 @@ namespace ibc { namespace gl { namespace model
 
       glGenBuffers(1, &mVertexBufferObject);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glBufferData(GL_ARRAY_BUFFER, (4 * 3 * 2 * sizeof(GLfloat)), vertexData, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, (4 * 3 * 2 * sizeof(GLfloat)), NULL, GL_DYNAMIC_DRAW);
+      updateVBO();
 
       glGenBuffers(1, &mIndexBufferObject);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBufferObject);
@@ -108,7 +103,7 @@ namespace ibc { namespace gl { namespace model
 
       glEnableVertexAttribArray(0);
       glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+      //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
       // enable and set the position attribute
       glEnableVertexAttribArray(positionLocation);
@@ -130,10 +125,42 @@ namespace ibc { namespace gl { namespace model
     {
     }
     // -------------------------------------------------------------------------
+    // setBackdropColor
+    // -------------------------------------------------------------------------
+    void setBackdropColor(const GLfloat inTopColor[3], const GLfloat inBottomColor[3])
+    {
+      struct vertex_info *vertexData = getVertexData();
+      for (int i = 0; i < 3; i++)
+      {
+        vertexData[0].color[i] = inBottomColor[i];
+        vertexData[1].color[i] = inTopColor[i];
+        vertexData[2].color[i] = inTopColor[i];
+        vertexData[3].color[i] = inBottomColor[i];
+      }
+      mIsBackdropColorModified = true;
+    }
+    // -------------------------------------------------------------------------
+    // getBackdropColor
+    // -------------------------------------------------------------------------
+    void getBackdropColor(GLfloat outTopColor[3], GLfloat outBottomColor[3])
+    {
+      struct vertex_info *vertexData = getVertexData();
+      for (int i = 0; i < 3; i++)
+      {
+        outBottomColor[i] = vertexData[0].color[i];
+        outTopColor[i] = vertexData[1].color[i];
+        outTopColor[i] = vertexData[2].color[i];
+        outBottomColor[i] = vertexData[3].color[i];
+      }
+    }
+    // -------------------------------------------------------------------------
     // drawModel
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
     {
+      if (mIsBackdropColorModified)
+        updateVBO();
+
       glUseProgram(mShaderProgram);
       glUniformMatrix4fv(mModelViewLocation, 1, GL_FALSE, &(inModelView[0]));
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
@@ -152,7 +179,33 @@ namespace ibc { namespace gl { namespace model
       GLfloat color[3];
     };
 
+    // -------------------------------------------------------------------------
+    // getVertexData
+    // -------------------------------------------------------------------------
+    struct vertex_info  *getVertexData()
+    {
+      static struct vertex_info vertexData[] =
+      {
+        { { -1.0f, -1.0f,  0.0f }, { 0.3f, 0.3f, 0.3f } },
+        { { -1.0f,  1.0f,  0.0f }, { 0.3f, 0.3f, 0.3f } },
+        { {  1.0f,  1.0f,  0.0f }, { 0.3f, 0.3f, 0.3f } },
+        { {  1.0f, -1.0f,  0.0f }, { 0.3f, 0.3f, 0.3f } }
+      };
+      return vertexData;
+    };
+    // -------------------------------------------------------------------------
+    // updateVBO
+    // -------------------------------------------------------------------------
+    void updateVBO()
+    {
+      glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+      glBufferSubData(GL_ARRAY_BUFFER, 0, (4 * 3 * 2 * sizeof(GLfloat)), getVertexData());
+      mIsBackdropColorModified = false;
+    }
+
     // Member variables --------------------------------------------------------
+    bool  mIsBackdropColorModified;
+
     GLuint mShaderProgram;
     GLuint mVertexArrayObject;
     GLuint mVertexBufferObject;
@@ -163,4 +216,4 @@ namespace ibc { namespace gl { namespace model
   };
 };};};
 
-#endif  // #ifdef IBC_GL_MODEL_SOLID_SQUARE_H_
+#endif  // #ifdef IBC_GL_MODEL_BACKDROP_SQUARE_H_

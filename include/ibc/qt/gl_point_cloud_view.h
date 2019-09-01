@@ -43,11 +43,12 @@
 #include "ibc/qt/image_data.h"
 //#include "ibc/qt/view_data_interface.h"
 #include "ibc/gl/model/color_cube.h"
+#include "ibc/gl/model/xyz_axis.h"
 #include "ibc/gl/model/points_rgba8.h"
 #include "ibc/gl/shader/simple.h"
 #include "ibc/gl/shader/point_cloud_rgba8.h"
 
-#include "ibc/gl/model/solid_square.h"
+#include "ibc/gl/model/backdrop_square.h"
 #include "ibc/gl/shader/backdrop.h"
 
 // Namespace -------------------------------------------------------------------
@@ -72,14 +73,16 @@ namespace ibc
       : GLObjView(parent, f)
     {
       mBackdropModel.setShader(&mBackdropShader);
-      mModel.setShader(&mShader);
+      mCubeModel.setShader(&mShader);
+      mAxisModel.setShader(&mShader);
       mDataModel.setShader(&mPointCloudShader);
 
       addShader(&mBackdropShader);
       addShader(&mShader);
       addShader(&mPointCloudShader);
 
-      addModel(&mModel);
+      addModel(&mCubeModel);
+      addModel(&mAxisModel);
       addModel(&mDataModel);
       addModel(&mBackdropModel);
     }
@@ -93,14 +96,15 @@ namespace ibc
     // Member variables --------------------------------------------------------
     ibc::gl::shader::PointCloudRGBA8  mPointCloudShader;
     ibc::gl::model::PointsRGBA8  mDataModel;
+    ibc::gl::model::ColorCube mCubeModel;
+    ibc::gl::model::XYZAxis   mAxisModel;
+    ibc::gl::model::BackdropSquare mBackdropModel;
 
   protected:
     // Member variables --------------------------------------------------------
-    ibc::gl::shader::Simple  mShader;
-    ibc::gl::model::ColorCube  mModel;
+    ibc::gl::shader::Simple   mShader;
 
-    ibc::gl::model::SolidSquare  mBackdropModel;
-    ibc::gl::shader::Backdrop  mBackdropShader;
+    ibc::gl::shader::Backdrop   mBackdropShader;
   };
  };
 };
