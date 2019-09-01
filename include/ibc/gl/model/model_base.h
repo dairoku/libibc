@@ -61,6 +61,7 @@ namespace ibc { namespace gl { namespace model
     ModelBase()
     {
       mShaderInterface = NULL;
+      mIsEnabled = true;
 
 #ifdef QT_VERSION
       mOpenGLFunctionsInitialized = false;
@@ -108,6 +109,20 @@ namespace ibc { namespace gl { namespace model
     {
     }
     // -------------------------------------------------------------------------
+    // setEnabled
+    // -------------------------------------------------------------------------
+    virtual void setEnabled(bool inEnabled)
+    {
+      mIsEnabled = inEnabled;
+    }
+    // -------------------------------------------------------------------------
+    // isEnabled
+    // -------------------------------------------------------------------------
+    virtual bool isEnabled()
+    {
+      return mIsEnabled;
+    }
+    // -------------------------------------------------------------------------
     // drawModel
     // -------------------------------------------------------------------------
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16])
@@ -119,6 +134,7 @@ namespace ibc { namespace gl { namespace model
   protected:
     // Member variables --------------------------------------------------------
     ibc::gl::ShaderInterface *mShaderInterface;
+    bool    mIsEnabled;
 #ifdef QT_VERSION
     bool  mOpenGLFunctionsInitialized;
 #endif

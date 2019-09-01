@@ -52,6 +52,7 @@ namespace ibc
     virtual ibc::gl::ShaderInterface *getShader() = 0;
     virtual bool initModel() = 0;
     virtual void disposeModel() = 0;
+    virtual bool isEnabled() = 0;
     virtual void drawModel(const GLfloat inModelView[16], const GLfloat inProjection[16]) = 0;
   };
  };

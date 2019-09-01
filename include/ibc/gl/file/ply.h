@@ -43,6 +43,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <QFileInfo>
 #include "ibc/base/types.h"
 #include "ibc/base/endian.h"
 #include "ibc/base/log.h"
@@ -228,6 +229,20 @@ namespace ibc { namespace gl { namespace file
       return mFormatVersionStr;
     }
     // -------------------------------------------------------------------------
+    // getFormatStr
+    // -------------------------------------------------------------------------
+    std::string getFormatStr() const
+    {
+      IBC_GL_FILE_PLY_TRACE();
+      std::string str;
+      if (mDataFormat == DATA_FORMAT_NOT_SPECIFIED)
+        return str;
+      str.append(getDataFormatWord(getFormat()));
+      str.append(" ");
+      str.append(getFormatVersionStr());
+      return str;
+    }
+    // -------------------------------------------------------------------------
     // addComment
     // -------------------------------------------------------------------------
     void  addComment(const char *inStr, size_t inStrLen)
@@ -357,6 +372,20 @@ namespace ibc { namespace gl { namespace file
       return outProperties->size();
     }
     // -------------------------------------------------------------------------
+    // findPropertyIndex
+    // -------------------------------------------------------------------------
+    bool findPropertyIndex(size_t inElementIndex, PropertyType inType, size_t *outIndex) const
+    {
+      IBC_GL_FILE_PLY_TRACE();
+      for (size_t i = 0; i < mProperties.size(); i++)
+        if (mProperties[i].elementIndex == inElementIndex && mProperties[i].type == inType)
+        {
+          *outIndex = i;
+          return true;
+        }
+      return false;
+    }
+    // -------------------------------------------------------------------------
     // getElementSingleDataSize
     // -------------------------------------------------------------------------
     size_t getElementSingleDataSize(size_t inElementIndex, bool *outContainsList) const
@@ -469,6 +498,40 @@ namespace ibc { namespace gl { namespace file
         }
       return false;
     }
+
+    // -------------------------------------------------------------------------
+    // getColorFormatStr
+    // -------------------------------------------------------------------------
+    std::string  getColorFormatStr(ElementType inType) const
+    {
+      IBC_GL_FILE_PLY_TRACE();
+      size_t  index;
+      if (findElementIndex(inType, &index) == false)
+        return std::string();
+      return getColorFormatStr(index);
+    }
+    // -------------------------------------------------------------------------
+    // getColorFormatStr
+    // -------------------------------------------------------------------------
+    std::string  getColorFormatStr(size_t inElementIndex) const
+    {
+      size_t  index;
+      std::string str;
+      if (findPropertyIndex(inElementIndex, PROPERTY_RED, &index))
+        str.append("R");
+      if (findPropertyIndex(inElementIndex, PROPERTY_GREEN, &index))
+        str.append("G");
+      if (findPropertyIndex(inElementIndex, PROPERTY_BLUE, &index))
+        str.append("B");
+      if (findPropertyIndex(inElementIndex, PROPERTY_ALPHA, &index))
+        str.append("A");
+      if (findPropertyIndex(inElementIndex, PROPERTY_INTENSITY, &index))
+        str.append("I");
+      if (findPropertyIndex(inElementIndex, PROPERTY_CONFIDENCE, &index))
+        str.append("C");
+      return str;
+    }
+
     // Debug Functions ---------------------------------------------------------
     void  debugDumpHeader(std::ostream *outStream) const
     {
@@ -1391,7 +1454,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static bool readHeader(const char *inFileName,
                     PLYHeader **outHeader,
-                    void **outDataPtr, size_t *outDataSize,
+                    unsigned char **outDataPtr, size_t *outDataSize,
                     char **outHeaderStrBufPtr = NULL)
     {
       IBC_GL_FILE_PLY_TRACE();
@@ -1497,7 +1560,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static void calcFitParam_glXYZf_RGBAub(
                     const ibc::gl::glXYZf_RGBAub *inDataPtr, size_t inDataNum,
-                    GLfloat outParam[4])
+                    GLfloat outParam[4], GLfloat outMinMax[6])
     {
       IBC_GL_FILE_PLY_TRACE();
       GLfloat x_min, y_min, z_min;
@@ -1540,6 +1603,13 @@ namespace ibc { namespace gl { namespace file
         outParam[3] = 2.0 / size_max;
       else
         outParam[3] = 1.0;
+      //
+      outMinMax[0] = x_min;
+      outMinMax[1] = x_max;
+      outMinMax[2] = y_min;
+      outMinMax[3] = y_max;
+      outMinMax[4] = z_min;
+      outMinMax[5] = z_max;
     }
 
   protected:

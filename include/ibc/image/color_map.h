@@ -522,6 +522,20 @@ namespace ibc
       }
       return inDefault;
     }
+    // -------------------------------------------------------------------------
+    // getColorMapNameTable
+    // -------------------------------------------------------------------------
+    static void getColorMapNameTable( std::vector<std::string> *outStrTable,
+                                      std::vector<ColorMapIndex> *outIndexTable)
+    {
+      const ColorMapIndexTable  *tablePtr = getColorMapIndexTable();
+      while (tablePtr->index != CMIndex_ANY)
+      {
+        outStrTable->push_back(std::string(tablePtr->str));
+        outIndexTable->push_back(tablePtr->index);
+        tablePtr++;
+      }
+    }
 
   private:
     // Typedefs ----------------------------------------------------------------
@@ -697,7 +711,7 @@ namespace ibc
       return colorMapData;
     }
     // -------------------------------------------------------------------------
-    // stringToColorMapIndex
+    // getColorMapIndexTable
     // -------------------------------------------------------------------------
     static const ColorMapIndexTable *getColorMapIndexTable()
     {
