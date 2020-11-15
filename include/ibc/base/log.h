@@ -46,8 +46,11 @@
 #define IBC_LOG_AT_TOSTRING(x)  IBC_LOG_AT_STRINGIFY(x)
 #define IBC_LOG_AT              IBC_LOG_AT_TOSTRING(__FILE__) ":" IBC_LOG_AT_TOSTRING(__LINE__)
 #define IBC_LOG_LOCATION_MACRO  "(" IBC_LOG_AT ")"
+#ifndef _MSC_VER
 #define IBC_FUNC_NAME_MACRO  __PRETTY_FUNCTION__
-//#define IBC_FUNC_NAME_MACRO  __FUNCTION__   // TODO switch this by a compiler
+#else
+#define IBC_FUNC_NAME_MACRO  __FUNCTION__
+#endif
 
 #ifndef IBC_LOG_WR_DISABLE
 #define IBC_LOG_WR(log, type, level, locstr, funcstr, outstr, ...) { if(log!=NULL)log->write(type, level, locstr, funcstr, outstr, ##__VA_ARGS__); }
@@ -316,7 +319,7 @@ namespace ibc
       std::ostream *stream;
       bool  outMessage = false;
      char  buf[MSG_BUF_SIZE];
- 
+
       if (inType == ERROR_MSG)
         stream = mErrorStream;
       else
