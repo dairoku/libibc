@@ -215,7 +215,7 @@ namespace ibc { namespace gl { namespace model
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
 
       glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_POINTS, 0, mNumPoints);
+      glDrawArrays(GL_POINTS, 0, (GLsizei )mNumPoints);
     }
 
   protected:

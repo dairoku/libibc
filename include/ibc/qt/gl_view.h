@@ -160,7 +160,7 @@ namespace ibc
       qInfo("Renderer: %s", mRendererStr);
       qInfo("OpenGL version supported %s", mVersionStr);
 
-      glClearColor(0.3, 0.3, 0.3, 0.0);
+      glClearColor(0.3f, 0.3f, 0.3f, 0.0f);
 
       glEnable(GL_CCW);
       glEnable(GL_CULL_FACE);

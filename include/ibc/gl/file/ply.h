@@ -41,7 +41,9 @@
 #include <string_view>
 #include <stdlib.h>
 #include <stdio.h>
-//#include <io.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1314,8 +1316,8 @@ namespace ibc { namespace gl { namespace file
           return;
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          if (*ioValue < -2147483648)
-            *ioValue = -2147483648;
+          if (*ioValue < -2147483648.0)
+            *ioValue = -2147483648.0;
           if (*ioValue > 2147483647)
             *ioValue = 2147483647;
           return;

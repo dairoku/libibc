@@ -482,7 +482,7 @@ namespace ibc
       if (cosTheta >= 1.0)
         return 0.0;
       if (cosTheta <= -1.0)
-        return M_PI;
+        return (VectorType )M_PI;
       return (VectorType )::acos(cosTheta);
     }
     // -------------------------------------------------------------------------
