@@ -41,7 +41,7 @@
 #include <string_view>
 #include <stdlib.h>
 #include <stdio.h>
-#include <io.h>
+//#include <io.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1460,7 +1460,11 @@ namespace ibc { namespace gl { namespace file
                     char **outHeaderStrBufPtr = NULL)
     {
       IBC_GL_FILE_PLY_TRACE();
+#ifndef Q_OS_WIN
+      int fd = ::open(inFileName, O_RDONLY);
+#else
       int fd = ::open(inFileName, O_RDONLY | O_BINARY);
+#endif
       if (fd == -1)
       {
         IBC_LOG_ERROR("Failed : open()");

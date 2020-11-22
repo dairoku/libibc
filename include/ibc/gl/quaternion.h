@@ -102,10 +102,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // =
     // -------------------------------------------------------------------------
-    /*QuaternionBase<QuaternionType> &operator=(const QuaternionBase<QuaternionType> &inQuaternion)
+    QuaternionBase<QuaternionType> &operator=(const QuaternionBase<QuaternionType> &inQuaternion)
     {
       return set(inQuaternion);
-    }*/
+    }
     // -------------------------------------------------------------------------
     // []
     // -------------------------------------------------------------------------
@@ -631,4 +631,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_QUATERNION_H_
-

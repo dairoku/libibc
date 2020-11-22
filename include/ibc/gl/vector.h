@@ -91,10 +91,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // =
     // -------------------------------------------------------------------------
-    /*VectorBase<VectorType> &operator=(const VectorBase<VectorType> &inVector)
+    VectorBase<VectorType> &operator=(const VectorBase<VectorType> &inVector)
     {
       return set(inVector);
-    }*/
+    }
     // -------------------------------------------------------------------------
     // []
     // -------------------------------------------------------------------------
@@ -538,4 +538,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_VECTOR_H_
-
