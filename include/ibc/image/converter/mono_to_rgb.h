@@ -57,38 +57,21 @@ namespace ibc { namespace image { namespace converter
     // -------------------------------------------------------------------------
     Mono_to_RGB()
     {
-      mSrcFormat      = NULL;
-      mDstFormat      = NULL;
-      mConvertFunc    = NULL;
-      mColorMapIndex  = ColorMap::CMIndex_NOT_SPECIFIED;
-      mColorMapPtr    = NULL;
-      mColorMapMultiNum = 1;
-      mGain = 1.0;
-      mOffset = 0.0;
-      mGamma = 1.0;
-      mIsColorMapModified = false;
+      initParams();
     }
     // -------------------------------------------------------------------------
     // ~Mono_to_RGB
     // -------------------------------------------------------------------------
     virtual ~Mono_to_RGB()
     {
-      if (mSrcFormat != NULL)
-        delete mSrcFormat;
-      if (mDstFormat != NULL)
-        delete mDstFormat;
-      if (mColorMapPtr != NULL)
-        delete mColorMapPtr;
-      mSrcFormat = NULL;
-      mDstFormat = NULL;
-      mColorMapPtr = NULL;
+      dispose();
     }
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
     // isSupported
     // -------------------------------------------------------------------------
-    virtual bool    isSupported(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat) const
+    virtual bool  isSupported(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat) const
     {
       if (findConvertFunction(inSrcFormat, inDstFormat, mColorMapIndex) == NULL)
         return false;
@@ -97,12 +80,11 @@ namespace ibc { namespace image { namespace converter
     // -------------------------------------------------------------------------
     // init
     // -------------------------------------------------------------------------
-    virtual void    init(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat)
+    virtual void  init(const ImageFormat *inSrcFormat, const ImageFormat *inDstFormat)
     {
-      if (mSrcFormat != NULL)
-        delete mSrcFormat;
-      if (mDstFormat != NULL)
-        delete mDstFormat;
+      dispose();
+      initParams();
+      //
       mSrcFormat = new ImageFormat(*inSrcFormat);
       mDstFormat = new ImageFormat(*inDstFormat);
       if (mSrcFormat == NULL || mDstFormat == NULL)
@@ -118,7 +100,7 @@ namespace ibc { namespace image { namespace converter
     // -------------------------------------------------------------------------
     // convert
     // -------------------------------------------------------------------------
-    virtual void    convert(const void *inImage, void *outImage)
+    virtual void  convert(const void *inImage, void *outImage)
     {
       if (mConvertFunc == NULL)
         return;
@@ -136,8 +118,9 @@ namespace ibc { namespace image { namespace converter
     // -------------------------------------------------------------------------
     // dispose
     // -------------------------------------------------------------------------
-    virtual void    dispose()
+    virtual void  dispose()
     {
+      mConvertFunc = NULL;
       if (mSrcFormat != NULL)
         delete mSrcFormat;
       if (mDstFormat != NULL)
@@ -270,11 +253,29 @@ namespace ibc { namespace image { namespace converter
 
     // Member functions --------------------------------------------------------
     // -------------------------------------------------------------------------
+    // initParams
+    // -------------------------------------------------------------------------
+    void  initParams()
+    {
+      mSrcFormat      = NULL;
+      mDstFormat      = NULL;
+      mConvertFunc    = NULL;
+      mColorMapPtr    = NULL;
+      //
+      mColorMapIndex    = ColorMap::CMIndex_NOT_SPECIFIED;
+      mColorMapMultiNum = 1;
+      mGain   = 1.0;
+      mOffset = 0.0;
+      mGamma  = 1.0;
+      mIsColorMapModified = false;
+    }
+    // -------------------------------------------------------------------------
     // updateImageBufferPtr
     // -------------------------------------------------------------------------
     bool  updateColorMap(bool inForceUpdate = false)
     {
-      if (inForceUpdate == false && mIsColorMapModified == false)
+      if (inForceUpdate == false && mIsColorMapModified == false &&
+          mColorMapPtr != NULL)  // <- The last one is for sanity checking
         return false;
 
       if (mColorMapPtr != NULL)
@@ -323,7 +324,8 @@ namespace ibc { namespace image { namespace converter
                                         ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
                                         ImageType::DATA_TYPE_8BIT))
       {
-        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED)
+        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED ||
+            inIndex == ColorMap::CMIndex_GrayScale)
           return convertMono8;
         return convertMono8_ColorMap;
       }
@@ -331,7 +333,8 @@ namespace ibc { namespace image { namespace converter
                                         ImageType::BUFFER_TYPE_PIXEL_ALIGNED,
                                         ImageType::DATA_TYPE_16BIT))
       {
-        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED)
+        if (inIndex == ColorMap::CMIndex_NOT_SPECIFIED ||
+            inIndex == ColorMap::CMIndex_GrayScale)
         {
           if (inSrcFormat->mType.mEndian == ImageType::ENDIAN_LITTLE)
             return convertMono16;
@@ -350,7 +353,6 @@ namespace ibc { namespace image { namespace converter
     static void  convertMono8(Mono_to_RGB *inObj, const void *inImage, void *outImage)
     {
       size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
-
       for (int i = 0; i < inObj->mHeight; i++)
       {
         const unsigned char *srcPtr =
@@ -377,6 +379,9 @@ namespace ibc { namespace image { namespace converter
     // -------------------------------------------------------------------------
     static void  convertMono8_ColorMap(Mono_to_RGB *inObj, const void *inImage, void *outImage)
     {
+      inObj->mSrcFormat->dump();
+      inObj->mDstFormat->dump();
+
       size_t  srcPixStep = inObj->mSrcFormat->mPixelStep;
 
       inObj->updateColorMap();
