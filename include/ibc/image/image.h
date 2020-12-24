@@ -319,14 +319,18 @@ namespace ibc
                 uint32 inFourCC = 0,
                 unsigned int inComponentsPerPixel = 0)
     {
-      mPixelType              = inPixelType;
+      setPixelType(inPixelType, inComponentsPerPixel);
       mBufferType             = inBufferType;
       mDataType               = inDataType;
       mFourCC                 = inFourCC;
-      if (inEndian == ENDIAN_TYPE_HOST)
-        mEndian               = getHostEndian();
-      else
-        mEndian               = inEndian;
+      setEndianType(inEndian);
+    }
+    // -------------------------------------------------------------------------
+    // setPixelType
+    // -------------------------------------------------------------------------
+    void  setPixelType(PixelType inPixelType, unsigned int inComponentsPerPixel = 0)
+    {
+      mPixelType  = inPixelType;
       if (inComponentsPerPixel == 0)
         mComponentsPerPixel   = coponentsPerPixel(inPixelType);
       else
@@ -338,6 +342,16 @@ namespace ibc
     void  setDataType(unsigned int inBitWidth, bool inIsSigned = false)
     {
       mDataType = dataTypeFromParams(inBitWidth, inIsSigned);
+    }
+    // -------------------------------------------------------------------------
+    // setEndianType
+    // -------------------------------------------------------------------------
+    void  setEndianType(EndianType inEndian = ENDIAN_TYPE_HOST)
+    {
+      if (inEndian == ENDIAN_TYPE_HOST)
+        mEndian               = getHostEndian();
+      else
+        mEndian               = inEndian;
     }
     // -------------------------------------------------------------------------
     // dump (debug function)
