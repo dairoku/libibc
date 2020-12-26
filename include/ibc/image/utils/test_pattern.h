@@ -52,9 +52,9 @@ namespace ibc { namespace image { namespace utils
   public:
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
-    // prepareTestPatternBuffer
+    // allocateBufferAndFill
     // -------------------------------------------------------------------------
-    static void prepareTestPattern(
+    static void allocateBufferAndFill(
       ibc::image::DisplayBuffer *inBuffer,
       int inPattern,
       ibc::image::ImageType::PixelType inPixelType,
@@ -74,7 +74,7 @@ namespace ibc { namespace image { namespace utils
       inBuffer->mActiveConverter->setColorMapIndex(inColorMapIndex, inColorMapMultiNum);
       inBuffer->mActiveConverter->setGain(inGain);
       inBuffer->mActiveConverter->setOffset(inOffsset);
-    
+
       fillTestPattern(inBuffer, inPattern);
     }
     // -------------------------------------------------------------------------
@@ -139,4 +139,3 @@ namespace ibc { namespace image { namespace utils
 };};};
 
 #endif  // #ifdef IBC_IMAGE_UTILS_TEST_PATTERN_H_
-

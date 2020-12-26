@@ -99,7 +99,7 @@ namespace ibc
       PIXEL_TYPE_JPEG,
       PIXEL_TYPE_ANY            = 0xFFFF
     };
-  
+
      enum  BufferType
     {
       BUFFER_TYPE_NOT_SPECIFIED                 = 0,
@@ -119,7 +119,7 @@ namespace ibc
       BUFFER_TYPE_COMPRESSION                   = 0x8000,
       BUFFER_TYPE_ANY                           = 0xFFFF
     };
-  
+
     enum  DataType
     {
       DATA_TYPE_NOT_SPECIFIED = 0,
@@ -155,7 +155,7 @@ namespace ibc
       //
       DATA_TYPE_ANY           = 0xFFFF
     };
-  
+
     enum  EndianType
     {
       ENDIAN_TYPE_NOT_SPECIFIED = 0,
@@ -320,10 +320,10 @@ namespace ibc
                 unsigned int inComponentsPerPixel = 0)
     {
       setPixelType(inPixelType, inComponentsPerPixel);
-      mBufferType             = inBufferType;
-      mDataType               = inDataType;
-      mFourCC                 = inFourCC;
+      setBufferType(inBufferType);
+      setDataType(inDataType);
       setEndianType(inEndian);
+      mFourCC = inFourCC;
     }
     // -------------------------------------------------------------------------
     // setPixelType
@@ -337,11 +337,25 @@ namespace ibc
         mComponentsPerPixel   = inComponentsPerPixel;
     }
     // -------------------------------------------------------------------------
+    // setBufferType
+    // -------------------------------------------------------------------------
+    void  setBufferType(BufferType inType)
+    {
+      mBufferType = inType;
+    }
+    // -------------------------------------------------------------------------
     // setDataType
     // -------------------------------------------------------------------------
     void  setDataType(unsigned int inBitWidth, bool inIsSigned = false)
     {
       mDataType = dataTypeFromParams(inBitWidth, inIsSigned);
+    }
+    // -------------------------------------------------------------------------
+    // setDataType
+    // -------------------------------------------------------------------------
+    void  setDataType(DataType inType)
+    {
+      mDataType = inType;
     }
     // -------------------------------------------------------------------------
     // setEndianType
@@ -358,10 +372,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  dump(const char *inLeadringStr = "")
     {
-      printf("%smPixelType  : 0x%X\n", inLeadringStr, mPixelType);
-      printf("%smBufferType : 0x%X\n", inLeadringStr, mBufferType);
-      printf("%smDataType   : 0x%X\n", inLeadringStr, mDataType);
-      printf("%smEndian     : 0x%X\n", inLeadringStr, mEndian);
+      printf("%smPixelType  : 0x%X (%s)\n", inLeadringStr, mPixelType, pixelTypeToString(mPixelType));
+      printf("%smBufferType : 0x%X (%s)\n", inLeadringStr, mBufferType, bufferTypeToString(mBufferType));
+      printf("%smDataType   : 0x%X (%s)\n", inLeadringStr, mDataType, dataTypeToString(mDataType));
+      printf("%smEndian     : 0x%X (%s)\n", inLeadringStr, mEndian, endianTypeToString(mEndian));
       printf("%smFourCC     : 0x%04X\n", inLeadringStr, mFourCC);
       printf("%smComponentsPerPixel : %d\n", inLeadringStr, mComponentsPerPixel);
     }
@@ -597,12 +611,86 @@ namespace ibc
 #endif
     }
     // -------------------------------------------------------------------------
+    // pixelTypeToString
+    // -------------------------------------------------------------------------
+    static const char *pixelTypeToString(PixelType inType)
+    {
+      const PixelTypeTable  *tablePtr = getPixelTypeTable();
+      while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // bufferTypeToString
+    // -------------------------------------------------------------------------
+    static const char *bufferTypeToString(BufferType inType)
+    {
+      const BufferTypeTable  *tablePtr = getBufferTypeTable();
+      while (tablePtr->type != BUFFER_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // dataTypeToString
+    // -------------------------------------------------------------------------
+    static const char *dataTypeToString(DataType inType)
+    {
+      const DataTypeTable  *tablePtr = getDataTypeTable();
+      while (tablePtr->type != DATA_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // endianTypeToString
+    // -------------------------------------------------------------------------
+    static const char *endianTypeToString(EndianType inType)
+    {
+      const EndianTypeTable  *tablePtr = getEndianTypeTable();
+      while (tablePtr->type != ENDIAN_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
     // stringToPixelType
     // -------------------------------------------------------------------------
     static PixelType stringToPixelType(const char *inString, PixelType inDefault = PIXEL_TYPE_NOT_SPECIFIED)
     {
       const PixelTypeTable  *tablePtr = getPixelTypeTable();
       while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
+      {
+#ifndef WIN32
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
+    // -------------------------------------------------------------------------
+    // stringToBufferlType
+    // -------------------------------------------------------------------------
+    static BufferType stringToBufferlType(const char *inString, BufferType inDefault = BUFFER_TYPE_NOT_SPECIFIED)
+    {
+      const BufferTypeTable  *tablePtr = getBufferTypeTable();
+      while (tablePtr->type != BUFFER_TYPE_NOT_SPECIFIED)
       {
 #ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
@@ -632,6 +720,24 @@ namespace ibc
       }
       return inDefault;
     }
+    // -------------------------------------------------------------------------
+    // stringToEndianType
+    // -------------------------------------------------------------------------
+    static EndianType stringToEndianType(const char *inString, EndianType inDefault = ENDIAN_TYPE_NOT_SPECIFIED)
+    {
+      const EndianTypeTable  *tablePtr = getEndianTypeTable();
+      while (tablePtr->type != ENDIAN_TYPE_NOT_SPECIFIED)
+      {
+#ifndef WIN32
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
 
   private:
     // Typedefs  ---------------------------------------------------------------
@@ -642,9 +748,19 @@ namespace ibc
     } PixelTypeTable;
     typedef struct
     {
+      BufferType type;
+      const char  *str;
+    } BufferTypeTable;
+    typedef struct
+    {
       DataType type;
       const char  *str;
     } DataTypeTable;
+    typedef struct
+    {
+      EndianType type;
+      const char  *str;
+    } EndianTypeTable;
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -691,6 +807,29 @@ namespace ibc
       return table;
     }
     // -------------------------------------------------------------------------
+    // getBufferTypeTable
+    // -------------------------------------------------------------------------
+    static const BufferTypeTable *getBufferTypeTable()
+    {
+      const static BufferTypeTable  table[] =
+      {
+        {BUFFER_TYPE_PIXEL_ALIGNED,                 "ALIGNED"},
+        {BUFFER_TYPE_PIXEL_PACKED,                  "PACKED"},
+        {BUFFER_TYPE_PIXEL_PACKED_CSI_2,            "PACKED_CSI_2"},
+        {BUFFER_TYPE_PLANAR_ALIGNED,                "PLANAR_ALIGNED"},
+        {BUFFER_TYPE_PLANAR_PACKED,                 "PLANAR_PACKED"},
+        {BUFFER_TYPE_PLANAR_PACKED_CSI_2,           "PLANAR_PACKED_CSI_2"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_ALIGNED,       "LINE_INTERLEVE_ALIGNED"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_PACKED,        "LINE_INTERLEVE_PACKED"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_PACKED_CSI_2,  "LINE_INTERLEVE_PACKED_CSI_2"},
+        {BUFFER_TYPE_INTRA_LINE_ALIGNED,            "INTRA_LINE_ALIGNED"},
+        {BUFFER_TYPE_INTRA_LINE_PACKED,             "INTRA_LINE_PACKED"},
+        {BUFFER_TYPE_INTRA_LINE_PACKED_CSI_2,       "INTRA_LINE_PACKED_CSI_2"},
+        {BUFFER_TYPE_NOT_SPECIFIED, ""},
+      };
+      return table;
+    }
+    // -------------------------------------------------------------------------
     // getDataTypeTable
     // -------------------------------------------------------------------------
     static const DataTypeTable *getDataTypeTable()
@@ -728,6 +867,20 @@ namespace ibc
         //
         {DATA_TYPE_ANY, "ANY"},
         {DATA_TYPE_NOT_SPECIFIED, ""}
+      };
+      return table;
+    }
+    // -------------------------------------------------------------------------
+    // getEndianTypeTable
+    // -------------------------------------------------------------------------
+    static const EndianTypeTable *getEndianTypeTable()
+    {
+      const static EndianTypeTable  table[] =
+      {
+        {ENDIAN_LITTLE,     "LITTLE"},
+        {ENDIAN_BIG,        "BIG"},
+        {ENDIAN_TYPE_HOST,  "HOST"},
+        {ENDIAN_TYPE_NOT_SPECIFIED, ""}
       };
       return table;
     }
@@ -1064,4 +1217,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_IMAGE_IMAGE_H_
-
