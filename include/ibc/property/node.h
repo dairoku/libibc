@@ -63,6 +63,7 @@ namespace ibc
     {
       printf("~NodeBase : %s\n", mName.c_str());
       removeAllChildren();
+      mParent = NULL;
     }
 
     // Member functions --------------------------------------------------------
@@ -182,13 +183,6 @@ namespace ibc
       return false;
     }
     // -------------------------------------------------------------------------
-    // addChild
-    // -------------------------------------------------------------------------
-    void  addChild(std::shared_ptr<NodeBase> inChild)
-    {
-      mChildren.push_back(inChild);
-    }
-    // -------------------------------------------------------------------------
     // removeChild
     // -------------------------------------------------------------------------
     bool  removeChild(std::shared_ptr<NodeBase> inChild)
@@ -196,6 +190,7 @@ namespace ibc
       decltype(mChildren)::iterator it;
       if (getChildIterator(inChild, &it) == false)
         return false;
+      (*it)->mParent = NULL;
       mChildren.erase(it);
       return true;
     }
@@ -224,6 +219,8 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  removeAllChildren()
     {
+      for (auto it = mChildren.begin(); it != mChildren.end(); it++)
+        (*it)->mParent = NULL;
       mChildren.clear();
     }
     // -------------------------------------------------------------------------
@@ -256,12 +253,21 @@ namespace ibc
     {
       return std::shared_ptr<NodeBase>(new NodeBase(inName));
     }
+    // -------------------------------------------------------------------------
+    // addChild
+    // -------------------------------------------------------------------------
+    static void  addChild(std::shared_ptr<NodeBase> inParent, std::shared_ptr<NodeBase> inChild)
+    {
+      inParent->mChildren.push_back(inChild);
+      inChild->mParent = inParent;
+    }
 
   protected:
     // Member variables (public) -----------------------------------------------
     bool  mHasValue;
     std::string mName;
     std::vector<std::shared_ptr<NodeBase>>  mChildren;
+    std::shared_ptr<NodeBase>  mParent;
 
     // Constructors ------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -271,6 +277,7 @@ namespace ibc
     {
       mHasValue   = false;
       mName       = inName;
+      mParent     = NULL;
     }
 
     // Member functions --------------------------------------------------------
@@ -385,7 +392,7 @@ namespace ibc
                                                         const char *inName)
     {
       std::shared_ptr<Node<ValueType>>  node = createNode(inValue, inName);
-      inParent->addChild(node);
+      NodeBase::addChild(inParent, node);
       return node;
     }
 
