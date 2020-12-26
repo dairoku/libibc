@@ -54,41 +54,72 @@ namespace ibc
     enum  PixelType
     {
       PIXEL_TYPE_NOT_SPECIFIED  = 0,
-      PIXEL_TYPE_RAW            = 1024,
-      PIXEL_TYPE_MONO           = 2048,
-      PIXEL_TYPE_BAYER          = 3072,
-      PIXEL_TYPE_RGB            = 4096,
-      PIXEL_TYPE_RGBA,
+      PIXEL_TYPE_RAW            = 0x10,
+      PIXEL_TYPE_MONO,
+      PIXEL_TYPE_BAYER_GBRG,
+      PIXEL_TYPE_BAYER_GRBG,
+      PIXEL_TYPE_BAYER_BGGR,
+      PIXEL_TYPE_BAYER_RGGB,
+      // TODO: Add followings
+      //PIXEL_TYPE_BAYER_YCGM,
+      //PIXEL_TYPE_BAYER_CYMG,
+      //PIXEL_TYPE_BAYER_GMYC,
+      //PIXEL_TYPE_BAYER_MGCY,
+      // RGBW, RGBE, EXR, CYGW, XTRANS...
+      //
+      PIXEL_TYPE_RGB            = 0x2000,
       PIXEL_TYPE_BGR,
+      PIXEL_TYPE_RGBA,
+      PIXEL_TYPE_ARGB,
       PIXEL_TYPE_BGRA,
-      PIXEL_TYPE_CMY            = 5120,
+      PIXEL_TYPE_ABGR,
+      PIXEL_TYPE_CMY            = 0x3000,
       PIXEL_TYPE_CMYK,
-      PIXEL_TYPE_HSL            = 6144,
-      PIXEL_TYPE_HSB,
+      PIXEL_TYPE_HSL            = 0x4000,
+      PIXEL_TYPE_HSV,                       // HSB
+      PIXEL_TYPE_HSI,
       PIXEL_TYPE_LUV,
       PIXEL_TYPE_LAB,
-      PIXEL_TYPE_YUV410         = 7168, // YUV9
+      PIXEL_TYPE_LCHAB,
+      PIXEL_TYPE_LCHUV,
+      PIXEL_TYPE_DIN99,
+      PIXEL_TYPE_DIN99D,
+      PIXEL_TYPE_DIN99O,
+      PIXEL_TYPE_YUV410         = 0x5000,   // YUV9
       PIXEL_TYPE_YUV411,
-      PIXEL_TYPE_YUV420,                // YUV12
+      PIXEL_TYPE_YUV420,                    // YUV12
       PIXEL_TYPE_YUV422,
       PIXEL_TYPE_YUV444,
-      PIXEL_TYPE_FOURCC         = 8192,
-      PIXEL_TYPE_MULTI_CH       = 9216,
-      PIXEL_TYPE_JPEG           = 10240,
-      PIXEL_TYPE_ANY            = 32767
+      PIXEL_TYPE_MULTI_CH       = 0x6000,
+      PIXEL_TYPE_MULTI_CH_MONO,
+      PIXEL_TYPE_MULTI_CH_RGB,
+      PIXEL_TYPE_MULTI_CH_RGBA,
+      PIXEL_TYPE_FOURCC         = 0x7000,
+      PIXEL_TYPE_COMPRESSED     = 0x8000,
+      PIXEL_TYPE_JPEG,
+      PIXEL_TYPE_ANY            = 0xFFFF
     };
-  
+
      enum  BufferType
     {
-      BUFFER_TYPE_NOT_SPECIFIED = 0,
+      BUFFER_TYPE_NOT_SPECIFIED                 = 0,
       BUFFER_TYPE_PIXEL_ALIGNED,
       BUFFER_TYPE_PIXEL_PACKED,
-      BUFFER_TYPE_PLANAR_ALIGNED,
+      BUFFER_TYPE_PIXEL_PACKED_CSI_2,
+      BUFFER_TYPE_PLANAR_ALIGNED                = 0x1000,
       BUFFER_TYPE_PLANAR_PACKED,
-      BUFFER_TYPE_COMPRESSION   = 10240,
-      BUFFER_TYPE_ANY           = 32767
+      BUFFER_TYPE_PLANAR_PACKED_CSI_2,
+      BUFFER_TYPE_LINE_INTERLEAVE_ALIGNED       = 0x2000,
+      BUFFER_TYPE_LINE_INTERLEAVE_PACKED,
+      BUFFER_TYPE_LINE_INTERLEAVE_PACKED_CSI_2,
+      BUFFER_TYPE_INTRA_LINE_ALIGNED            = 0x3000,
+      BUFFER_TYPE_INTRA_LINE_PACKED,
+      BUFFER_TYPE_INTRA_LINE_PACKED_CSI_2,
+      //
+      BUFFER_TYPE_COMPRESSION                   = 0x8000,
+      BUFFER_TYPE_ANY                           = 0xFFFF
     };
-  
+
     enum  DataType
     {
       DATA_TYPE_NOT_SPECIFIED = 0,
@@ -103,47 +134,54 @@ namespace ibc
       DATA_TYPE_32BIT         = 32,
       DATA_TYPE_40BIT         = 40,
       DATA_TYPE_48BIT         = 48,
-      DATA_TYPE_54BIT         = 56,
-      DATA_TYPE_64BIT         = 64,
-      DATA_TYPE_FLOAT         = 512,
-      DATA_TYPE_DOUBLE        = 1024,
-      DATA_TYPE_ANY           = 32767
+      DATA_TYPE_56BIT         = 56,
+      DATA_TYPE_64BIT         = 64,     // 0x40
+      DATA_TYPE_FLOAT         = 0x200,  // 512
+      DATA_TYPE_DOUBLE        = 0x400,  // 1024
+      //
+      DATA_TYPE_SIGNED_OFFSET = 0x1000,   // 4096
+      DATA_TYPE_4BIT_SIGNED   = 4100,
+      DATA_TYPE_8BIT_SIGNED   = 4104,
+      DATA_TYPE_10BIT_SIGNED  = 4106,
+      DATA_TYPE_12BIT_SIGNED  = 4108,
+      DATA_TYPE_14BIT_SIGNED  = 4110,
+      DATA_TYPE_16BIT_SIGNED  = 4112,
+      DATA_TYPE_24BIT_SIGNED  = 4120,
+      DATA_TYPE_32BIT_SIGNED  = 4128,
+      DATA_TYPE_40BIT_SIGNED  = 4136,
+      DATA_TYPE_48BIT_SIGNED  = 4144,
+      DATA_TYPE_56BIT_SIGNED  = 4152,
+      DATA_TYPE_64BIT_SIGNED  = 4160,   // 0x1040
+      //
+      DATA_TYPE_ANY           = 0xFFFF
     };
-  
+
     enum  EndianType
     {
       ENDIAN_TYPE_NOT_SPECIFIED = 0,
       ENDIAN_LITTLE,
       ENDIAN_BIG,
-      ENDIAN_TYPE_HOST          = 32764,
-      ENDIAN_TYPE_ANY           = 32767
+      ENDIAN_TYPE_HOST,
+      ENDIAN_TYPE_ANY           = 0xFFFF
     };
 
-    enum  BayerType
-    {
-      BAYER_TYPE_NOT_SPECIFIED  = 0,
-      BAYER_TYPE_GBRG,
-      BAYER_TYPE_GRBG,
-      BAYER_TYPE_BGGR,
-      BAYER_TYPE_RGGB,
-      BAYER_TYPE_ANY           = 32767
-    };
-  
-    enum  ChannelType
+    enum  ChannelType       // We are not using this for now...
     {
       CH_TYPE_NOT_SPECIFIED   = 0,
-      CH_TYPE_LUMINANCE       = 1024,
-      CH_TYPE_RED,
+      CH_TYPE_RAW             = 0x1000,
+      CH_TYPE_DATA,
+      CH_TYPE_LUMINANCE       = 0x2000,
+      CH_TYPE_RED             = 0x4000,
       CH_TYPE_GREEN,
       CH_TYPE_BLUE,
+      CH_TYPE_ALPHA,
       CH_TYPE_WHITE,
       CH_TYPE_IR,
-      CH_TYPE_ALPHA,
-      CH_TYPE_CYAN,
+      CH_TYPE_CYAN            = 0x5000,
       CH_TYPE_MAGENTA,
       CH_TYPE_YELLOW,
       CH_TYPE_KEY_PLATE,
-      CH_TYPE_HUE,
+      CH_TYPE_HUE             = 0x6000,
       CH_TYPE_SATURATION,
       CH_TYPE_VALUE,
       CH_TYPE_L_STAR,
@@ -151,29 +189,21 @@ namespace ibc
       CH_TYPE_V_STAR,
       CH_TYPE_A_STAR,
       CH_TYPE_B_STAR,
-      CH_TYPE_Y,
-      CH_TYPE_U,            // Cb
-      CH_TYPE_V,            // Cr
-      CH_TYPE_R_0           = 2048,
-      CH_TYPE_R_1,
-      CH_TYPE_G_0           = 2064,
-      CH_TYPE_G_1,
-      CH_TYPE_B_0           = 2080,
-      CH_TYPE_B_1,
-      CH_TYPE_W_0           = 2096,
-      CH_TYPE_W_1,
-      CH_TYPE_IR_0          = 2112,
-      CH_TYPE_IR_1,
-      CH_TYPE_Y_0           = 3072,
-      CH_TYPE_Y_1,
-      CH_TYPE_Y_3,
-      CH_TYPE_Y_4,
-      CH_TYPE_U_0           = 3088,
-      CH_TYPE_U_1,
-      CH_TYPE_V_0           = 3104,
-      CH_TYPE_V_1,
-      CH_TYPE_MULTI_0       = 4096,
-      CH_TYPE_ANY           = 32767
+      CH_TYPE_Y               = 0x7000,
+      CH_TYPE_U,
+      CH_TYPE_V,
+      //
+      CH_TYPE_MULTI_0         = 0x8000,
+      CH_TYPE_MULTI_1,
+      CH_TYPE_MULTI_2,
+      CH_TYPE_MULTI_3,
+      CH_TYPE_MULTI_4,
+      CH_TYPE_MULTI_5,
+      CH_TYPE_MULTI_6,
+      CH_TYPE_MULTI_7,
+      CH_TYPE_MULTI_8,
+      //
+      CH_TYPE_ANY             = 0xFFFF
     };
 
     // Member variables (public) -----------------------------------------------
@@ -181,7 +211,6 @@ namespace ibc
     BufferType      mBufferType;
     DataType        mDataType;
     EndianType      mEndian;
-    BayerType       mBayerType;
     uint32          mFourCC;
     unsigned int    mComponentsPerPixel;
 
@@ -195,7 +224,6 @@ namespace ibc
       mBufferType             = BUFFER_TYPE_NOT_SPECIFIED;
       mDataType               = DATA_TYPE_NOT_SPECIFIED;
       mEndian                 = ENDIAN_TYPE_NOT_SPECIFIED;
-      mBayerType              = BAYER_TYPE_NOT_SPECIFIED;
       mFourCC                 = 0;
       mComponentsPerPixel     = 0;
     }
@@ -203,24 +231,12 @@ namespace ibc
     // ImageType
     // -------------------------------------------------------------------------
     ImageType(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
-                BayerType inBayerType = BAYER_TYPE_NOT_SPECIFIED,
                 EndianType inEndian = ENDIAN_TYPE_HOST,
                 uint32 inFourCC = 0,
                 unsigned int inComponentsPerPixel = 0)
     {
-      mPixelType              = inPixelType;
-      mBufferType             = inBufferType;
-      mDataType               = inDataType;
-      mBayerType              = inBayerType;
-      mFourCC                 = inFourCC;
-      if (inEndian == ENDIAN_TYPE_HOST)
-        mEndian               = getHostEndian();
-      else
-        mEndian               = inEndian;
-      if (inComponentsPerPixel == 0)
-        mComponentsPerPixel   = coponentsPerPixel(inPixelType);
-      else
-        mComponentsPerPixel   = inComponentsPerPixel;
+      set(inPixelType, inBufferType, inDataType, inEndian,
+          inFourCC, inComponentsPerPixel);
     }
     // -------------------------------------------------------------------------
     // ~ImageType
@@ -229,6 +245,7 @@ namespace ibc
     {
     }
     // Member functions --------------------------------------------------------
+    // cost functions ----------------------------------------------------------
     // -------------------------------------------------------------------------
     // isValid
     // -------------------------------------------------------------------------
@@ -240,11 +257,16 @@ namespace ibc
         return false;
       if (mDataType == DATA_TYPE_NOT_SPECIFIED)
         return false;
-      if (mBayerType == BAYER_TYPE_NOT_SPECIFIED)
-        return false;
       if (mComponentsPerPixel == 0)
         return false;
       return true;
+    }
+    // -------------------------------------------------------------------------
+    // hasMacroPixelStructure
+    // -------------------------------------------------------------------------
+    bool  hasMacroPixelStructure() const
+    {
+      return hasMacroPixelStructure(mPixelType, mFourCC);
     }
     // -------------------------------------------------------------------------
     // isPlanar
@@ -261,6 +283,20 @@ namespace ibc
       return isPacked(mBufferType);
     }
     // -------------------------------------------------------------------------
+    // isSigned
+    // -------------------------------------------------------------------------
+    bool  isSigned() const
+    {
+      return isSigned(mDataType);
+    }
+    // -------------------------------------------------------------------------
+    // isByteAlgned
+    // -------------------------------------------------------------------------
+    bool  isByteAlgned() const
+    {
+      return isByteAlgned(mDataType);
+    }
+    // -------------------------------------------------------------------------
     // sizeOfData
     // -------------------------------------------------------------------------
     size_t  sizeOfData() const
@@ -274,6 +310,75 @@ namespace ibc
     {
       return checkType(*this, inPixelType, inBufferType, inDataType);
     }
+    // non-cost functions ------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // set
+    // -------------------------------------------------------------------------
+    void  set(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
+                EndianType inEndian = ENDIAN_TYPE_HOST,
+                uint32 inFourCC = 0,
+                unsigned int inComponentsPerPixel = 0)
+    {
+      setPixelType(inPixelType, inComponentsPerPixel);
+      setBufferType(inBufferType);
+      setDataType(inDataType);
+      setEndianType(inEndian);
+      mFourCC = inFourCC;
+    }
+    // -------------------------------------------------------------------------
+    // setPixelType
+    // -------------------------------------------------------------------------
+    void  setPixelType(PixelType inPixelType, unsigned int inComponentsPerPixel = 0)
+    {
+      mPixelType  = inPixelType;
+      if (inComponentsPerPixel == 0)
+        mComponentsPerPixel   = coponentsPerPixel(inPixelType);
+      else
+        mComponentsPerPixel   = inComponentsPerPixel;
+    }
+    // -------------------------------------------------------------------------
+    // setBufferType
+    // -------------------------------------------------------------------------
+    void  setBufferType(BufferType inType)
+    {
+      mBufferType = inType;
+    }
+    // -------------------------------------------------------------------------
+    // setDataType
+    // -------------------------------------------------------------------------
+    void  setDataType(unsigned int inBitWidth, bool inIsSigned = false)
+    {
+      mDataType = dataTypeFromParams(inBitWidth, inIsSigned);
+    }
+    // -------------------------------------------------------------------------
+    // setDataType
+    // -------------------------------------------------------------------------
+    void  setDataType(DataType inType)
+    {
+      mDataType = inType;
+    }
+    // -------------------------------------------------------------------------
+    // setEndianType
+    // -------------------------------------------------------------------------
+    void  setEndianType(EndianType inEndian = ENDIAN_TYPE_HOST)
+    {
+      if (inEndian == ENDIAN_TYPE_HOST)
+        mEndian               = getHostEndian();
+      else
+        mEndian               = inEndian;
+    }
+    // -------------------------------------------------------------------------
+    // dump (debug function)
+    // -------------------------------------------------------------------------
+    void  dump(const char *inLeadringStr = "")
+    {
+      printf("%smPixelType  : 0x%X (%s)\n", inLeadringStr, mPixelType, pixelTypeToString(mPixelType));
+      printf("%smBufferType : 0x%X (%s)\n", inLeadringStr, mBufferType, bufferTypeToString(mBufferType));
+      printf("%smDataType   : 0x%X (%s)\n", inLeadringStr, mDataType, dataTypeToString(mDataType));
+      printf("%smEndian     : 0x%X (%s)\n", inLeadringStr, mEndian, endianTypeToString(mEndian));
+      printf("%smFourCC     : 0x%04X\n", inLeadringStr, mFourCC);
+      printf("%smComponentsPerPixel : %d\n", inLeadringStr, mComponentsPerPixel);
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -285,13 +390,17 @@ namespace ibc
       {
         case PIXEL_TYPE_RAW:
         case PIXEL_TYPE_MONO:
-        case PIXEL_TYPE_BAYER:
+        case PIXEL_TYPE_BAYER_GBRG:
+        case PIXEL_TYPE_BAYER_GRBG:
+        case PIXEL_TYPE_BAYER_BGGR:
+        case PIXEL_TYPE_BAYER_RGGB:
           return 1;
         case PIXEL_TYPE_RGB:
         case PIXEL_TYPE_BGR:
         case PIXEL_TYPE_CMY:
         case PIXEL_TYPE_HSL:
-        case PIXEL_TYPE_HSB:
+        case PIXEL_TYPE_HSV:
+        case PIXEL_TYPE_HSI:
         case PIXEL_TYPE_LUV:
         case PIXEL_TYPE_LAB:
         case PIXEL_TYPE_YUV444:
@@ -306,6 +415,68 @@ namespace ibc
       return 0;
     }
     // -------------------------------------------------------------------------
+    // hasMacroPixelStructure
+    // -------------------------------------------------------------------------
+    static bool  hasMacroPixelStructure(PixelType inType, uint32 inFourCC = 0)
+    {
+      switch (inType)
+      {
+        case PIXEL_TYPE_YUV410:
+        case PIXEL_TYPE_YUV411:
+        case PIXEL_TYPE_YUV420:
+        case PIXEL_TYPE_YUV422:
+          return true;
+        case PIXEL_TYPE_FOURCC:
+          // TODO : We need to check inFourCC here
+          if (inFourCC == 0)
+            return false;
+          break;
+        default:
+          break;
+      }
+      return false;
+    }
+    // -------------------------------------------------------------------------
+    // isSigned
+    // -------------------------------------------------------------------------
+    static size_t  isSigned(DataType inType)
+    {
+      if (inType < 0x1000)
+        return false;
+      return true;
+    }
+    // -------------------------------------------------------------------------
+    // isByteAlgned
+    // -------------------------------------------------------------------------
+    static bool  isByteAlgned(DataType inType)
+    {
+      switch (inType)
+      {
+        case DATA_TYPE_8BIT:
+        case DATA_TYPE_8BIT_SIGNED:
+        case DATA_TYPE_16BIT:
+        case DATA_TYPE_16BIT_SIGNED:
+        case DATA_TYPE_24BIT:
+        case DATA_TYPE_24BIT_SIGNED:
+        case DATA_TYPE_32BIT:
+        case DATA_TYPE_32BIT_SIGNED:
+        case DATA_TYPE_40BIT:
+        case DATA_TYPE_40BIT_SIGNED:
+        case DATA_TYPE_48BIT:
+        case DATA_TYPE_48BIT_SIGNED:
+        case DATA_TYPE_56BIT:
+        case DATA_TYPE_56BIT_SIGNED:
+        case DATA_TYPE_64BIT:
+        case DATA_TYPE_64BIT_SIGNED:
+        case DATA_TYPE_FLOAT:
+        case DATA_TYPE_DOUBLE:
+          return true;
+        default:
+          break;
+      }
+      return false;
+    }
+    // -------------------------------------------------------------------------
     // sizeOfData
     // -------------------------------------------------------------------------
     static size_t  sizeOfData(DataType inType)
@@ -313,29 +484,87 @@ namespace ibc
       switch (inType)
       {
         case DATA_TYPE_8BIT:
+        case DATA_TYPE_8BIT_SIGNED:
           return 1;
         case DATA_TYPE_16BIT:
+        case DATA_TYPE_16BIT_SIGNED:
           return 2;
         case DATA_TYPE_24BIT:
+        case DATA_TYPE_24BIT_SIGNED:
           return 3;
         case DATA_TYPE_32BIT:
+        case DATA_TYPE_32BIT_SIGNED:
           return 4;
         case DATA_TYPE_40BIT:
+        case DATA_TYPE_40BIT_SIGNED:
           return 5;
         case DATA_TYPE_48BIT:
+        case DATA_TYPE_48BIT_SIGNED:
           return 6;
-        case DATA_TYPE_54BIT:
+        case DATA_TYPE_56BIT:
+        case DATA_TYPE_56BIT_SIGNED:
           return 7;
         case DATA_TYPE_64BIT:
-          return 8;
-        case DATA_TYPE_FLOAT:
-          return 4;
-        case DATA_TYPE_DOUBLE:
+        case DATA_TYPE_64BIT_SIGNED:
           return 8;
         default:
           break;
       }
       return 0;
+    }
+    // -------------------------------------------------------------------------
+    // dataTypeFromParams
+    // -------------------------------------------------------------------------
+    static DataType dataTypeFromParams(unsigned int inBitWidth, bool inIsSigned = false)
+    {
+      DataType  type;
+
+      switch (inBitWidth)
+      {
+        case 1:
+          return DATA_TYPE_1BIT;
+        case 4:
+          type = DATA_TYPE_4BIT;
+          break;
+        case 8:
+          type = DATA_TYPE_8BIT;
+          break;
+        case 10:
+          type = DATA_TYPE_10BIT;
+          break;
+        case 12:
+          type = DATA_TYPE_12BIT;
+          break;
+        case 14:
+          type = DATA_TYPE_14BIT;
+          break;
+        case 16:
+          type = DATA_TYPE_16BIT;
+          break;
+        case 24:
+          type = DATA_TYPE_24BIT;
+          break;
+        case 32:
+          type = DATA_TYPE_32BIT;
+          break;
+        case 40:
+          type = DATA_TYPE_40BIT;
+          break;
+        case 48:
+          type = DATA_TYPE_48BIT;
+          break;
+        case 56:
+          type = DATA_TYPE_56BIT;
+          break;
+        case 64:
+          type = DATA_TYPE_64BIT;
+          break;
+        default:
+          return DATA_TYPE_NOT_SPECIFIED;
+      }
+      if (inIsSigned)
+        type = (DataType )((int )type + (int )DATA_TYPE_SIGNED_OFFSET);
+      return type;
     }
     // -------------------------------------------------------------------------
     // isPlanar
@@ -382,12 +611,86 @@ namespace ibc
 #endif
     }
     // -------------------------------------------------------------------------
+    // pixelTypeToString
+    // -------------------------------------------------------------------------
+    static const char *pixelTypeToString(PixelType inType)
+    {
+      const PixelTypeTable  *tablePtr = getPixelTypeTable();
+      while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // bufferTypeToString
+    // -------------------------------------------------------------------------
+    static const char *bufferTypeToString(BufferType inType)
+    {
+      const BufferTypeTable  *tablePtr = getBufferTypeTable();
+      while (tablePtr->type != BUFFER_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // dataTypeToString
+    // -------------------------------------------------------------------------
+    static const char *dataTypeToString(DataType inType)
+    {
+      const DataTypeTable  *tablePtr = getDataTypeTable();
+      while (tablePtr->type != DATA_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
+    // endianTypeToString
+    // -------------------------------------------------------------------------
+    static const char *endianTypeToString(EndianType inType)
+    {
+      const EndianTypeTable  *tablePtr = getEndianTypeTable();
+      while (tablePtr->type != ENDIAN_TYPE_NOT_SPECIFIED)
+      {
+        if (tablePtr->type == inType)
+          return tablePtr->str;
+        tablePtr++;
+      }
+      return "Unknown Type";
+    }
+    // -------------------------------------------------------------------------
     // stringToPixelType
     // -------------------------------------------------------------------------
     static PixelType stringToPixelType(const char *inString, PixelType inDefault = PIXEL_TYPE_NOT_SPECIFIED)
     {
       const PixelTypeTable  *tablePtr = getPixelTypeTable();
       while (tablePtr->type != PIXEL_TYPE_NOT_SPECIFIED)
+      {
+#ifndef WIN32
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
+    // -------------------------------------------------------------------------
+    // stringToBufferlType
+    // -------------------------------------------------------------------------
+    static BufferType stringToBufferlType(const char *inString, BufferType inDefault = BUFFER_TYPE_NOT_SPECIFIED)
+    {
+      const BufferTypeTable  *tablePtr = getBufferTypeTable();
+      while (tablePtr->type != BUFFER_TYPE_NOT_SPECIFIED)
       {
 #ifndef WIN32
         if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
@@ -417,6 +720,24 @@ namespace ibc
       }
       return inDefault;
     }
+    // -------------------------------------------------------------------------
+    // stringToEndianType
+    // -------------------------------------------------------------------------
+    static EndianType stringToEndianType(const char *inString, EndianType inDefault = ENDIAN_TYPE_NOT_SPECIFIED)
+    {
+      const EndianTypeTable  *tablePtr = getEndianTypeTable();
+      while (tablePtr->type != ENDIAN_TYPE_NOT_SPECIFIED)
+      {
+#ifndef WIN32
+        if (::strncasecmp(inString, tablePtr->str, ::strlen(tablePtr->str)) == 0)
+#else
+        if (::stricmp(inString, tablePtr->str) == 0)
+#endif
+          return tablePtr->type;
+        tablePtr++;
+      }
+      return inDefault;
+    }
 
   private:
     // Typedefs  ---------------------------------------------------------------
@@ -427,9 +748,19 @@ namespace ibc
     } PixelTypeTable;
     typedef struct
     {
+      BufferType type;
+      const char  *str;
+    } BufferTypeTable;
+    typedef struct
+    {
       DataType type;
       const char  *str;
     } DataTypeTable;
+    typedef struct
+    {
+      EndianType type;
+      const char  *str;
+    } EndianTypeTable;
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -439,28 +770,62 @@ namespace ibc
     {
       const static PixelTypeTable  table[] =
       {
-        {PIXEL_TYPE_RAW, "RAW"},
-        {PIXEL_TYPE_MONO, "MONO"},
-        {PIXEL_TYPE_BAYER, "BAYER"},
-        {PIXEL_TYPE_RGB, "RGB"},
-        {PIXEL_TYPE_RGBA, "RGBA"},
-        {PIXEL_TYPE_BGR, "BGR"},
-        {PIXEL_TYPE_BGRA, "BGRA"},
-        {PIXEL_TYPE_CMY, "CMY"},
-        {PIXEL_TYPE_CMYK, "CMYK"},
-        {PIXEL_TYPE_HSL, "HSL"},
-        {PIXEL_TYPE_HSB, "HSB"},
-        {PIXEL_TYPE_LUV, "LUV"},
-        {PIXEL_TYPE_LAB, "LAB"},
-        {PIXEL_TYPE_YUV410, "YUV410"},
-        {PIXEL_TYPE_YUV411, "YUV411"},
-        {PIXEL_TYPE_YUV420, "YUV420"},
-        {PIXEL_TYPE_YUV422, "YUV422"},
-        {PIXEL_TYPE_FOURCC, "FORCC"},
-        {PIXEL_TYPE_MULTI_CH, "MULTI_CH"},
-        {PIXEL_TYPE_JPEG, "JPEG"},
-        {PIXEL_TYPE_ANY, "ANY"},
+        {PIXEL_TYPE_RAW,        "RAW"},
+        {PIXEL_TYPE_MONO,       "MONO"},
+        {PIXEL_TYPE_BAYER_GBRG, "BAYER_GBRG"},
+        {PIXEL_TYPE_BAYER_GRBG, "BAYER_GRBG"},
+        {PIXEL_TYPE_BAYER_BGGR, "BAYER_BGGR"},
+        {PIXEL_TYPE_BAYER_RGGB, "BAYER_RGGB"},
+        {PIXEL_TYPE_RGB,        "RGB"},
+        {PIXEL_TYPE_RGBA,       "RGBA"},
+        {PIXEL_TYPE_ARGB,       "ARGB"},
+        {PIXEL_TYPE_BGR,        "BGR"},
+        {PIXEL_TYPE_BGRA,       "BGRA"},
+        {PIXEL_TYPE_ABGR,       "ABGR"},
+        {PIXEL_TYPE_CMY,        "CMY"},
+        {PIXEL_TYPE_CMYK,       "CMYK"},
+        {PIXEL_TYPE_HSL,        "HSL"},
+        {PIXEL_TYPE_HSV,        "HSV"},
+        {PIXEL_TYPE_HSI,        "HSI"},
+        {PIXEL_TYPE_LUV,        "LUV"},
+        {PIXEL_TYPE_LAB,        "LAB"},
+        {PIXEL_TYPE_LCHAB,      "LCHAB"},
+        {PIXEL_TYPE_LCHUV,      "LCHUV"},
+        {PIXEL_TYPE_DIN99,      "DIN99"},
+        {PIXEL_TYPE_DIN99D,     "DIN99d"},
+        {PIXEL_TYPE_DIN99O,     "DIN99o"},
+        {PIXEL_TYPE_YUV410,     "YUV410"},
+        {PIXEL_TYPE_YUV411,     "YUV411"},
+        {PIXEL_TYPE_YUV420,     "YUV420"},
+        {PIXEL_TYPE_YUV422,     "YUV422"},
+        {PIXEL_TYPE_FOURCC,     "FORCC"},
+        {PIXEL_TYPE_MULTI_CH,   "MULTI_CH"},
+        {PIXEL_TYPE_JPEG,       "JPEG"},
+        {PIXEL_TYPE_ANY,        "ANY"},
         {PIXEL_TYPE_NOT_SPECIFIED, ""},
+      };
+      return table;
+    }
+    // -------------------------------------------------------------------------
+    // getBufferTypeTable
+    // -------------------------------------------------------------------------
+    static const BufferTypeTable *getBufferTypeTable()
+    {
+      const static BufferTypeTable  table[] =
+      {
+        {BUFFER_TYPE_PIXEL_ALIGNED,                 "ALIGNED"},
+        {BUFFER_TYPE_PIXEL_PACKED,                  "PACKED"},
+        {BUFFER_TYPE_PIXEL_PACKED_CSI_2,            "PACKED_CSI_2"},
+        {BUFFER_TYPE_PLANAR_ALIGNED,                "PLANAR_ALIGNED"},
+        {BUFFER_TYPE_PLANAR_PACKED,                 "PLANAR_PACKED"},
+        {BUFFER_TYPE_PLANAR_PACKED_CSI_2,           "PLANAR_PACKED_CSI_2"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_ALIGNED,       "LINE_INTERLEVE_ALIGNED"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_PACKED,        "LINE_INTERLEVE_PACKED"},
+        {BUFFER_TYPE_LINE_INTERLEAVE_PACKED_CSI_2,  "LINE_INTERLEVE_PACKED_CSI_2"},
+        {BUFFER_TYPE_INTRA_LINE_ALIGNED,            "INTRA_LINE_ALIGNED"},
+        {BUFFER_TYPE_INTRA_LINE_PACKED,             "INTRA_LINE_PACKED"},
+        {BUFFER_TYPE_INTRA_LINE_PACKED_CSI_2,       "INTRA_LINE_PACKED_CSI_2"},
+        {BUFFER_TYPE_NOT_SPECIFIED, ""},
       };
       return table;
     }
@@ -471,23 +836,51 @@ namespace ibc
     {
       const static DataTypeTable  table[] =
       {
-        {DATA_TYPE_1BIT, "1BIT"},
-        {DATA_TYPE_4BIT, "4BIT"},
-        {DATA_TYPE_8BIT, "8BIT"},
-        {DATA_TYPE_10BIT, "10BIT"},
-        {DATA_TYPE_12BIT, "12BIT"},
-        {DATA_TYPE_14BIT, "14BIT"},
-        {DATA_TYPE_16BIT, "16BIT"},
-        {DATA_TYPE_24BIT, "24BIT"},
-        {DATA_TYPE_32BIT, "32BIT"},
-        {DATA_TYPE_40BIT, "40BIT"},
-        {DATA_TYPE_48BIT, "48BIT"},
-        {DATA_TYPE_54BIT, "54BIT"},
-        {DATA_TYPE_64BIT, "64BIT"},
-        {DATA_TYPE_FLOAT, "FLOAT"},
-        {DATA_TYPE_DOUBLE, "DOUBLE"},
+        {DATA_TYPE_1BIT,    "1BIT"},
+        {DATA_TYPE_4BIT,    "4BIT"},
+        {DATA_TYPE_8BIT,    "8BIT"},
+        {DATA_TYPE_10BIT,   "10BIT"},
+        {DATA_TYPE_12BIT,   "12BIT"},
+        {DATA_TYPE_14BIT,   "14BIT"},
+        {DATA_TYPE_16BIT,   "16BIT"},
+        {DATA_TYPE_24BIT,   "24BIT"},
+        {DATA_TYPE_32BIT,   "32BIT"},
+        {DATA_TYPE_40BIT,   "40BIT"},
+        {DATA_TYPE_48BIT,   "48BIT"},
+        {DATA_TYPE_56BIT,   "56BIT"},
+        {DATA_TYPE_64BIT,   "64BIT"},
+        {DATA_TYPE_FLOAT,   "FLOAT"},
+        {DATA_TYPE_DOUBLE,  "DOUBLE"},
+        //
+        {DATA_TYPE_4BIT_SIGNED,   "4BIT_SIGNED"},
+        {DATA_TYPE_8BIT_SIGNED,   "8BIT_SIGNED"},
+        {DATA_TYPE_10BIT_SIGNED,  "10BIT_SIGNED"},
+        {DATA_TYPE_12BIT_SIGNED,  "12BIT_SIGNED"},
+        {DATA_TYPE_14BIT_SIGNED,  "14BIT_SIGNED"},
+        {DATA_TYPE_16BIT_SIGNED,  "16BIT_SIGNED"},
+        {DATA_TYPE_24BIT_SIGNED,  "24BIT_SIGNED"},
+        {DATA_TYPE_32BIT_SIGNED,  "32BIT_SIGNED"},
+        {DATA_TYPE_40BIT_SIGNED,  "40BIT_SIGNED"},
+        {DATA_TYPE_48BIT_SIGNED,  "48BIT_SIGNED"},
+        {DATA_TYPE_56BIT_SIGNED,  "56BIT_SIGNED"},
+        {DATA_TYPE_64BIT_SIGNED,  "64BIT_SIGNED"},
+        //
         {DATA_TYPE_ANY, "ANY"},
         {DATA_TYPE_NOT_SPECIFIED, ""}
+      };
+      return table;
+    }
+    // -------------------------------------------------------------------------
+    // getEndianTypeTable
+    // -------------------------------------------------------------------------
+    static const EndianTypeTable *getEndianTypeTable()
+    {
+      const static EndianTypeTable  table[] =
+      {
+        {ENDIAN_LITTLE,     "LITTLE"},
+        {ENDIAN_BIG,        "BIG"},
+        {ENDIAN_TYPE_HOST,  "HOST"},
+        {ENDIAN_TYPE_NOT_SPECIFIED, ""}
       };
       return table;
     }
@@ -507,10 +900,25 @@ namespace ibc
     size_t          mBufferSize;
     size_t          mHeaderOffset;
     size_t          mPixelStep;
-    size_t          mWidthStep;
-    size_t          mPlaneStep;
+    size_t          mLineStep;
+    size_t          mChannelStep;
     size_t          mPixelAreaSize;
 
+    // -------------------------------------------------------------------------
+    // ImageFormat
+    // -------------------------------------------------------------------------
+    ImageFormat()
+    {
+      mWidth          = 0;
+      mHeight         = 0;
+      mIsBottomUp     = false;
+      mBufferSize     = 0;
+      mHeaderOffset   = 0;
+      mPixelStep      = 0;
+      mLineStep       = 0;
+      mChannelStep    = 0;
+      mPixelAreaSize  = 0;
+    }
     // -------------------------------------------------------------------------
     // ImageFormat
     // -------------------------------------------------------------------------
@@ -520,45 +928,14 @@ namespace ibc
                 size_t inBufferSize = 0,
                 size_t inHeaderOffset = 0,
                 size_t inPixelStep = 0,
-                size_t inWidthStep = 0,
-                size_t inPlaneStep = 0)
+                size_t inLineStep = 0,
+                size_t inChannelStep = 0)
     {
-      mType           = inType;
-      mWidth          = inWidth;
-      mHeight         = inHeight;
-      mIsBottomUp     = inIsBottomUp;
-      mHeaderOffset   = inHeaderOffset;
-      if (inPixelStep != 0)
-        mPixelStep = inPixelStep; // TODO: Add a sanity check here...
-      else
-      {
-        if (mType.isPacked())
-          mPixelStep = 0;
-        else
-          mPixelStep = mType.sizeOfData();
-      }
-      if (inWidthStep != 0)
-        mWidthStep = inWidthStep; // TODO: Add a sanity check here...
-      else
-      {
-        mWidthStep = mPixelStep * mWidth;
-        if (mType.isPlanar() == false)
-          mWidthStep *= mType.mComponentsPerPixel;
-      }
-      if (inPlaneStep != 0)
-        mPlaneStep = inPlaneStep;  // TODO: Add a sanity check here...
-      else
-        mPlaneStep = mWidthStep * mHeight;
-      //
-      if (mType.isPlanar())
-        mPixelAreaSize = mPlaneStep * mType.mComponentsPerPixel;
-      else
-        mPixelAreaSize = mPlaneStep;
-      //
-      if (inBufferSize != 0)
-        mBufferSize = inBufferSize;
-      else
-        mBufferSize = mHeaderOffset + mPixelAreaSize;
+      set(inType,
+          inWidth, inHeight,
+          inIsBottomUp,
+          inBufferSize, inHeaderOffset,
+          inPixelStep, inLineStep, inChannelStep);
     }
     // -------------------------------------------------------------------------
     // ~ImageFormat
@@ -567,6 +944,7 @@ namespace ibc
     {
     }
     // Member functions --------------------------------------------------------
+    // cost functions ----------------------------------------------------------
     // -------------------------------------------------------------------------
     // getPlaneOffset
     // -------------------------------------------------------------------------
@@ -644,6 +1022,95 @@ namespace ibc
     {
       return getPixelPtr(*this, inBufferPtr);
     }
+    // non-cost functions ------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // set
+    // -------------------------------------------------------------------------
+    void  set(const ImageType &inType,
+                unsigned int inWidth, unsigned int inHeight,
+                bool inIsBottomUp = false,
+                size_t inBufferSize = 0,
+                size_t inHeaderOffset = 0,
+                size_t inPixelStep = 0,
+                size_t inLineStep = 0,
+                size_t inChannelStep = 0)
+    {
+      mType = inType;
+      set(inWidth, inHeight,
+          inIsBottomUp,
+          inBufferSize, inHeaderOffset,
+          inPixelStep, inLineStep, inChannelStep);
+    }
+    // -------------------------------------------------------------------------
+    // set
+    // -------------------------------------------------------------------------
+    void  set(unsigned int inWidth, unsigned int inHeight,
+                bool inIsBottomUp = false,
+                size_t inBufferSize = 0,
+                size_t inHeaderOffset = 0,
+                size_t inPixelStep = 0,
+                size_t inLineStep = 0,
+                size_t inChannelStep = 0)
+    {
+      mWidth          = inWidth;
+      mHeight         = inHeight;
+      mIsBottomUp     = inIsBottomUp;
+      mHeaderOffset   = inHeaderOffset;
+      if (inPixelStep != 0)
+        mPixelStep = inPixelStep; // TODO: Add a sanity check here...
+      else
+      {
+        if (mType.isPacked() || mType.hasMacroPixelStructure())
+          mPixelStep = 0;
+        else
+        {
+          mPixelStep = mType.sizeOfData();
+          if (mType.isPlanar() == false)
+            mPixelStep *= mType.mComponentsPerPixel;
+        }
+      }
+      if (inLineStep != 0)
+        mLineStep = inLineStep; // TODO: Add a sanity check here...
+      else
+        mLineStep = mPixelStep * mWidth;
+      if (inChannelStep != 0)
+        mChannelStep = inChannelStep;  // TODO: Add a sanity check here...
+      else
+        mChannelStep = mLineStep * mHeight;  // TODO: this assumption doesn't cover everything...
+      //
+      if (mType.isPlanar())
+        mPixelAreaSize = mChannelStep * mType.mComponentsPerPixel;
+      else
+        mPixelAreaSize = mChannelStep;
+      //
+      if (inBufferSize != 0)
+        mBufferSize = inBufferSize;
+      else
+        mBufferSize = mHeaderOffset + mPixelAreaSize;
+    }
+    // -------------------------------------------------------------------------
+    // dump (debug function)
+    // -------------------------------------------------------------------------
+    void  dump(const char *inLeadringStr = "")
+    {
+      char  buf[256];
+      if (strlen(inLeadringStr) < (sizeof(buf) - 10))
+        sprintf(buf, "%s  ", inLeadringStr);
+      else
+        sprintf(buf, "  ");
+      //
+      printf("%smType:\n", inLeadringStr);
+      mType.dump(buf);
+      printf("%smWidth          : %d\n", inLeadringStr, mWidth);
+      printf("%smHeight         : %d\n", inLeadringStr, mHeight);
+      printf("%smIsBottomUp     : %d\n", inLeadringStr, mIsBottomUp);
+      printf("%smBufferSize     : %zu\n", inLeadringStr, mBufferSize);
+      printf("%smHeaderOffset   : %zu\n", inLeadringStr, mHeaderOffset);
+      printf("%smPixelStep      : %zu\n", inLeadringStr, mPixelStep);
+      printf("%smLineStep       : %zu\n", inLeadringStr, mLineStep);
+      printf("%smChannelStep    : %zu\n", inLeadringStr, mChannelStep);
+      printf("%smPixelAreaSize  : %zu\n", inLeadringStr, mPixelAreaSize);
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -667,47 +1134,86 @@ namespace ibc
     // -------------------------------------------------------------------------
     // calculatePlaneOffset
     // -------------------------------------------------------------------------
-    static size_t calculatePlaneOffset(const ImageFormat &inFormat, unsigned int inPlaneIndex = 0)
+    static size_t calculatePlaneOffset(
+                            const ImageFormat &inFormat,
+                            unsigned int inPlaneIndex = 0)
     {
       if (inFormat.mType.isPlanar() == false)
         return inFormat.mHeaderOffset;
       if (inPlaneIndex >= inFormat.mType.mComponentsPerPixel)
         inPlaneIndex = inFormat.mType.mComponentsPerPixel - 1;
-      return inFormat.mPlaneStep * inPlaneIndex + inFormat.mHeaderOffset;
+      // TODO : we need to think about a format that has MacroPixel Structure with a planner buffer
+      return inFormat.mChannelStep * inPlaneIndex + inFormat.mHeaderOffset;
+    }
+    // -------------------------------------------------------------------------
+    // calculateLineOffsetFromPlaneOffset
+    // -------------------------------------------------------------------------
+    static size_t calculateLineOffsetFromPlaneOffset(
+                              const ImageFormat &inFormat,
+                              size_t inPlaneOffset,
+                              unsigned int inY)
+    {
+      if (inY >= inFormat.mHeight)
+        inY = inFormat.mHeight - 1;
+      if (inY == 0)
+        return inPlaneOffset;
+      return inPlaneOffset + inFormat.mLineStep * inY;
     }
     // -------------------------------------------------------------------------
     // calculateLineOffset
     // -------------------------------------------------------------------------
-    static size_t calculateLineOffset(const ImageFormat &inFormat, unsigned int inY = 0,
-                                      unsigned int inPlaneIndex = 0)
+    static size_t calculateLineOffset(
+                              const ImageFormat &inFormat,
+                              unsigned int inY,
+                              unsigned int inPlaneIndex)
     {
-      size_t  offset;
-
-      if (inY >= inFormat.mHeight)
-        inY = inFormat.mHeight - 1;
-      offset = calculatePlaneOffset(inFormat, inPlaneIndex);
-      if (inY == 0)
-        return offset;
-      offset +=  inFormat.mWidthStep * inY;
-      return offset;
+      return calculateLineOffsetFromPlaneOffset(
+                                  inFormat,
+                                  calculatePlaneOffset(inFormat, inPlaneIndex),
+                                  inY);
+    }
+    // -------------------------------------------------------------------------
+    // calculatePixelOffsetFromLineOffset
+    // -------------------------------------------------------------------------
+    static size_t calculatePixelOffsetFromLineOffset(
+                              const ImageFormat &inFormat,
+                              size_t inLineOffset,
+                              unsigned int inX)
+    {
+      if (inX >= inFormat.mWidth)
+        inX = inFormat.mWidth - 1;
+      return inLineOffset + inFormat.mPixelStep * inX;
+    }
+    // -------------------------------------------------------------------------
+    // calculatePixelOffsetFromPlaneOffset
+    // -------------------------------------------------------------------------
+    static size_t calculatePixelOffsetFromPlaneOffset(
+                              const ImageFormat &inFormat,
+                              size_t inPlaneOffset,
+                              unsigned int inX,
+                              unsigned int inY)
+    {
+      return calculatePixelOffsetFromLineOffset(
+                                  inFormat,
+                                  calculateLineOffsetFromPlaneOffset(inFormat, inPlaneOffset, inY),
+                                  inX);
     }
     // -------------------------------------------------------------------------
     // calculatePixelOffset
     // -------------------------------------------------------------------------
-    static size_t calculatePixelOffset(const ImageFormat &inFormat, unsigned int inX  = 0,
-                                       unsigned int inY = 0, unsigned int inPlaneIndex = 0)
+    static size_t calculatePixelOffset(
+                              const ImageFormat &inFormat,
+                              unsigned int inX,
+                              unsigned int inY,
+                              unsigned int inPlaneIndex = 0)
     {
-      size_t  offset;
-
-      if (inY >= inFormat.mWidth)
-        inY = inFormat.mWidth - 1;
-      offset = calculateLineOffset(inFormat, inY, inPlaneIndex);
-      offset +=  inFormat.mPixelStep * inX;
-      return offset;
+      return calculatePixelOffsetFromLineOffset(
+                                  inFormat,
+                                  calculateLineOffset(inFormat, inY, inPlaneIndex),
+                                  inX);
     }
   };
  };
 };
 
 #endif  // #ifdef IBC_IMAGE_IMAGE_H_
-

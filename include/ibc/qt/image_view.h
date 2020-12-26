@@ -88,7 +88,7 @@ namespace ibc
         updateSizeUsingImageData();
         return;
       }
- 
+
       mImageDataPtr->removeWidget(this);
       mImageDataPtr = inImageDataPtr;
       mImageDataPtr->addWidget(this);

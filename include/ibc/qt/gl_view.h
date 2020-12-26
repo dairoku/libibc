@@ -34,11 +34,18 @@
 #ifndef IBC_QT_GL_VIEW_H_
 #define IBC_QT_GL_VIEW_H_
 
+// Macros ----------------------------------------------------------------------
+#include "ibc/base/types.h"
+#define IBC_GET_QOPENGL_API_i(major, minor)   QOpenGLFunctions_##major##_##minor##_Core
+#define IBC_GET_QOPENGL_API(major, minor)     IBC_GET_QOPENGL_API_i(major,minor)
+#define IBC_QOPENGL_CLASS_NAME                IBC_GET_QOPENGL_API(LIBIBC_OPENGL_MAJOR_VER,LIBIBC_OPENGL_MINOR_VER)
+
 // Includes --------------------------------------------------------------------
+#include <stdlib.h>
+#include <QObject>
 #include <QtWidgets>
 #include <QOpenGLWidget>
-//#include <QOpenGLExtraFunctions>
-#include <QOpenGLFunctions_4_5_Core>
+#include IBC_MACRO_TOSTRING(IBC_QOPENGL_CLASS_NAME)
 #include "ibc/gl/matrix.h"
 #include "ibc/gl/model_interface.h"
 #include "ibc/gl/shader_interface.h"
@@ -51,8 +58,7 @@ namespace ibc
   // ---------------------------------------------------------------------------
   // GLView class
   // ---------------------------------------------------------------------------
-//class GLView : public QOpenGLWidget, protected QOpenGLExtraFunctions
-  class GLView : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core
+  class GLView : public QOpenGLWidget, protected IBC_QOPENGL_CLASS_NAME
   {
     Q_OBJECT
 
@@ -132,20 +138,35 @@ namespace ibc
     virtual void  initializeGL()
     {
       makeCurrent();
+      {
+        // We need to do a OpenGL version sanity check here
+        QOpenGLContext *context = QOpenGLContext::currentContext();
+        if (context == NULL)
+        {
+          qCritical("Error: QOpenGLContext() returned null");
+          exit(1);
+        }
+        if (context->versionFunctions<IBC_QOPENGL_CLASS_NAME>() == NULL)
+        {
+          qCritical("Error: Could not obtain " IBC_MACRO_TOSTRING(IBC_QOPENGL_CLASS_NAME));
+          qCritical("The system doesn't support the required OpenGL version");
+          exit(1);
+        }
+      }
       initializeOpenGLFunctions();
 
       mRendererStr = glGetString(GL_RENDERER);
       mVersionStr = glGetString(GL_VERSION);
-      printf("Renderer: %s\n", mRendererStr);
-      printf("OpenGL version supported %s\n", mVersionStr);
+      qInfo("Renderer: %s", mRendererStr);
+      qInfo("OpenGL version supported %s", mVersionStr);
 
-      glClearColor(0.3, 0.3, 0.3, 0.0);
+      glClearColor(0.3f, 0.3f, 0.3f, 0.0f);
 
       glEnable(GL_CCW);
       glEnable(GL_CULL_FACE);
       glCullFace(GL_BACK);
 
-      glClearDepthf(1.0);
+      glClearDepth(1.0);
       glDepthFunc(GL_LESS);
       glEnable(GL_DEPTH_TEST);
 
@@ -196,4 +217,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_QT_IMAGE_VIEW_H_
-

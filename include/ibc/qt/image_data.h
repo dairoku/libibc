@@ -104,6 +104,7 @@ namespace ibc
         return false; // Should throw exception?
 
       mActiveConverter->convert(getImageBufferPixelPtr(), mQImage->bits());
+
       clearIsImageModifiedFlag();
       return true;
     }

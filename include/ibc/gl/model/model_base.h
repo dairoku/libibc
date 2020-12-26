@@ -49,8 +49,7 @@ namespace ibc { namespace gl { namespace model
 #ifndef QT_VERSION
   class ModelBase : public virtual ibc::gl::ModelInterface
 #else
-//class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLExtraFunctions
-  class ModelBase : public virtual ibc::gl::ModelInterface, protected QOpenGLFunctions_4_5_Core
+  class ModelBase : public virtual ibc::gl::ModelInterface, protected IBC_QOPENGL_CLASS_NAME
 #endif
   {
   public:

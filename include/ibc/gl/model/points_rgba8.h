@@ -193,7 +193,7 @@ namespace ibc { namespace gl { namespace model
       glBindTexture(GL_TEXTURE_1D, mColorMapTexture);
 
       glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_POINTS, 0, mDataNum);
+      glDrawArrays(GL_POINTS, 0, (GLsizei )mDataNum);
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_1D, 0);
@@ -412,7 +412,7 @@ namespace ibc { namespace gl { namespace model
       glGenTextures(1, &mColorMapTexture);
 
       glBindTexture(GL_TEXTURE_1D, mColorMapTexture);
-      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, mColorMapSize, 0,
+      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, (GLsizei )mColorMapSize, 0,
                   GL_RGB, GL_UNSIGNED_BYTE, NULL);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -431,12 +431,12 @@ namespace ibc { namespace gl { namespace model
     {
       unsigned char *colorMap = new unsigned char[mColorMapSize * 3];
       //getMonoMap <- gamma
-      ibc::image::ColorMap::getColorMap(mColorMapIndex, mColorMapSize, colorMap,
+      ibc::image::ColorMap::getColorMap(mColorMapIndex, (GLsizei )mColorMapSize, colorMap,
                               mColorMapRepeatNum, 1.0, 0);
 
       glActiveTexture(GL_TEXTURE0);
       glBindTexture(GL_TEXTURE_1D, mColorMapTexture);
-      glTexSubImage1D(GL_TEXTURE_1D, 0, 0, mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      glTexSubImage1D(GL_TEXTURE_1D, 0, 0, (GLsizei )mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
       glBindTexture(GL_TEXTURE_1D, 0);
       delete colorMap;
       mIsColorMapIndexModified = false;

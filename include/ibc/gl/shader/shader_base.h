@@ -48,8 +48,7 @@ namespace ibc { namespace gl { namespace shader
 #ifndef QT_VERSION
   class ShaderBase : public virtual ibc::gl::ShaderInterface
 #else
-//class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLExtraFunctions
-  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected QOpenGLFunctions_4_5_Core
+  class ShaderBase : public virtual ibc::gl::ShaderInterface, protected IBC_QOPENGL_CLASS_NAME
 #endif
   {
   public:

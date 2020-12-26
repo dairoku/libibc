@@ -120,6 +120,7 @@ namespace ibc
     {
       if (mAllocatedImageBufferPtr != NULL && mImageFormatPtr != NULL)
       {
+        // Need sanity check (should check if mBufferSize is not zero)
         if (mImageFormatPtr->mBufferSize == inFormat.mBufferSize)
         {
           delete mImageFormatPtr;
@@ -180,6 +181,17 @@ namespace ibc
     bool  isImageModified() const
     {
       return mIsImageModified;
+    }
+    // -------------------------------------------------------------------------
+    // getImageBufferPtr
+    // -------------------------------------------------------------------------
+    size_t  getImageBufferSize() const
+    {
+      if (mImageFormatPtr == NULL)
+      {
+        return 0;
+      }
+      return mImageFormatPtr->mBufferSize;
     }
     // -------------------------------------------------------------------------
     // getImageBufferPtr

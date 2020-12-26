@@ -36,11 +36,6 @@
 
 // Includes --------------------------------------------------------------------
 #include "ibc/base/types.h"
-#ifdef _WIN32
-  // ToDo define Endian related macros
-#else
-  #include <endian.h>
-#endif
 
 // Macros ----------------------------------------------------------------------
 #if !defined(__LITTLE_ENDIAN__) && !defined(__BIG_ENDIAN__)

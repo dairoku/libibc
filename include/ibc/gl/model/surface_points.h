@@ -157,14 +157,17 @@ namespace ibc { namespace gl { namespace model
       glVertexAttribPointer(intensityLocation, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, NULL);
 
       // Initialize Texture
-      glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
-      glTextureStorage1D(mTexture, 1, GL_RGB8, 256);
+      glEnable(GL_TEXTURE_1D);
+      glGenTextures(1, &mTexture);
+      //glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
+      //glTextureStorage1D(mTexture, 1, GL_RGB8, 256);
       glBindTexture(GL_TEXTURE_1D, mTexture);
 
       unsigned char *colorMap = new unsigned char[256 * 3];
       ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
                                         256, colorMap);
-      glTextureSubImage1D(mTexture, 0, 0, 256, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      //glTextureSubImage1D(mTexture, 0, 0, 256, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
       delete colorMap;
 
       return true;
@@ -212,7 +215,7 @@ namespace ibc { namespace gl { namespace model
       glUniformMatrix4fv(mProjectionLocation, 1, GL_FALSE, &(inProjection[0]));
 
       glBindVertexArray(mVertexArrayObject);
-      glDrawArrays(GL_POINTS, 0, mNumPoints);
+      glDrawArrays(GL_POINTS, 0, (GLsizei )mNumPoints);
     }
 
   protected:
@@ -298,8 +301,10 @@ namespace ibc { namespace gl { namespace model
       if (mIsColoMapTextureInitialized)
         disposeColoMapTexture();
       //
-      glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
-      glTextureStorage1D(mTexture, 1, GL_RGB8, mColorMapSize);
+      glEnable(GL_TEXTURE_1D);
+      glGenTextures(1, &mTexture);
+      //glCreateTextures(GL_TEXTURE_1D, 1, &mTexture);
+      //glTextureStorage1D(mTexture, 1, GL_RGB8, mColorMapSize);
       glBindTexture(GL_TEXTURE_1D, mTexture);
       mIsColoMapTextureInitialized = true;
       //
@@ -313,7 +318,8 @@ namespace ibc { namespace gl { namespace model
       unsigned char *colorMap = new unsigned char[mColorMapSize * 3];
       ibc::image::ColorMap::getColorMap(ibc::image::ColorMap::CMIndex_Rainbow,
                                         mColorMapSize, colorMap);
-      glTextureSubImage1D(mTexture, 0, 0, mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      //glTextureSubImage1D(mTexture, 0, 0, mColorMapSize, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
+      glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, colorMap);
       delete colorMap;
       mIsColorMapModified = false;
     }

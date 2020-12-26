@@ -39,10 +39,14 @@
 #include <vector>
 #include <string>
 #include <string_view>
+#include <stdlib.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <QFileInfo>
 #include "ibc/base/types.h"
 #include "ibc/base/endian.h"
@@ -474,7 +478,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     // getPropertyOffset
     // -------------------------------------------------------------------------
-    bool  getPropertyOffset(size_t inElementIndex, PropertyType inType, 
+    bool  getPropertyOffset(size_t inElementIndex, PropertyType inType,
                             size_t *outOffset, DataType *outDataType) const
     {
       IBC_GL_FILE_PLY_TRACE();
@@ -1312,8 +1316,8 @@ namespace ibc { namespace gl { namespace file
           return;
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          if (*ioValue < -2147483648)
-            *ioValue = -2147483648;
+          if (*ioValue < -2147483648.0)
+            *ioValue = -2147483648.0;
           if (*ioValue > 2147483647)
             *ioValue = 2147483647;
           return;
@@ -1458,7 +1462,11 @@ namespace ibc { namespace gl { namespace file
                     char **outHeaderStrBufPtr = NULL)
     {
       IBC_GL_FILE_PLY_TRACE();
+#ifndef Q_OS_WIN
       int fd = ::open(inFileName, O_RDONLY);
+#else
+      int fd = ::open(inFileName, O_RDONLY | O_BINARY);
+#endif
       if (fd == -1)
       {
         IBC_LOG_ERROR("Failed : open()");
@@ -1486,7 +1494,7 @@ namespace ibc { namespace gl { namespace file
       }
       if (::fread(buf, sizeof(unsigned char), fileSize, fp) != fileSize)
       {
-        IBC_LOG_ERROR("Failed : fread()");
+        IBC_LOG_ERROR("Failed : fread() returned");
         delete buf;
         ::fclose(fp);
         return false;
@@ -1644,7 +1652,7 @@ namespace ibc { namespace gl { namespace file
     // -------------------------------------------------------------------------
     static bool parseData(const PLYHeader &inHeader, PLYHeader::ElementType inType,
                     const DestinationInfo *inDstInfoPtr, size_t inDstInfoNum,
-                    size_t inDstDataStructSize, 
+                    size_t inDstDataStructSize,
                     const void *inSrcDataPtr, size_t inSrcDataSize,
                     void **outDstDataPtr, size_t *outDstDataNum)
     {
