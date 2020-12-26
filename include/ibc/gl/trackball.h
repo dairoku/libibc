@@ -153,9 +153,9 @@ namespace ibc
       UNUSED(inDeltaY);
 
       if (inDirection == 0)
-        mZoomOffset -= 0.1;
+        mZoomOffset -= (TrackballType )0.1;
       else
-        mZoomOffset += 0.1;
+        mZoomOffset += (TrackballType )0.1;
     }
     // -------------------------------------------------------------------------
     // getGLRotationMatrix
@@ -241,4 +241,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_TRACKBALL_H_
-

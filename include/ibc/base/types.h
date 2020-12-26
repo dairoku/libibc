@@ -34,6 +34,14 @@
 #ifndef IBC_TYPES_H_
 #define IBC_TYPES_H_
 
+// Macros ----------------------------------------------------------------------
+#define IBC_MACRO_TOSTRING_i(x)  #x
+#define IBC_MACRO_JOIN_i(x, y)   x##y
+//
+#define IBC_MACRO_TOSTRING(x)           IBC_MACRO_TOSTRING_i(x)
+#define IBC_MACRO_JOIN(x, y)            IBC_MACRO_JOIN_i(x,y)
+
+
 // Types -----------------------------------------------------------------------
 
 #ifndef int8

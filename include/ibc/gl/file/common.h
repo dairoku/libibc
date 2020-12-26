@@ -154,7 +154,11 @@ namespace ibc { namespace gl { namespace file
         }
         else
         {
-          if (r.len != 0)
+          if (r.len == 0) // If we found separators in series, we just skip those
+          {
+            r.from++;
+          }
+          else
           {
             outRanges->push_back(r);
             r.from += r.len + 1;

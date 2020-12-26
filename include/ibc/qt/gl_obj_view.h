@@ -119,7 +119,7 @@ namespace ibc
       int direction = 1;
       if (delta.x() < 0 || delta.y() < 0)
         direction = 0;
-      mTrackball.mouseWheel(direction, delta.x(), delta.y());
+      mTrackball.mouseWheel(direction, (GLfloat )delta.x(), (GLfloat )delta.y());
       glUpdaetProjection();
       update();
     }
@@ -141,9 +141,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  glUpdaetProjection()
     {
-      mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 0.1, 100);
+      mProjection = ibc::gl::Utils::perspective<GLfloat>(mCameraFoV, mWidth / (GLfloat )mHeight, 0.1f, 100.0f);
       ibc::gl::MatrixBase<GLfloat>  translate;
-      translate.setTranslationMatrix(0.0, 0.0, -5);
+      translate.setTranslationMatrix(0.0f, 0.0f, -5.0f);
       mProjection *= translate;
     }
     // -------------------------------------------------------------------------
@@ -162,4 +162,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_QT_GL_OBJ_VIEW_H_
-

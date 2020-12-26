@@ -109,10 +109,10 @@ namespace ibc
     // -------------------------------------------------------------------------
     // =
     // -------------------------------------------------------------------------
-    /*MatrixBase<MatrixType> &operator=(const MatrixBase<MatrixType> &inMatrix)
+    MatrixBase<MatrixType> &operator=(const MatrixBase<MatrixType> &inMatrix)
     {
       return set(inMatrix);
-    }*/
+    }
     // -------------------------------------------------------------------------
     // []
     // -------------------------------------------------------------------------
@@ -661,104 +661,104 @@ namespace ibc
     {
       MatrixType  t[16], v;
 
-      t[0] =  inSrc[5]  * inSrc[10] * inSrc[15] - 
-              inSrc[5]  * inSrc[11] * inSrc[14] - 
-              inSrc[9]  * inSrc[6]  * inSrc[15] + 
+      t[0] =  inSrc[5]  * inSrc[10] * inSrc[15] -
+              inSrc[5]  * inSrc[11] * inSrc[14] -
+              inSrc[9]  * inSrc[6]  * inSrc[15] +
               inSrc[9]  * inSrc[7]  * inSrc[14] +
-              inSrc[13] * inSrc[6]  * inSrc[11] - 
+              inSrc[13] * inSrc[6]  * inSrc[11] -
               inSrc[13] * inSrc[7]  * inSrc[10];
-      t[1] = -inSrc[1]  * inSrc[10] * inSrc[15] + 
-              inSrc[1]  * inSrc[11] * inSrc[14] + 
-              inSrc[9]  * inSrc[2]  * inSrc[15] - 
-              inSrc[9]  * inSrc[3]  * inSrc[14] - 
-              inSrc[13] * inSrc[2]  * inSrc[11] + 
+      t[1] = -inSrc[1]  * inSrc[10] * inSrc[15] +
+              inSrc[1]  * inSrc[11] * inSrc[14] +
+              inSrc[9]  * inSrc[2]  * inSrc[15] -
+              inSrc[9]  * inSrc[3]  * inSrc[14] -
+              inSrc[13] * inSrc[2]  * inSrc[11] +
               inSrc[13] * inSrc[3]  * inSrc[10];
-      t[2] =  inSrc[1]  * inSrc[6]  * inSrc[15] - 
-              inSrc[1]  * inSrc[7]  * inSrc[14] - 
-              inSrc[5]  * inSrc[2]  * inSrc[15] + 
-              inSrc[5]  * inSrc[3]  * inSrc[14] + 
-              inSrc[13] * inSrc[2]  * inSrc[7] - 
+      t[2] =  inSrc[1]  * inSrc[6]  * inSrc[15] -
+              inSrc[1]  * inSrc[7]  * inSrc[14] -
+              inSrc[5]  * inSrc[2]  * inSrc[15] +
+              inSrc[5]  * inSrc[3]  * inSrc[14] +
+              inSrc[13] * inSrc[2]  * inSrc[7] -
               inSrc[13] * inSrc[3]  * inSrc[6];
-      t[3] = -inSrc[1]  * inSrc[6]  * inSrc[11] + 
-              inSrc[1]  * inSrc[7]  * inSrc[10] + 
-              inSrc[5]  * inSrc[2]  * inSrc[11] - 
-              inSrc[5]  * inSrc[3]  * inSrc[10] - 
-              inSrc[9]  * inSrc[2]  * inSrc[7] + 
+      t[3] = -inSrc[1]  * inSrc[6]  * inSrc[11] +
+              inSrc[1]  * inSrc[7]  * inSrc[10] +
+              inSrc[5]  * inSrc[2]  * inSrc[11] -
+              inSrc[5]  * inSrc[3]  * inSrc[10] -
+              inSrc[9]  * inSrc[2]  * inSrc[7] +
               inSrc[9]  * inSrc[3]  * inSrc[6];
       //
-      t[4] = -inSrc[4]  * inSrc[10] * inSrc[15] + 
-              inSrc[4]  * inSrc[11] * inSrc[14] + 
-              inSrc[8]  * inSrc[6]  * inSrc[15] - 
-              inSrc[8]  * inSrc[7]  * inSrc[14] - 
-              inSrc[12] * inSrc[6]  * inSrc[11] + 
+      t[4] = -inSrc[4]  * inSrc[10] * inSrc[15] +
+              inSrc[4]  * inSrc[11] * inSrc[14] +
+              inSrc[8]  * inSrc[6]  * inSrc[15] -
+              inSrc[8]  * inSrc[7]  * inSrc[14] -
+              inSrc[12] * inSrc[6]  * inSrc[11] +
               inSrc[12] * inSrc[7]  * inSrc[10];
-      t[5] =  inSrc[0]  * inSrc[10] * inSrc[15] - 
-              inSrc[0]  * inSrc[11] * inSrc[14] - 
-              inSrc[8]  * inSrc[2]  * inSrc[15] + 
-              inSrc[8]  * inSrc[3]  * inSrc[14] + 
-              inSrc[12] * inSrc[2]  * inSrc[11] - 
+      t[5] =  inSrc[0]  * inSrc[10] * inSrc[15] -
+              inSrc[0]  * inSrc[11] * inSrc[14] -
+              inSrc[8]  * inSrc[2]  * inSrc[15] +
+              inSrc[8]  * inSrc[3]  * inSrc[14] +
+              inSrc[12] * inSrc[2]  * inSrc[11] -
               inSrc[12] * inSrc[3]  * inSrc[10];
-      t[6] = -inSrc[0]  * inSrc[6]  * inSrc[15] + 
-              inSrc[0]  * inSrc[7]  * inSrc[14] + 
-              inSrc[4]  * inSrc[2]  * inSrc[15] - 
-              inSrc[4]  * inSrc[3]  * inSrc[14] - 
-              inSrc[12] * inSrc[2]  * inSrc[7] + 
+      t[6] = -inSrc[0]  * inSrc[6]  * inSrc[15] +
+              inSrc[0]  * inSrc[7]  * inSrc[14] +
+              inSrc[4]  * inSrc[2]  * inSrc[15] -
+              inSrc[4]  * inSrc[3]  * inSrc[14] -
+              inSrc[12] * inSrc[2]  * inSrc[7] +
               inSrc[12] * inSrc[3]  * inSrc[6];
-      t[7] =  inSrc[0]  * inSrc[6]  * inSrc[11] - 
-              inSrc[0]  * inSrc[7]  * inSrc[10] - 
-              inSrc[4]  * inSrc[2]  * inSrc[11] + 
-              inSrc[4]  * inSrc[3]  * inSrc[10] + 
-              inSrc[8]  * inSrc[2]  * inSrc[7] - 
+      t[7] =  inSrc[0]  * inSrc[6]  * inSrc[11] -
+              inSrc[0]  * inSrc[7]  * inSrc[10] -
+              inSrc[4]  * inSrc[2]  * inSrc[11] +
+              inSrc[4]  * inSrc[3]  * inSrc[10] +
+              inSrc[8]  * inSrc[2]  * inSrc[7] -
               inSrc[8]  * inSrc[3]  * inSrc[6];
       //
-      t[8] =  inSrc[4]  * inSrc[9]  * inSrc[15] - 
-              inSrc[4]  * inSrc[11] * inSrc[13] - 
-              inSrc[8]  * inSrc[5]  * inSrc[15] + 
-              inSrc[8]  * inSrc[7]  * inSrc[13] + 
-              inSrc[12] * inSrc[5]  * inSrc[11] - 
+      t[8] =  inSrc[4]  * inSrc[9]  * inSrc[15] -
+              inSrc[4]  * inSrc[11] * inSrc[13] -
+              inSrc[8]  * inSrc[5]  * inSrc[15] +
+              inSrc[8]  * inSrc[7]  * inSrc[13] +
+              inSrc[12] * inSrc[5]  * inSrc[11] -
               inSrc[12] * inSrc[7]  * inSrc[9];
-      t[9] = -inSrc[0]  * inSrc[9]  * inSrc[15] + 
-              inSrc[0]  * inSrc[11] * inSrc[13] + 
-              inSrc[8]  * inSrc[1]  * inSrc[15] - 
-              inSrc[8]  * inSrc[3]  * inSrc[13] - 
-              inSrc[12] * inSrc[1]  * inSrc[11] + 
+      t[9] = -inSrc[0]  * inSrc[9]  * inSrc[15] +
+              inSrc[0]  * inSrc[11] * inSrc[13] +
+              inSrc[8]  * inSrc[1]  * inSrc[15] -
+              inSrc[8]  * inSrc[3]  * inSrc[13] -
+              inSrc[12] * inSrc[1]  * inSrc[11] +
               inSrc[12] * inSrc[3]  * inSrc[9];
-      t[10] = inSrc[0]  * inSrc[5]  * inSrc[15] - 
-              inSrc[0]  * inSrc[7]  * inSrc[13] - 
-              inSrc[4]  * inSrc[1]  * inSrc[15] + 
-              inSrc[4]  * inSrc[3]  * inSrc[13] + 
-              inSrc[12] * inSrc[1]  * inSrc[7] - 
+      t[10] = inSrc[0]  * inSrc[5]  * inSrc[15] -
+              inSrc[0]  * inSrc[7]  * inSrc[13] -
+              inSrc[4]  * inSrc[1]  * inSrc[15] +
+              inSrc[4]  * inSrc[3]  * inSrc[13] +
+              inSrc[12] * inSrc[1]  * inSrc[7] -
               inSrc[12] * inSrc[3]  * inSrc[5];
-      t[11] =-inSrc[0]  * inSrc[5]  * inSrc[11] + 
-              inSrc[0]  * inSrc[7]  * inSrc[9] + 
-              inSrc[4]  * inSrc[1]  * inSrc[11] - 
-              inSrc[4]  * inSrc[3]  * inSrc[9] - 
-              inSrc[8]  * inSrc[1]  * inSrc[7] + 
+      t[11] =-inSrc[0]  * inSrc[5]  * inSrc[11] +
+              inSrc[0]  * inSrc[7]  * inSrc[9] +
+              inSrc[4]  * inSrc[1]  * inSrc[11] -
+              inSrc[4]  * inSrc[3]  * inSrc[9] -
+              inSrc[8]  * inSrc[1]  * inSrc[7] +
               inSrc[8]  * inSrc[3]  * inSrc[5];
       //
-      t[12] =-inSrc[4]  * inSrc[9]  * inSrc[14] + 
+      t[12] =-inSrc[4]  * inSrc[9]  * inSrc[14] +
               inSrc[4]  * inSrc[10] * inSrc[13] +
-              inSrc[8]  * inSrc[5]  * inSrc[14] - 
-              inSrc[8]  * inSrc[6]  * inSrc[13] - 
-              inSrc[12] * inSrc[5]  * inSrc[10] + 
+              inSrc[8]  * inSrc[5]  * inSrc[14] -
+              inSrc[8]  * inSrc[6]  * inSrc[13] -
+              inSrc[12] * inSrc[5]  * inSrc[10] +
               inSrc[12] * inSrc[6]  * inSrc[9];
-      t[13] = inSrc[0]  * inSrc[9]  * inSrc[14] - 
-              inSrc[0]  * inSrc[10] * inSrc[13] - 
-              inSrc[8]  * inSrc[1]  * inSrc[14] + 
-              inSrc[8]  * inSrc[2]  * inSrc[13] + 
-              inSrc[12] * inSrc[1]  * inSrc[10] - 
+      t[13] = inSrc[0]  * inSrc[9]  * inSrc[14] -
+              inSrc[0]  * inSrc[10] * inSrc[13] -
+              inSrc[8]  * inSrc[1]  * inSrc[14] +
+              inSrc[8]  * inSrc[2]  * inSrc[13] +
+              inSrc[12] * inSrc[1]  * inSrc[10] -
               inSrc[12] * inSrc[2]  * inSrc[9];
-      t[14] =-inSrc[0]  * inSrc[5]  * inSrc[14] + 
-              inSrc[0]  * inSrc[6]  * inSrc[13] + 
-              inSrc[4]  * inSrc[1]  * inSrc[14] - 
-              inSrc[4]  * inSrc[2]  * inSrc[13] - 
-              inSrc[12] * inSrc[1]  * inSrc[6] + 
+      t[14] =-inSrc[0]  * inSrc[5]  * inSrc[14] +
+              inSrc[0]  * inSrc[6]  * inSrc[13] +
+              inSrc[4]  * inSrc[1]  * inSrc[14] -
+              inSrc[4]  * inSrc[2]  * inSrc[13] -
+              inSrc[12] * inSrc[1]  * inSrc[6] +
               inSrc[12] * inSrc[2]  * inSrc[5];
-      t[15] = inSrc[0]  * inSrc[5]  * inSrc[10] - 
-              inSrc[0]  * inSrc[6]  * inSrc[9] - 
-              inSrc[4]  * inSrc[1]  * inSrc[10] + 
-              inSrc[4]  * inSrc[2]  * inSrc[9] + 
-              inSrc[8]  * inSrc[1]  * inSrc[6] - 
+      t[15] = inSrc[0]  * inSrc[5]  * inSrc[10] -
+              inSrc[0]  * inSrc[6]  * inSrc[9] -
+              inSrc[4]  * inSrc[1]  * inSrc[10] +
+              inSrc[4]  * inSrc[2]  * inSrc[9] +
+              inSrc[8]  * inSrc[1]  * inSrc[6] -
               inSrc[8]  * inSrc[2]  * inSrc[5];
 
       v = inSrc[0] * t[0] + inSrc[1] * t[4] + inSrc[2] * t[8] + inSrc[3] * t[12];
@@ -822,4 +822,3 @@ namespace ibc
 };
 
 #endif  // #ifdef IBC_MATRIX_H_
-
