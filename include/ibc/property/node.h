@@ -45,10 +45,8 @@
 #include "ibc/base/types.h"
 
 // Namespace -------------------------------------------------------------------
-namespace ibc
+namespace ibc::property
 {
- namespace property
- {
   // ---------------------------------------------------------------------------
   // NodeBase class
   // ---------------------------------------------------------------------------
@@ -61,7 +59,6 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual ~NodeBase()
     {
-      printf("~NodeBase : %s\n", mName.c_str());
       removeAllChildren();
       mParent = NULL;
     }
@@ -110,6 +107,13 @@ namespace ibc
         if ((*it)->mName.compare(inName) == 0)
           list.push_back(*it);
       return list;
+    }
+    // -------------------------------------------------------------------------
+    // getParent
+    // -------------------------------------------------------------------------
+    std::shared_ptr<NodeBase>  getParent()
+    {
+      return mParent;
     }
     // -------------------------------------------------------------------------
     // getChild
@@ -411,7 +415,6 @@ namespace ibc
       mValue = inValue;
     }
   };
- };
 };
 
 #endif  // #ifdef IBC_PROPERTY_NODE_H_
