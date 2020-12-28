@@ -35,6 +35,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <QAbstractItemModel>
+#include <QColor>
 #include "ibc/property/node.h"
 
 // Namespace -------------------------------------------------------------------
@@ -53,13 +54,15 @@ namespace ibc::qt::property
     // NodeModel
     // -------------------------------------------------------------------------
     NodeModel(std::shared_ptr<ibc::property::NodeBase> inRootNode,
+              bool inSkipRootNode = true,
               QObject *parent = Q_NULLPTR)
     : QAbstractItemModel(parent)
     {
       mRootNode = inRootNode;
+      mSkipRootNode = inSkipRootNode;
     }
     // -------------------------------------------------------------------------
-    // ~NodeDelegate
+    // ~NodeModel
     // -------------------------------------------------------------------------
     virtual ~NodeModel()
     {
@@ -71,7 +74,19 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     int rowCount(const QModelIndex &parent = QModelIndex()) const
     {
-      return 1;
+      // Sanity check
+      if (mRootNode == NULL)
+        return 0; // something wrong
+
+      if (parent.isValid() == false)  // Yes, this is the root node
+      {
+        if (mSkipRootNode == false)
+          return 1;
+        return mRootNode->getChildrenNum();
+      }
+
+      ibc::property::NodeBase *parentNode = getNode(parent);
+      return parentNode->getChildrenNum();
     }
     // -------------------------------------------------------------------------
     // columnCount
@@ -91,13 +106,23 @@ namespace ibc::qt::property
         return QModelIndex(); // something wrong
 
       // Whether this is a root node or not
-      if (parent.isValid() == false)
+      if (parent.isValid() == false)  // Yes, this is the root node
       {
-        // Sanity check for the root node
-        if (row != 0 || column != 0)
-          return QModelIndex(); // something wrong
-        // returns the root node index
-        return createIndex(0, 0, mRootNode.get());
+        if (mSkipRootNode == false)
+        {
+          // Sanity check for the root node
+          if (row != 0 || column != 0)
+            return QModelIndex(); // something wrong
+          // returns the root node index
+          return createIndex(0, 0, mRootNode.get());
+        }
+        else
+        {
+          // Sanity check for the top level
+          if (row >= mRootNode->getChildrenNum())
+            return QModelIndex(); // something wrong or no items
+          return createIndex(row, column, mRootNode->getChild(row).get());
+        }
       }
 
       if (column > 1)
@@ -153,7 +178,15 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     virtual QVariant data(const QModelIndex &index, int role) const
     {
-      if (role != Qt::DisplayRole || index.isValid() == false)
+      if (index.isValid() == false)
+        return false;
+      /* We can change background color here
+      if (role == Qt::BackgroundRole)
+      {
+        return QColor(Qt::green);
+      }*/
+
+      if (role != Qt::DisplayRole)
         return QVariant();
       //
       ibc::property::NodeBase *nodeBase = getNode(index);
@@ -172,6 +205,7 @@ namespace ibc::qt::property
   protected:
     // Member variables --------------------------------------------------------
     std::shared_ptr<ibc::property::NodeBase>  mRootNode;
+    bool  mSkipRootNode;
 
     // -------------------------------------------------------------------------
     // getNode

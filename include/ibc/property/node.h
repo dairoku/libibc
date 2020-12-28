@@ -248,6 +248,13 @@ namespace ibc::property
     {
       return mHasValue;
     }
+    // -------------------------------------------------------------------------
+    // getAuxiliaryDataPointer
+    // -------------------------------------------------------------------------
+    void  *getAuxiliaryDataPointer()
+    {
+      return mAuxiliaryDataPointer;
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -270,6 +277,7 @@ namespace ibc::property
     // Member variables (public) -----------------------------------------------
     bool  mHasValue;
     std::string mName;
+    void  *mAuxiliaryDataPointer;
     std::vector<std::shared_ptr<NodeBase>>  mChildren;
     std::shared_ptr<NodeBase>  mParent;
 
@@ -279,9 +287,10 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     NodeBase(const char *inName)
     {
-      mHasValue   = false;
-      mName       = inName;
-      mParent     = NULL;
+      mHasValue             = false;
+      mName                 = inName;
+      mAuxiliaryDataPointer = NULL;
+      mParent               = NULL;
     }
 
     // Member functions --------------------------------------------------------
@@ -372,11 +381,18 @@ namespace ibc::property
       // ToDo Event Notifier
     }
     // -------------------------------------------------------------------------
-    // getgetValue
+    // getValue
     // -------------------------------------------------------------------------
     ValueType getValue()
     {
       return mValue;
+    }
+    // -------------------------------------------------------------------------
+    // setAuxiliaryDataPointer
+    // -------------------------------------------------------------------------
+    void  setAuxiliaryDataPointer(void *inAuxiliaryDataPointer)
+    {
+      mAuxiliaryDataPointer = inAuxiliaryDataPointer;
     }
 
     // Static Functions --------------------------------------------------------

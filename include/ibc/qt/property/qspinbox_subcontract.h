@@ -1,5 +1,5 @@
 // =============================================================================
-//  node_delegate.h
+//  qspinbox_subcontract.h
 //
 //  MIT License
 //
@@ -24,14 +24,14 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/qt/property/node_delegate.h
+  \file     ibc/qt/property/qspinbox_subcontract.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2020/12/27
 */
 
-#ifndef IBC_QT_PROPERTY_NODE_DELEGATE_H_
-#define IBC_QT_PROPERTY_NODE_DELEGATE_H_
+#ifndef IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
+#define IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
 
 // Includes --------------------------------------------------------------------
 #include <QStyledItemDelegate>
@@ -40,31 +40,28 @@
 #include <QPainter>
 #include <QSpinBox>
 #include "ibc/property/node.h"
-#include "ibc/qt/property/qspinbox_subcontract.h"
+#include "ibc/qt/property/subcontract_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
 {
   // ---------------------------------------------------------------------------
-  // NodeDelegate class
+  // QSpinBoxSubcontract class
   // ---------------------------------------------------------------------------
-  class NodeDelegate : public QStyledItemDelegate
+  class QSpinBoxSubcontract : public virtual SubcontractInterface
   {
-    Q_OBJECT
-
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // NodeDelegate
+    // QSpinBoxSubcontract
     // -------------------------------------------------------------------------
-    NodeDelegate(QObject *parent=NULL)
-      : QStyledItemDelegate(parent)
+    QSpinBoxSubcontract()
     {
     }
     // -------------------------------------------------------------------------
-    // ~NodeDelegate
+    // ~QSpinBoxSubcontract
     // -------------------------------------------------------------------------
-    virtual ~NodeDelegate()
+    virtual ~QSpinBoxSubcontract()
     {
     }
 
@@ -73,83 +70,52 @@ namespace ibc::qt::property
     // createEditor
     // -------------------------------------------------------------------------
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
-                          const QModelIndex &index) const
+                          const QModelIndex &index)
     {
-      ibc::property::Node<int>  *node;
-      node = SubcontractInterface::getNode<int>(index);
-      if (node == NULL)
-        return NULL;
-
-      SubcontractInterface  *subcontract;
-      subcontract = (SubcontractInterface *)&sQSpinBoxSubcontract;
-      node->setAuxiliaryDataPointer(subcontract);
-
-      return subcontract->createEditor(parent, option, index);
+      QSpinBox *editor = new QSpinBox(parent);
+      editor->setFrame(false);
+      editor->setMinimum(0);
+      editor->setMaximum(0xFFFFF);
+      return editor;
     }
     // -------------------------------------------------------------------------
     // setEditorData
     // -------------------------------------------------------------------------
-    void setEditorData(QWidget *editor, const QModelIndex &index) const
+    void setEditorData(QWidget *editor, const QModelIndex &index)
     {
-      SubcontractInterface *subcontract;
-      subcontract = SubcontractInterface::getSubcontract(index);
-      if (subcontract == NULL)
+      ibc::property::Node<int>  *node = getNode<int>(index);
+      if (node == NULL)
         return;
-      subcontract->setEditorData(editor, index);
+      QSpinBox *spinBox = dynamic_cast<QSpinBox*>(editor);
+      if (spinBox == NULL)
+        return;
+      spinBox->setValue(node->getValue());
     }
     // -------------------------------------------------------------------------
     // setModelData
     // -------------------------------------------------------------------------
     void setModelData(QWidget *editor, QAbstractItemModel *model,
-                      const QModelIndex &index) const
+                      const QModelIndex &index)
     {
-      SubcontractInterface *subcontract;
-      subcontract = SubcontractInterface::getSubcontract(index);
-      if (subcontract == NULL)
+      ibc::property::Node<int>  *node = getNode<int>(index);
+      if (node == NULL)
         return;
-      subcontract->setModelData(editor, model, index);
+      QSpinBox *spinBox = dynamic_cast<QSpinBox*>(editor);
+      if (spinBox == NULL)
+        return;
+      spinBox->interpretText();
+      node->setValue(spinBox->value());
     }
     // -------------------------------------------------------------------------
     // updateEditorGeometry
     // -------------------------------------------------------------------------
     void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
-                              const QModelIndex &index) const
+                              const QModelIndex &index)
     {
-      SubcontractInterface *subcontract;
-      subcontract = SubcontractInterface::getSubcontract(index);
-      if (subcontract == NULL)
-        return;
-      subcontract->updateEditorGeometry(editor, option, index);
+      editor->setGeometry(option.rect);
+      //editor->setGeometry(option.rect.adjusted(0, 0, 0, -1));
     }
-    // -------------------------------------------------------------------------
-    // -------------------------------------------------------------------------
-    // paint
-    // -------------------------------------------------------------------------
-    void paint(QPainter *painter, const QStyleOptionViewItem &option,
-            const QModelIndex &index) const
-    {
-      QStyleOptionViewItemV3 opt = option;
-      QStyledItemDelegate::paint(painter, opt, index);
-      //
-      opt.palette.setCurrentColorGroup(QPalette::Active);
-      QColor color = static_cast<QRgb>(QApplication::style()->styleHint(
-                                        QStyle::SH_Table_GridLineColor, &opt));
-      painter->save();
-      painter->setPen(QPen(color));
-      if (index.column() == 1)
-      {
-        // This is to draw a vertical line between columns
-        int left = (option.direction == Qt::LeftToRight) ? option.rect.left() : option.rect.right();
-        painter->drawLine(left, option.rect.y(), left, option.rect.bottom());
-      }
-      painter->restore();
-    }
-
-  protected:
-    // Member variables --------------------------------------------------------
-    QSpinBoxSubcontract    sQSpinBoxSubcontract;
-
   };
 };
 
-#endif  // #ifdef IBC_QT_PROPERTY_NODE_DELEGATE_H_
+#endif  // #ifdef IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
