@@ -73,9 +73,34 @@ namespace ibc::qt::property
                           const QModelIndex &index)
     {
       QSpinBox *editor = new QSpinBox(parent);
+      if (editor == NULL)
+        return NULL;
       editor->setFrame(false);
-      editor->setMinimum(0);
-      editor->setMaximum(0xFFFFF);
+      //
+      ibc::property::NodeBase *property;
+      property = getPropertiesRoot(index);
+      if (property != NULL)
+      {
+        int value_int;
+        QString value_qstring;
+        QAbstractSpinBox::StepType  value_steptype;
+        //
+        // TODO : add parameters in QAbstractSpinBox
+        if (getChildValue<int>(property, "displayIntegerBase", &value_int))
+          editor->setDisplayIntegerBase(value_int);
+        if (getChildValue<int>(property, "maximum", &value_int))
+          editor->setMaximum(value_int);
+        if (getChildValue<int>(property, "minimum", &value_int))
+          editor->setMinimum(value_int);
+        if (getChildValue<QString>(property, "prefix", &value_qstring))
+          editor->setPrefix(value_qstring);
+        if (getChildValue<int>(property, "singleStep", &value_int))
+          editor->setSingleStep(value_int);
+        if (getChildValue<QAbstractSpinBox::StepType>(property, "stepType", &value_steptype))
+          editor->setStepType(value_steptype);
+        if (getChildValue<QString>(property, "suffix", &value_qstring))
+          editor->setSuffix(value_qstring);
+      }
       return editor;
     }
     // -------------------------------------------------------------------------

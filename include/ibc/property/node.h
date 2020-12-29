@@ -125,6 +125,17 @@ namespace ibc::property
       return mChildren[inIndex];
     }
     // -------------------------------------------------------------------------
+    // getChildPointer
+    // -------------------------------------------------------------------------
+    NodeBase  *getChildPointer(size_t inIndex)
+    {
+      std::shared_ptr<NodeBase> nodeBase;
+      nodeBase = getChild(inIndex);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
     // getChildByName
     // -------------------------------------------------------------------------
     std::shared_ptr<NodeBase>  getChildByName(const char *inName)
@@ -135,9 +146,20 @@ namespace ibc::property
       return NULL;
     }
     // -------------------------------------------------------------------------
-    // getChildrenByPath
+    // getChildPointer
     // -------------------------------------------------------------------------
-    std::shared_ptr<NodeBase>  getChildrenByPath(const char *inPath)
+    NodeBase  *getChildPointerByName(const char *inName)
+    {
+      std::shared_ptr<NodeBase> nodeBase;
+      nodeBase = getChildByName(inName);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
+    // getChildByPath
+    // -------------------------------------------------------------------------
+    std::shared_ptr<NodeBase>  getChildByPath(const char *inPath)
     {
       std::shared_ptr<NodeBase> node = NULL;
       std::vector<std::string>  list;
@@ -156,6 +178,17 @@ namespace ibc::property
       return node;
     }
     // -------------------------------------------------------------------------
+    // getChildPointerByPath
+    // -------------------------------------------------------------------------
+    NodeBase  *getChildPointerByPath(const char *inPath)
+    {
+      std::shared_ptr<NodeBase> nodeBase;
+      nodeBase = getChildByPath(inPath);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
     // getChildAs
     // -------------------------------------------------------------------------
     template <class T> std::shared_ptr<T>  getChildAs(size_t inIndex)
@@ -163,18 +196,51 @@ namespace ibc::property
       return castChildTo<T>(getChild(inIndex));
     }
     // -------------------------------------------------------------------------
-    // getChildAsByNane
+    // getChildPointerAs
+    // -------------------------------------------------------------------------
+    template <class T>T  *getChildPointerAs(size_t inIndex)
+    {
+      std::shared_ptr<T> nodeBase;
+      nodeBase = getChildAs<T>(inIndex);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
+    // getChildAsByName
     // -------------------------------------------------------------------------
     template <class T> std::shared_ptr<T>  getChildAsByName(const char *inName)
     {
       return castChildTo<T>(getChildByName(inName));
     }
     // -------------------------------------------------------------------------
+    // getChildPointerAsByName
+    // -------------------------------------------------------------------------
+    template <class T>T  *getChildPointerAsByName(const char *inName)
+    {
+      std::shared_ptr<T> nodeBase;
+      nodeBase = getChildAsByName<T>(inName);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
     // getChildAsByPath
     // -------------------------------------------------------------------------
     template <class T> std::shared_ptr<T>  getChildAsByPath(const char *inPath)
     {
-      return castChildTo<T>(getChildrenByPath(inPath));
+      return castChildTo<T>(getChildByPath(inPath));
+    }
+    // -------------------------------------------------------------------------
+    // getChildPointerAsByPath
+    // -------------------------------------------------------------------------
+    template <class T>T  *getChildPointerAsByPath(const char *inPath)
+    {
+      std::shared_ptr<T> nodeBase;
+      nodeBase = getChildAsByPath<T>(inPath);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
     }
     // -------------------------------------------------------------------------
     // isChild
@@ -254,6 +320,21 @@ namespace ibc::property
     void  *getAuxiliaryDataPointer()
     {
       return mAuxiliaryDataPointer;
+    }
+    // -------------------------------------------------------------------------
+    // get_shared_ptr
+    // -------------------------------------------------------------------------
+    std::shared_ptr<NodeBase> get_shared_ptr()
+    {
+      if (mParent == NULL)
+        return NULL;
+      //
+      for (size_t i = 0; i < mParent->mChildren.size(); i++)
+      {
+        if (mParent->mChildren[i].get() == this)
+          return mParent->mChildren[i];
+      }
+      return NULL;
     }
 
     // Static Functions --------------------------------------------------------

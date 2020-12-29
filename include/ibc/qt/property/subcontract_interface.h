@@ -35,6 +35,7 @@
 
 // Includes --------------------------------------------------------------------
 #include <QStyledItemDelegate>
+#include <QString>
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -45,6 +46,24 @@ namespace ibc::qt::property
   class SubcontractInterface
   {
   public:
+    // Enum --------------------------------------------------------------------
+    enum  DataType
+    {
+      DATA_TYPE_NOT_SPECIFIED = 0,
+      //
+      DATA_TYPE_int           = 1,
+      DATA_TYPE_uint,
+      DATA_TYPE_double,
+      DATA_TYPE_bool,
+      //
+      DATA_TYPE_QString,
+      //DATA_TYPE_QColor,
+      //DATA_TYPE_QRect,
+      //DATA_TYPE_QTime,
+      //
+      DATA_TYPE_ANY           = 0xFFFF
+    };
+
     // Member functions (overrides) --------------------------------------------
     virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) = 0;
@@ -63,11 +82,44 @@ namespace ibc::qt::property
       return (ibc::property::NodeBase *)inIndex.internalPointer();
     }
     // -------------------------------------------------------------------------
+    // getPropertiesRoot
+    // -------------------------------------------------------------------------
+    static ibc::property::NodeBase *getPropertiesRoot(const QModelIndex &inIndex)
+    {
+      return getPropertiesRoot(getNodeBase(inIndex));
+    }
+    // -------------------------------------------------------------------------
+    // getPropertiesRoot
+    // -------------------------------------------------------------------------
+    static ibc::property::NodeBase *getPropertiesRoot(ibc::property::NodeBase *inNode)
+    {
+      if (inNode == NULL)
+        return NULL;
+      ibc::property::NodeBase *propertiesRoot;
+      propertiesRoot = inNode->getChildPointerByName(".properties");
+      return propertiesRoot;
+    }
+    // -------------------------------------------------------------------------
     // getNode
     // -------------------------------------------------------------------------
     template <class T> static ibc::property::Node<T> *getNode(const QModelIndex &inIndex)
     {
       return (ibc::property::Node<T> *)inIndex.internalPointer();
+    }
+    // -------------------------------------------------------------------------
+    // getChildValue
+    // -------------------------------------------------------------------------
+    template <class T> static bool getChildValue(
+                ibc::property::NodeBase *inParent,
+                const char *inName,
+                T *outValue)
+    {
+      ibc::property::Node<T>  *node;
+      node = inParent->getChildPointerAsByName<ibc::property::Node<T>>(inName);
+      if (node == NULL)
+        return false;
+      *outValue = node->getValue();
+      return true;
     }
     // -------------------------------------------------------------------------
     // getSubcontract
@@ -80,6 +132,42 @@ namespace ibc::qt::property
         return NULL;
 
       return (SubcontractInterface  *)nodeBase->getAuxiliaryDataPointer();
+    }
+    // -------------------------------------------------------------------------
+    // getNodeType
+    // -------------------------------------------------------------------------
+    static DataType getNodeType(ibc::property::NodeBase *inNode)
+    {
+      if (inNode == NULL)
+        return DATA_TYPE_NOT_SPECIFIED;
+      //
+      ibc::property::NodeBase *child;
+      child = inNode->getChildPointerByName(".node_type_qt");
+      if (child != NULL)
+        if (child->checkType<ibc::property::Node<DataType>>())
+        {
+          ibc::property::Node<DataType> *dataTypeNode;
+          dataTypeNode = (ibc::property::Node<DataType> *)child;
+          return dataTypeNode->getValue();
+        }
+      //
+      DataType  dataType = DATA_TYPE_NOT_SPECIFIED;
+      if (child->checkType<ibc::property::Node<int>>())
+        dataType = DATA_TYPE_int;
+      else if (child->checkType<ibc::property::Node<unsigned int>>())
+        dataType = DATA_TYPE_uint;
+      else if (child->checkType<ibc::property::Node<double>>())
+        dataType = DATA_TYPE_double;
+      else if (child->checkType<ibc::property::Node<bool>>())
+        dataType = DATA_TYPE_bool;
+      else if (child->checkType<ibc::property::Node<QString>>())
+        dataType = DATA_TYPE_QString;
+      //
+      std::shared_ptr<ibc::property::NodeBase> node_shared_ptr = inNode->get_shared_ptr();
+      if (node_shared_ptr != NULL)
+        ibc::property::Node<DataType>::createAsChildOf(
+                          node_shared_ptr, dataType, ".node_type_qt");
+      return dataType;
     }
   };
 };
