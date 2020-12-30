@@ -84,9 +84,20 @@ namespace ibc::property
       return false;
     }
     // -------------------------------------------------------------------------
-    // getChildrenNum
+    // getChildrenNum (without hidden nodes)
     // -------------------------------------------------------------------------
     size_t  getChildrenNum()
+    {
+      size_t  num = 0;
+      for (auto it = mChildren.begin(); it != mChildren.end(); it++)
+        if ((*it)->isHiddenNode() == false)
+          num++;
+      return num;
+    }
+    // -------------------------------------------------------------------------
+    // getChildrenNum_ALL (include hidden)
+    // -------------------------------------------------------------------------
+    size_t  getChildrenNum_ALL()
     {
       return mChildren.size();
     }
@@ -116,9 +127,26 @@ namespace ibc::property
       return mParent;
     }
     // -------------------------------------------------------------------------
-    // getChild
+    // getChild (without hidden nodes)
     // -------------------------------------------------------------------------
     std::shared_ptr<NodeBase>  getChild(size_t inIndex)
+    {
+      size_t  num = 0;
+      for (auto it = mChildren.begin(); it != mChildren.end(); it++)
+      {
+        if ((*it)->isHiddenNode() == false)
+        {
+          if (num == inIndex)
+            return *it;
+          num++;
+        }
+      }
+      return NULL;
+    }
+    // -------------------------------------------------------------------------
+    // getChild_ALL (include hidden)
+    // -------------------------------------------------------------------------
+    std::shared_ptr<NodeBase>  getChild_ALL(size_t inIndex)
     {
       if (inIndex >= mChildren.size())
         return NULL;
@@ -131,6 +159,17 @@ namespace ibc::property
     {
       std::shared_ptr<NodeBase> nodeBase;
       nodeBase = getChild(inIndex);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
+    // getChildPointer_ALL
+    // -------------------------------------------------------------------------
+    NodeBase  *getChildPointer_ALL(size_t inIndex)
+    {
+      std::shared_ptr<NodeBase> nodeBase;
+      nodeBase = getChild_ALL(inIndex);
       if (nodeBase == NULL)
         return NULL;
       return nodeBase.get();
@@ -196,12 +235,30 @@ namespace ibc::property
       return castChildTo<T>(getChild(inIndex));
     }
     // -------------------------------------------------------------------------
+    // getChildAs_ALL
+    // -------------------------------------------------------------------------
+    template <class T> std::shared_ptr<T>  getChildAs_ALL(size_t inIndex)
+    {
+      return castChildTo<T>(getChild_ALL(inIndex));
+    }
+    // -------------------------------------------------------------------------
     // getChildPointerAs
     // -------------------------------------------------------------------------
     template <class T>T  *getChildPointerAs(size_t inIndex)
     {
       std::shared_ptr<T> nodeBase;
       nodeBase = getChildAs<T>(inIndex);
+      if (nodeBase == NULL)
+        return NULL;
+      return nodeBase.get();
+    }
+    // -------------------------------------------------------------------------
+    // getChildPointerAs_ALL
+    // -------------------------------------------------------------------------
+    template <class T>T  *getChildPointerAs_ALL(size_t inIndex)
+    {
+      std::shared_ptr<T> nodeBase;
+      nodeBase = getChildAs_ALL<T>(inIndex);
       if (nodeBase == NULL)
         return NULL;
       return nodeBase.get();
@@ -253,6 +310,16 @@ namespace ibc::property
       return false;
     }
     // -------------------------------------------------------------------------
+    // isChild
+    // -------------------------------------------------------------------------
+    bool  isChild(const char *inName)
+    {
+      for (auto it = mChildren.begin(); it != mChildren.end(); it++)
+        if ((*it)->mName.compare(inName) == 0)
+          return true;
+      return false;
+    }
+    // -------------------------------------------------------------------------
     // removeChild
     // -------------------------------------------------------------------------
     bool  removeChild(std::shared_ptr<NodeBase> inChild)
@@ -270,6 +337,16 @@ namespace ibc::property
     bool  removeChild(size_t inIndex)
     {
       auto child = getChild(inIndex);
+      if (child == NULL)
+        return false;
+      return removeChild(child);
+    }
+    // -------------------------------------------------------------------------
+    // removeChild_ALL
+    // -------------------------------------------------------------------------
+    bool  removeChild_ALL(size_t inIndex)
+    {
+      auto child = getChild_ALL(inIndex);
       if (child == NULL)
         return false;
       return removeChild(child);
@@ -305,6 +382,8 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     void  setName(const char *inName)
     {
+      if (inName == NULL)
+        return;
       mName = inName;
     }
     // -------------------------------------------------------------------------
@@ -355,12 +434,15 @@ namespace ibc::property
     }
 
   protected:
-    // Member variables (public) -----------------------------------------------
+    // Member variables (protected) -----------------------------------------------
     bool  mHasValue;
     std::string mName;
     void  *mAuxiliaryDataPointer;
     std::vector<std::shared_ptr<NodeBase>>  mChildren;
     std::shared_ptr<NodeBase>  mParent;
+    //
+    char  mPathSeparator;
+    char  mHiddenNodeChar;
 
     // Constructors ------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -372,6 +454,9 @@ namespace ibc::property
       mName                 = inName;
       mAuxiliaryDataPointer = NULL;
       mParent               = NULL;
+      //
+      mPathSeparator        = '/';
+      mHiddenNodeChar       = '.';
     }
 
     // Member functions --------------------------------------------------------
@@ -414,13 +499,13 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     void  parseNodePath(const char *inPath, std::vector<std::string> &ioList)
     {
-      while (*inPath == '/')
+      while (*inPath == mPathSeparator)
         inPath++;
       const char  *startPtr = inPath;
       size_t  len = 0;
       while (*inPath != 0)
       {
-        if (*inPath == '/' && len != 0)
+        if (*inPath == mPathSeparator && len != 0)
         {
           ioList.push_back(std::string(startPtr, len));
           len = 0;
@@ -435,6 +520,79 @@ namespace ibc::property
       }
       if (len != 0)
         ioList.push_back(std::string(startPtr, len));
+    }
+    // -------------------------------------------------------------------------
+    // isHiddenNode
+    // -------------------------------------------------------------------------
+    bool  isHiddenNode()
+    {
+      if (mName.length() == 0)
+        return true;
+      if (mName[0] == mHiddenNodeChar)
+        return true;
+      return false;
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // NoValueNode class
+  // ---------------------------------------------------------------------------
+  class  NoValueNode : public NodeBase
+  {
+  public:
+    // Destructor --------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // ~NoValueNode
+    // -------------------------------------------------------------------------
+    virtual ~NoValueNode()
+    {
+    }
+
+    // Static Functions --------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // createNode
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<NoValueNode> createNode(const char *inName)
+    {
+      return std::shared_ptr<NoValueNode>(new NoValueNode(inName));
+    }
+    // -------------------------------------------------------------------------
+    // createAsChildOf
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<NoValueNode> createAsChildOf(
+                                            std::shared_ptr<NodeBase> inParent,
+                                            const char *inName)
+    {
+      std::shared_ptr<NoValueNode>  node = createNode(inName);
+      NodeBase::addChild(inParent, node);
+      return node;
+    }
+    // -------------------------------------------------------------------------
+    // prepareAsChildOf (get or create a node, if not exist)
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<NoValueNode> prepareAsChildOf(
+                                            std::shared_ptr<NodeBase> inParent,
+                                            const char *inName)
+    {
+      if (inParent->isChild(inName))
+      {
+        if (inParent->getChildByName(inName)->checkType<NoValueNode>() == false)
+          return NULL;
+        std::shared_ptr<NoValueNode> node;
+        return inParent->getChildAsByName<NoValueNode>(inName);
+      }
+      return createAsChildOf(inParent, inName);
+    }
+
+  protected:
+    // Constructors ------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // NoValueNode
+    // -------------------------------------------------------------------------
+    NoValueNode(const char *inName)
+      : NodeBase(inName)
+    {
+      mHasValue = false;
     }
   };
 
@@ -480,21 +638,41 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     // createNode
     // -------------------------------------------------------------------------
-    static std::shared_ptr<Node<ValueType>> createNode(ValueType inValue,
-                                                        const char *inName)
+    static std::shared_ptr<Node<ValueType>> createNode(const char *inName,
+                                                       ValueType inValue)
     {
-      return std::shared_ptr<Node<ValueType>>(new Node<ValueType>(inValue, inName));
+      return std::shared_ptr<Node<ValueType>>(new Node<ValueType>(inName, inValue));
     }
     // -------------------------------------------------------------------------
-    // createAsChild
+    // createAsChildOf
     // -------------------------------------------------------------------------
-    static std::shared_ptr<Node<ValueType>> createAsChildOf(std::shared_ptr<NodeBase> inParent,
-                                                        ValueType inValue,
-                                                        const char *inName)
+    static std::shared_ptr<Node<ValueType>> createAsChildOf(
+                                            std::shared_ptr<NodeBase> inParent,
+                                            const char *inName,
+                                            ValueType inValue)
     {
-      std::shared_ptr<Node<ValueType>>  node = createNode(inValue, inName);
+      std::shared_ptr<Node<ValueType>>  node = createNode(inName, inValue);
       NodeBase::addChild(inParent, node);
       return node;
+    }
+    // -------------------------------------------------------------------------
+    // prepareAsChildOf (get+set or create a node, if not exist)
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<Node<ValueType>> prepareAsChildOf(
+                                            std::shared_ptr<NodeBase> inParent,
+                                            const char *inName,
+                                            ValueType inValue)
+    {
+      if (inParent->isChild(inName))
+      {
+        if (inParent->getChildByName(inName)->checkType<Node<ValueType>>() == false)
+          return NULL;
+        std::shared_ptr<Node<ValueType>> node;
+        node = inParent->getChildAsByName<Node<ValueType>>(inName);
+        node->setValue(inValue);
+        return node;
+      }
+      return createAsChildOf(inParent, inName, inValue);
     }
 
   protected:
@@ -505,7 +683,7 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     // Node
     // -------------------------------------------------------------------------
-    Node(ValueType inValue, const char *inName)
+    Node(const char *inName, ValueType inValue)
       : NodeBase(inName)
     {
       mHasValue = true;

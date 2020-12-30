@@ -96,7 +96,7 @@ namespace ibc::qt::property
       if (inNode == NULL)
         return NULL;
       ibc::property::NodeBase *propertiesRoot;
-      propertiesRoot = inNode->getChildPointerByName(".properties");
+      propertiesRoot = inNode->getChildPointerByName(getPropertiesNodeNameStr());
       return propertiesRoot;
     }
     // -------------------------------------------------------------------------
@@ -166,8 +166,16 @@ namespace ibc::qt::property
       std::shared_ptr<ibc::property::NodeBase> node_shared_ptr = inNode->get_shared_ptr();
       if (node_shared_ptr != NULL)
         ibc::property::Node<DataType>::createAsChildOf(
-                          node_shared_ptr, dataType, ".node_type_qt");
+                          node_shared_ptr, ".node_type_qt", dataType);
       return dataType;
+    }
+    // -------------------------------------------------------------------------
+    // getPropertiesNodeNameStr
+    // -------------------------------------------------------------------------
+    static const char *getPropertiesNodeNameStr()
+    {
+      static const  char  *sPropertiesNodeName = ".properties";
+      return sPropertiesNodeName;
     }
   };
 };
