@@ -1,5 +1,5 @@
 // =============================================================================
-//  qspinbox_subcontract.h
+//  qdoublespinbox_subcontract.h
 //
 //  MIT License
 //
@@ -24,21 +24,21 @@
 //  SOFTWARE.
 // =============================================================================
 /*!
-  \file     ibc/qt/property/qspinbox_subcontract.h
+  \file     ibc/qt/property/qdoublespinbox_subcontract.h
   \author   Dairoku Sekiguchi
   \version  1.0.0
   \date     2020/12/27
 */
 
-#ifndef IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
-#define IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
+#ifndef IBC_QT_PROPERTY_QDOUBLESPINBOX_SUBCONTRACT_H_
+#define IBC_QT_PROPERTY_QDOUBLESPINBOX_SUBCONTRACT_H_
 
 // Includes --------------------------------------------------------------------
 #include <QStyledItemDelegate>
 #include <QStyle>
 #include <QApplication>
 #include <QPainter>
-#include <QSpinBox>
+#include <QDoubleSpinBox>
 #include "ibc/property/node.h"
 #include "ibc/qt/property/subcontract_interface.h"
 
@@ -46,22 +46,22 @@
 namespace ibc::qt::property
 {
   // ---------------------------------------------------------------------------
-  // QSpinBoxSubcontract class
+  // QDoubleSpinBoxSubcontract class
   // ---------------------------------------------------------------------------
-  class QSpinBoxSubcontract : public virtual SubcontractInterface
+  class QDoubleSpinBoxSubcontract : public virtual SubcontractInterface
   {
   public:
     // Constructors and Destructor ---------------------------------------------
     // -------------------------------------------------------------------------
-    // QSpinBoxSubcontract
+    // QDoubleSpinBoxSubcontract
     // -------------------------------------------------------------------------
-    QSpinBoxSubcontract()
+    QDoubleSpinBoxSubcontract()
     {
     }
     // -------------------------------------------------------------------------
-    // ~QSpinBoxSubcontract
+    // ~QDoubleSpinBoxSubcontract
     // -------------------------------------------------------------------------
-    virtual ~QSpinBoxSubcontract()
+    virtual ~QDoubleSpinBoxSubcontract()
     {
     }
 
@@ -74,7 +74,7 @@ namespace ibc::qt::property
     {
       UNUSED(option);
       //
-      QSpinBox *editor = new QSpinBox(parent);
+      QDoubleSpinBox *editor = new QDoubleSpinBox(parent);
       if (editor == NULL)
         return NULL;
       editor->setFrame(false);
@@ -84,20 +84,21 @@ namespace ibc::qt::property
       if (property != NULL)
       {
         int value_int;
+        double value_double;
         QString value_qstring;
         QAbstractSpinBox::StepType  value_steptype;
         //
         // TODO : add parameters in QAbstractSpinBox
-        if (getChildValue<int>(property, "displayIntegerBase", &value_int))
-          editor->setDisplayIntegerBase(value_int);
-        if (getChildValue<int>(property, "maximum", &value_int))
-          editor->setMaximum(value_int);
-        if (getChildValue<int>(property, "minimum", &value_int))
-          editor->setMinimum(value_int);
+        if (getChildValue<int>(property, "decimals", &value_int))
+          editor->setDecimals(value_int);
+        if (getChildValue<double>(property, "maximum", &value_double))
+          editor->setMaximum(value_double);
+        if (getChildValue<double>(property, "minimum", &value_double))
+          editor->setMinimum(value_double);
         if (getChildValue<QString>(property, "prefix", &value_qstring))
           editor->setPrefix(value_qstring);
-        if (getChildValue<int>(property, "singleStep", &value_int))
-          editor->setSingleStep(value_int);
+        if (getChildValue<double>(property, "singleStep", &value_double))
+          editor->setSingleStep(value_double);
         if (getChildValue<QAbstractSpinBox::StepType>(property, "stepType", &value_steptype))
           editor->setStepType(value_steptype);
         if (getChildValue<QString>(property, "suffix", &value_qstring))
@@ -110,10 +111,10 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     void setEditorData(QWidget *editor, const QModelIndex &index)
     {
-      ibc::property::Node<int>  *node = getNode<int>(index);
+      ibc::property::Node<double>  *node = getNode<double>(index);
       if (node == NULL)
         return;
-      QSpinBox *spinBox = dynamic_cast<QSpinBox*>(editor);
+      QDoubleSpinBox *spinBox = dynamic_cast<QDoubleSpinBox*>(editor);
       if (spinBox == NULL)
         return;
       spinBox->setValue(node->getValue());
@@ -126,10 +127,10 @@ namespace ibc::qt::property
     {
       UNUSED(model);
       //
-      ibc::property::Node<int>  *node = getNode<int>(index);
+      ibc::property::Node<double>  *node = getNode<double>(index);
       if (node == NULL)
         return;
-      QSpinBox *spinBox = dynamic_cast<QSpinBox*>(editor);
+      QDoubleSpinBox *spinBox = dynamic_cast<QDoubleSpinBox*>(editor);
       if (spinBox == NULL)
         return;
       spinBox->interpretText();
@@ -149,4 +150,4 @@ namespace ibc::qt::property
   };
 };
 
-#endif  // #ifdef IBC_QT_PROPERTY_QSPINBOX_SUBCONTRACT_H_
+#endif  // #ifdef IBC_QT_PROPERTY_QDOUBLESPINBOX_SUBCONTRACT_H_

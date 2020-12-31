@@ -104,7 +104,11 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     template <class T> static ibc::property::Node<T> *getNode(const QModelIndex &inIndex)
     {
-      return (ibc::property::Node<T> *)inIndex.internalPointer();
+      ibc::property::NodeBase *nodeBase;
+      nodeBase = (ibc::property::NodeBase *)inIndex.internalPointer();
+      if (nodeBase->checkType<ibc::property::Node<T>>() == false)
+        return NULL;
+      return (ibc::property::Node<T> *)nodeBase;
     }
     // -------------------------------------------------------------------------
     // getChildValue
@@ -134,9 +138,9 @@ namespace ibc::qt::property
       return (SubcontractInterface  *)nodeBase->getAuxiliaryDataPointer();
     }
     // -------------------------------------------------------------------------
-    // getNodeType
+    // getNodeDataType
     // -------------------------------------------------------------------------
-    static DataType getNodeType(ibc::property::NodeBase *inNode)
+    static DataType getNodeDataType(ibc::property::NodeBase *inNode)
     {
       if (inNode == NULL)
         return DATA_TYPE_NOT_SPECIFIED;
@@ -152,15 +156,15 @@ namespace ibc::qt::property
         }
       //
       DataType  dataType = DATA_TYPE_NOT_SPECIFIED;
-      if (child->checkType<ibc::property::Node<int>>())
+      if (inNode->checkType<ibc::property::Node<int>>())
         dataType = DATA_TYPE_int;
-      else if (child->checkType<ibc::property::Node<unsigned int>>())
+      else if (inNode->checkType<ibc::property::Node<unsigned int>>())
         dataType = DATA_TYPE_uint;
-      else if (child->checkType<ibc::property::Node<double>>())
+      else if (inNode->checkType<ibc::property::Node<double>>())
         dataType = DATA_TYPE_double;
-      else if (child->checkType<ibc::property::Node<bool>>())
+      else if (inNode->checkType<ibc::property::Node<bool>>())
         dataType = DATA_TYPE_bool;
-      else if (child->checkType<ibc::property::Node<QString>>())
+      else if (inNode->checkType<ibc::property::Node<QString>>())
         dataType = DATA_TYPE_QString;
       //
       std::shared_ptr<ibc::property::NodeBase> node_shared_ptr = inNode->get_shared_ptr();
@@ -168,6 +172,25 @@ namespace ibc::qt::property
         ibc::property::Node<DataType>::createAsChildOf(
                           node_shared_ptr, ".node_type_qt", dataType);
       return dataType;
+    }
+    // -------------------------------------------------------------------------
+    // getQVariant
+    // -------------------------------------------------------------------------
+    static QVariant getQVariant(ibc::property::NodeBase *inNode)
+    {
+      SubcontractInterface::DataType  type;
+      type = SubcontractInterface::getNodeDataType(inNode);
+      if (type == SubcontractInterface::DATA_TYPE_int)
+      {
+        ibc::property::Node<int> *node = (ibc::property::Node<int> *)inNode;
+        return QVariant(node->getValue());
+      }
+      if (type == SubcontractInterface::DATA_TYPE_double)
+      {
+        ibc::property::Node<double> *node = (ibc::property::Node<double> *)inNode;
+        return QVariant(node->getValue());
+      }
+      return QVariant();
     }
     // -------------------------------------------------------------------------
     // getPropertiesNodeNameStr

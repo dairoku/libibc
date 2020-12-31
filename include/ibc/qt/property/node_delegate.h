@@ -40,7 +40,7 @@
 #include <QPainter>
 #include <QSpinBox>
 #include "ibc/property/node.h"
-#include "ibc/qt/property/qspinbox_subcontract.h"
+#include "ibc/qt/property/node_utils.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -75,14 +75,14 @@ namespace ibc::qt::property
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const
     {
-      ibc::property::Node<int>  *node;
-      node = SubcontractInterface::getNode<int>(index);
-      if (node == NULL)
+      ibc::property::NodeBase  *nodeBase;
+      nodeBase = SubcontractInterface::getNodeBase(index);
+      if (nodeBase == NULL)
         return NULL;
 
       SubcontractInterface  *subcontract;
-      subcontract = (SubcontractInterface *)&sQSpinBoxSubcontract;
-      node->setAuxiliaryDataPointer(subcontract);
+      subcontract = NodeUtils::getSubcontract(nodeBase);
+      nodeBase->setAuxiliaryDataPointer(subcontract);
 
       return subcontract->createEditor(parent, option, index);
     }
@@ -144,11 +144,6 @@ namespace ibc::qt::property
       }
       painter->restore();
     }
-
-  protected:
-    // Member variables --------------------------------------------------------
-    QSpinBoxSubcontract    sQSpinBoxSubcontract;
-
   };
 };
 

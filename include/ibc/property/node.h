@@ -47,6 +47,17 @@
 // Namespace -------------------------------------------------------------------
 namespace ibc::property
 {
+  class NodeBase;
+  // ---------------------------------------------------------------------------
+  // UpdateEventInterface class
+  // ---------------------------------------------------------------------------
+  class  UpdateEventInterface
+  {
+  public:
+    virtual void updateEventListener(
+                      std::shared_ptr<NodeBase> inNodeBase) = 0;
+  };
+
   // ---------------------------------------------------------------------------
   // NodeBase class
   // ---------------------------------------------------------------------------
@@ -394,6 +405,13 @@ namespace ibc::property
       return mHasValue;
     }
     // -------------------------------------------------------------------------
+    // setAuxiliaryDataPointer
+    // -------------------------------------------------------------------------
+    void  setAuxiliaryDataPointer(void *inAuxiliaryDataPointer)
+    {
+      mAuxiliaryDataPointer = inAuxiliaryDataPointer;
+    }
+    // -------------------------------------------------------------------------
     // getAuxiliaryDataPointer
     // -------------------------------------------------------------------------
     void  *getAuxiliaryDataPointer()
@@ -414,6 +432,26 @@ namespace ibc::property
           return mParent->mChildren[i];
       }
       return NULL;
+    }
+    // -------------------------------------------------------------------------
+    // addUpdateEventListener
+    // -------------------------------------------------------------------------
+    void  addUpdateEventListener(UpdateEventInterface *inInterface)
+    {
+      mUpdateEventListeners.push_back(inInterface);
+    }
+    // -------------------------------------------------------------------------
+    // removeUpdateEventListener
+    // -------------------------------------------------------------------------
+    void  removeUpdateEventListener(UpdateEventInterface *inInterface)
+    {
+      decltype(mUpdateEventListeners)::iterator it;
+      it = std::find(mUpdateEventListeners.begin(),
+                     mUpdateEventListeners.end(),
+                     inInterface);
+      if (it == mUpdateEventListeners.end())
+        return;
+      mUpdateEventListeners.erase(it);
     }
 
     // Static Functions --------------------------------------------------------
@@ -439,6 +477,7 @@ namespace ibc::property
     std::string mName;
     void  *mAuxiliaryDataPointer;
     std::vector<std::shared_ptr<NodeBase>>  mChildren;
+    std::vector<UpdateEventInterface *>     mUpdateEventListeners;
     std::shared_ptr<NodeBase>  mParent;
     //
     char  mPathSeparator;
@@ -532,6 +571,17 @@ namespace ibc::property
         return true;
       return false;
     }
+    // -------------------------------------------------------------------------
+    // invokeUpdateEvent
+    // -------------------------------------------------------------------------
+    void  invokeUpdateEvent()
+    {
+      std::shared_ptr<NodeBase> nodeBase = get_shared_ptr();
+      if (nodeBase == NULL)
+        return;
+      for (auto it = mUpdateEventListeners.begin(); it != mUpdateEventListeners.end(); it++)
+        (*it)->updateEventListener(nodeBase);
+    }
   };
 
   // ---------------------------------------------------------------------------
@@ -614,10 +664,11 @@ namespace ibc::property
     // -------------------------------------------------------------------------
     // setValue
     // -------------------------------------------------------------------------
-    void  setValue(const ValueType &inValue)
+    void  setValue(const ValueType &inValue, bool inInvokeUpdateEvent = true)
     {
       mValue = inValue;
-      // ToDo Event Notifier
+      if (inInvokeUpdateEvent)
+        invokeUpdateEvent();
     }
     // -------------------------------------------------------------------------
     // getValue
@@ -625,13 +676,6 @@ namespace ibc::property
     ValueType getValue()
     {
       return mValue;
-    }
-    // -------------------------------------------------------------------------
-    // setAuxiliaryDataPointer
-    // -------------------------------------------------------------------------
-    void  setAuxiliaryDataPointer(void *inAuxiliaryDataPointer)
-    {
-      mAuxiliaryDataPointer = inAuxiliaryDataPointer;
     }
 
     // Static Functions --------------------------------------------------------

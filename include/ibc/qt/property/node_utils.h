@@ -39,6 +39,7 @@
 #include "ibc/property/node.h"
 #include "ibc/qt/property/subcontract_interface.h"
 #include "ibc/qt/property/qspinbox_subcontract.h"
+#include "ibc/qt/property/qdoublespinbox_subcontract.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -49,6 +50,17 @@ namespace ibc::qt::property
   class NodeUtils
   {
   public:
+    // Enum --------------------------------------------------------------------
+    enum  WidgetType
+    {
+      WIDGET_TYPE_NOT_SPECIFIED = 0,
+      //
+      WIDGET_TYPE_QSpinBox    = 1,
+      WIDGET_TYPE_QDoubleSpinBox,
+      //
+      WIDGET_TYPE_ANY           = 0xFFFF
+    };
+
     // Static Functions --------------------------------------------------------
     // QSpinBox ----------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -127,6 +139,159 @@ namespace ibc::qt::property
         preparePropertyNode<QString>(
                     inPropertiesRoot, "suffix", QString(inSuffix));
       return true;
+    }
+
+    // QDoubleSpinBox ----------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // addQDoubleSpinBoxNode
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> addQDoubleSpinBoxNode(
+                        std::shared_ptr<ibc::property::NodeBase> inParent,
+                        const char *inName,
+                        double inValue,
+                        double inMin, double inMax)
+    {
+      std::shared_ptr<ibc::property::Node<double>> node;
+      node = ibc::property::Node<double>::createAsChildOf(
+                              inParent, inName, inValue);
+      if (node == NULL)
+        return NULL;
+      return prepareQDoubleSpinBoxParams(node, inMin, inMax);
+    }
+    // -------------------------------------------------------------------------
+    // addQDoubleSpinBoxNodeWithAllParams
+    // -------------------------------------------------------------------------
+    static bool addQDoubleSpinBoxNodeWithAllParams(
+                std::shared_ptr<ibc::property::NodeBase> inParent,
+                const char *inName,
+                double inValue,
+                double inMin, double inMax,
+                double inSingleStep, QAbstractSpinBox::StepType inStepType,
+                int inDecimals = 2,
+                const char *inPrefix = NULL, const char *inSuffix = NULL)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = addQDoubleSpinBoxNode(inParent, inName, inValue, inMin, inMax);
+      if (propertiesRoot == NULL)
+        return false;
+      return prepareQDoubleSpinBoxExtraParams(propertiesRoot,
+                    inSingleStep, inStepType,
+                    inDecimals,
+                    inPrefix, inSuffix);
+    }
+    // -------------------------------------------------------------------------
+    // prepareQDoubleSpinBoxParams
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> prepareQDoubleSpinBoxParams(
+                              std::shared_ptr<ibc::property::Node<double>> inNode,
+                              double inMin, double inMax)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = preparePropertiesRoot(inNode);
+      if (propertiesRoot == NULL)
+        return NULL;
+      //
+      preparePropertyNode<QString>(propertiesRoot, "widget", QString("QDoubleSpinBox"));
+      preparePropertyNode<double>(propertiesRoot, "minimum", inMin);
+      preparePropertyNode<double>(propertiesRoot, "maximum", inMax);
+      return propertiesRoot;
+    }
+    // -------------------------------------------------------------------------
+    // prepareQDoubleSpinBoxExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQDoubleSpinBoxExtraParams(
+                std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+                double inSingleStep, QAbstractSpinBox::StepType inStepType,
+                int inDecimals = 2,
+                const char *inPrefix = NULL, const char *inSuffix = NULL)
+    {
+      preparePropertyNode<double>(inPropertiesRoot, "singleStep", inSingleStep);
+      preparePropertyNode<QAbstractSpinBox::StepType>(
+                                inPropertiesRoot, "stepType", inStepType);
+      if (inDecimals != 2)
+        preparePropertyNode<int>(
+                    inPropertiesRoot, "decimals", inDecimals);
+      if (inPrefix != NULL)
+        preparePropertyNode<QString>(
+                    inPropertiesRoot, "prefix", QString(inPrefix));
+      if (inSuffix != NULL)
+        preparePropertyNode<QString>(
+                    inPropertiesRoot, "suffix", QString(inSuffix));
+      return true;
+    }
+    //
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // getSubcontract
+    // -------------------------------------------------------------------------
+    static SubcontractInterface *getSubcontract(ibc::property::NodeBase *inNode)
+    {
+      return getSubcontract(getWidgetTypeFromNode(inNode));
+    }
+    // -------------------------------------------------------------------------
+    // getSubcontract
+    // -------------------------------------------------------------------------
+    static SubcontractInterface *getSubcontract(WidgetType inType)
+    {
+      static QSpinBoxSubcontract       sQSpinBoxSubcontract;
+      static QDoubleSpinBoxSubcontract sQDobuleSpinBoxSubcontract;
+      //
+      switch(inType)
+      {
+        case WIDGET_TYPE_QSpinBox:
+          return &sQSpinBoxSubcontract;
+        case WIDGET_TYPE_QDoubleSpinBox:
+          return &sQDobuleSpinBoxSubcontract;
+      }
+      return NULL;
+    }
+    // -------------------------------------------------------------------------
+    // getWidgetTypeFromNode
+    // -------------------------------------------------------------------------
+    static WidgetType getWidgetTypeFromNode(ibc::property::NodeBase *inNode)
+    {
+      SubcontractInterface::DataType dataType;
+      dataType = SubcontractInterface::getNodeDataType(inNode);
+      if (dataType == SubcontractInterface::DATA_TYPE_NOT_SPECIFIED)
+        return WIDGET_TYPE_NOT_SPECIFIED;
+      ibc::property::NodeBase *property;
+      property = SubcontractInterface::getPropertiesRoot(inNode);
+      if (property == NULL)
+        return getWidgetTypeFromDataType(dataType);
+      QString name;
+      if (SubcontractInterface::getChildValue<QString>(property, "widget", &name))
+        return getWidgetTypeFromName(name);
+      return getWidgetTypeFromDataType(dataType);
+    }
+    // -------------------------------------------------------------------------
+    // getWidgetTypeFromDataType
+    // -------------------------------------------------------------------------
+    static WidgetType getWidgetTypeFromDataType(SubcontractInterface::DataType inDataType)
+    {
+      WidgetType type = WIDGET_TYPE_NOT_SPECIFIED;
+
+      switch(inDataType)
+      {
+        case SubcontractInterface::DATA_TYPE_int:
+          type = WIDGET_TYPE_QSpinBox;
+          break;
+        case SubcontractInterface::DATA_TYPE_double:
+          type = WIDGET_TYPE_QDoubleSpinBox;
+          break;
+      }
+      return type;
+    }
+    // -------------------------------------------------------------------------
+    // getWidgetTypeFromName
+    // -------------------------------------------------------------------------
+    static WidgetType getWidgetTypeFromName(QString &inName)
+    {
+      if (inName == "QSpinBox")
+        return WIDGET_TYPE_QSpinBox;
+      if (inName == "QDoubleSpinBox")
+        return WIDGET_TYPE_QDoubleSpinBox;
+      //
+      return WIDGET_TYPE_NOT_SPECIFIED;
     }
 
   protected:

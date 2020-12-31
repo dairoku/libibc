@@ -37,6 +37,7 @@
 #include <QAbstractItemModel>
 #include <QColor>
 #include "ibc/property/node.h"
+#include "ibc/qt/property/subcontract_interface.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -72,7 +73,7 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     // rowCount
     // -------------------------------------------------------------------------
-    int rowCount(const QModelIndex &parent = QModelIndex()) const
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const
     {
       // Sanity check
       if (mRootNode == NULL)
@@ -82,17 +83,18 @@ namespace ibc::qt::property
       {
         if (mSkipRootNode == false)
           return 1;
-        return mRootNode->getChildrenNum();
+        return (int )mRootNode->getChildrenNum();
       }
 
       ibc::property::NodeBase *parentNode = getNode(parent);
-      return parentNode->getChildrenNum();
+      return (int )parentNode->getChildrenNum();
     }
     // -------------------------------------------------------------------------
     // columnCount
     // -------------------------------------------------------------------------
     virtual int columnCount(const QModelIndex &parent = QModelIndex()) const
     {
+      UNUSED(parent);
       return 2;
     }
     // -------------------------------------------------------------------------
@@ -196,10 +198,7 @@ namespace ibc::qt::property
       if (nodeBase->hasValue() == false)  // Has no value
         return QVariant();
       //
-      if (nodeBase->checkType<ibc::property::Node<int>>() == false)
-        return QVariant(0);
-      ibc::property::Node<int> *node = (ibc::property::Node<int> *)nodeBase;  // Up cast
-      return QVariant(node->getValue());
+      return SubcontractInterface::getQVariant(nodeBase);
     }
 
   protected:
