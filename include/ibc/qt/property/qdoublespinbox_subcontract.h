@@ -41,6 +41,7 @@
 #include <QDoubleSpinBox>
 #include "ibc/property/node.h"
 #include "ibc/qt/property/subcontract_interface.h"
+#include "ibc/qt/property/qspinbox_subcontract.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -79,29 +80,31 @@ namespace ibc::qt::property
         return NULL;
       editor->setFrame(false);
       //
-      ibc::property::NodeBase *property;
-      property = getPropertiesRoot(index);
-      if (property != NULL)
+      ibc::property::NodeBase *properties;
+      properties = getPropertiesRoot(index);
+      if (properties != NULL)
       {
+        QSpinBoxSubcontract::getQAbstractSpinBoxParameters(editor, properties);
+        //
         int value_int;
         double value_double;
         QString value_qstring;
         QAbstractSpinBox::StepType  value_steptype;
         //
         // TODO : add parameters in QAbstractSpinBox
-        if (getChildValue<int>(property, "decimals", &value_int))
+        if (getChildValue<int>(properties, "decimals", &value_int))
           editor->setDecimals(value_int);
-        if (getChildValue<double>(property, "maximum", &value_double))
+        if (getChildValue<double>(properties, "maximum", &value_double))
           editor->setMaximum(value_double);
-        if (getChildValue<double>(property, "minimum", &value_double))
+        if (getChildValue<double>(properties, "minimum", &value_double))
           editor->setMinimum(value_double);
-        if (getChildValue<QString>(property, "prefix", &value_qstring))
+        if (getChildValue<QString>(properties, "prefix", &value_qstring))
           editor->setPrefix(value_qstring);
-        if (getChildValue<double>(property, "singleStep", &value_double))
+        if (getChildValue<double>(properties, "singleStep", &value_double))
           editor->setSingleStep(value_double);
-        if (getChildValue<QAbstractSpinBox::StepType>(property, "stepType", &value_steptype))
+        if (getChildValue<QAbstractSpinBox::StepType>(properties, "stepType", &value_steptype))
           editor->setStepType(value_steptype);
-        if (getChildValue<QString>(property, "suffix", &value_qstring))
+        if (getChildValue<QString>(properties, "suffix", &value_qstring))
           editor->setSuffix(value_qstring);
       }
       return editor;

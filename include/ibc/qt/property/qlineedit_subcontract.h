@@ -94,11 +94,11 @@ namespace ibc::qt::property
           editor->setAlignment(value_alignment);
         if (getChildValue<bool>(property, "clearButtonEnabled", &value_bool))
           editor->setClearButtonEnabled(value_bool);
-        if (getChildValue<t::CursorMoveStyle>(property, "cursorMoveStyle", &value_cusormovestyle))
-          editor->setMinimum(value_cusormovestyle);
-        if (getChildValue<QString>(property, "dragEnabled", &value_bool))
+        if (getChildValue<Qt::CursorMoveStyle>(property, "cursorMoveStyle", &value_cusormovestyle))
+          editor->setCursorMoveStyle(value_cusormovestyle);
+        if (getChildValue<bool>(property, "dragEnabled", &value_bool))
           editor->setDragEnabled(value_bool);
-        if (getChildValue<int>(property, "echoMode", &value_echomode))
+        if (getChildValue<QLineEdit::EchoMode>(property, "echoMode", &value_echomode))
           editor->setEchoMode(value_echomode);
         if (getChildValue<QString>(property, "inputMask", &value_qstring))
           editor->setInputMask(value_qstring);

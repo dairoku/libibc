@@ -79,28 +79,29 @@ namespace ibc::qt::property
         return NULL;
       editor->setFrame(false);
       //
-      ibc::property::NodeBase *property;
-      property = getPropertiesRoot(index);
-      if (property != NULL)
+      ibc::property::NodeBase *properties;
+      properties = getPropertiesRoot(index);
+      if (properties != NULL)
       {
+        getQAbstractSpinBoxParameters(editor, properties);
+        //
         int value_int;
         QString value_qstring;
         QAbstractSpinBox::StepType  value_steptype;
         //
-        // TODO : add parameters in QAbstractSpinBox
-        if (getChildValue<int>(property, "displayIntegerBase", &value_int))
+        if (getChildValue<int>(properties, "displayIntegerBase", &value_int))
           editor->setDisplayIntegerBase(value_int);
-        if (getChildValue<int>(property, "maximum", &value_int))
+        if (getChildValue<int>(properties, "maximum", &value_int))
           editor->setMaximum(value_int);
-        if (getChildValue<int>(property, "minimum", &value_int))
+        if (getChildValue<int>(properties, "minimum", &value_int))
           editor->setMinimum(value_int);
-        if (getChildValue<QString>(property, "prefix", &value_qstring))
+        if (getChildValue<QString>(properties, "prefix", &value_qstring))
           editor->setPrefix(value_qstring);
-        if (getChildValue<int>(property, "singleStep", &value_int))
+        if (getChildValue<int>(properties, "singleStep", &value_int))
           editor->setSingleStep(value_int);
-        if (getChildValue<QAbstractSpinBox::StepType>(property, "stepType", &value_steptype))
+        if (getChildValue<QAbstractSpinBox::StepType>(properties, "stepType", &value_steptype))
           editor->setStepType(value_steptype);
-        if (getChildValue<QString>(property, "suffix", &value_qstring))
+        if (getChildValue<QString>(properties, "suffix", &value_qstring))
           editor->setSuffix(value_qstring);
       }
       return editor;
@@ -145,6 +146,35 @@ namespace ibc::qt::property
       //
       editor->setGeometry(option.rect);
       //editor->setGeometry(option.rect.adjusted(0, 0, 0, -1));
+    }
+    // -------------------------------------------------------------------------
+    // getQAbstractSpinBoxParameters
+    // -------------------------------------------------------------------------
+    static void getQAbstractSpinBoxParameters(QAbstractSpinBox *inEditor,
+                              ibc::property::NodeBase *inProperties)
+    {
+      bool  value_bool;
+      Qt::Alignment value_alignment;
+      QAbstractSpinBox::ButtonSymbols value_symbols;
+      QAbstractSpinBox::CorrectionMode value_mode;
+      QString value_qstring;
+      //
+      if (getChildValue<bool>(inProperties, "accelerated", &value_bool))
+        inEditor->setAccelerated(value_bool);
+      if (getChildValue<Qt::Alignment>(inProperties, "alignment", &value_alignment))
+        inEditor->setAlignment(value_alignment);
+      if (getChildValue<QAbstractSpinBox::ButtonSymbols>(inProperties, "buttonSymbols", &value_symbols))
+        inEditor->setButtonSymbols(value_symbols);
+      if (getChildValue<QAbstractSpinBox::CorrectionMode>(inProperties, "correctionMode", &value_mode))
+        inEditor->setCorrectionMode(value_mode);
+      if (getChildValue<bool>(inProperties, "keyboardTracking", &value_bool))
+        inEditor->setKeyboardTracking(value_bool);
+      if (getChildValue<bool>(inProperties, "showGroupSeparator", &value_bool))
+        inEditor->setGroupSeparatorShown(value_bool);
+      if (getChildValue<QString>(inProperties, "specialValueText", &value_qstring))
+        inEditor->setSpecialValueText(value_qstring);
+      if (getChildValue<bool>(inProperties, "wrapping", &value_bool))
+        inEditor->setWrapping(value_bool);
     }
   };
 };

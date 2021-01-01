@@ -190,6 +190,11 @@ namespace ibc::qt::property
         ibc::property::Node<double> *node = (ibc::property::Node<double> *)inNode;
         return QVariant(node->getValue());
       }
+      if (type == SubcontractInterface::DATA_TYPE_QString)
+      {
+        ibc::property::Node<QString> *node = (ibc::property::Node<QString> *)inNode;
+        return QVariant(node->getValue());
+      }
       return QVariant();
     }
     // -------------------------------------------------------------------------

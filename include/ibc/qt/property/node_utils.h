@@ -40,6 +40,7 @@
 #include "ibc/qt/property/subcontract_interface.h"
 #include "ibc/qt/property/qspinbox_subcontract.h"
 #include "ibc/qt/property/qdoublespinbox_subcontract.h"
+#include "ibc/qt/property/qlineedit_subcontract.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -57,11 +58,49 @@ namespace ibc::qt::property
       //
       WIDGET_TYPE_QSpinBox    = 1,
       WIDGET_TYPE_QDoubleSpinBox,
+      WIDGET_TYPE_QLineEdit,
       //
       WIDGET_TYPE_ANY           = 0xFFFF
     };
 
     // Static Functions --------------------------------------------------------
+    // QAbstractSpinBox ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // prepareQAbstractSpinBoxExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQAbstractSpinBoxExtraParams(
+        std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+        QAbstractSpinBox::ButtonSymbols inSymbols = QAbstractSpinBox::UpDownArrows,
+        bool inSeparator = false,
+        bool inAccelerated = false,
+        bool inWrapping = false,
+        const char inValueText = NULL,
+        QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
+        Qt::Alignment inAlignment = Qt::AlignLeft,
+        bool inTracking = true)
+    {
+      if (inAccelerated != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "accelerated", inAccelerated);
+      if (inAlignment != Qt::AlignLeft)
+        preparePropertyNode<Qt::Alignment>(inPropertiesRoot, "alignment", inAlignment);
+      if (inSymbols != QAbstractSpinBox::UpDownArrows)
+        preparePropertyNode<QAbstractSpinBox::ButtonSymbols>(
+            inPropertiesRoot, "buttonSymbols", inSymbols);
+      if (inMode != QAbstractSpinBox::CorrectToPreviousValue)
+        preparePropertyNode<QAbstractSpinBox::CorrectionMode>(
+            inPropertiesRoot, "correctionMode", inMode);
+      if (inTracking != true)
+        preparePropertyNode<bool>(inPropertiesRoot, "keyboardTracking", inTracking);
+      if (inSeparator != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "showGroupSeparator", inSeparator);
+      if (inValueText != NULL)
+        preparePropertyNode<QString>(
+            inPropertiesRoot, "specialValueText", QString(inValueText));
+      if (inWrapping != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "wrapping", inWrapping);
+      return true;
+    }
+
     // QSpinBox ----------------------------------------------------------------
     // -------------------------------------------------------------------------
     // addQSpinBoxNode
@@ -83,22 +122,40 @@ namespace ibc::qt::property
     // addQSpinBoxNodeWithAllParams
     // -------------------------------------------------------------------------
     static bool addQSpinBoxNodeWithAllParams(
-                std::shared_ptr<ibc::property::NodeBase> inParent,
-                const char *inName,
-                int inValue,
-                int inMin, int inMax,
-                int inSingleStep, QAbstractSpinBox::StepType inStepType,
-                int inDisplayIntegerBase = -1,
-                const char *inPrefix = NULL, const char *inSuffix = NULL)
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        int inValue,
+        int inMin, int inMax,
+        int inSingleStep, QAbstractSpinBox::StepType inStepType,
+        int inDisplayIntegerBase = -1,
+        const char *inPrefix = NULL, const char *inSuffix = NULL,
+        QAbstractSpinBox::ButtonSymbols inSymbols = QAbstractSpinBox::UpDownArrows,
+        bool inSeparator = false,
+        bool inAccelerated = false,
+        bool inWrapping = false,
+        const char inValueText = NULL,
+        QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
+        Qt::Alignment inAlignment = Qt::AlignLeft,
+        bool inTracking = true)
     {
       std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
       propertiesRoot = addQSpinBoxNode(inParent, inName, inValue, inMin, inMax);
       if (propertiesRoot == NULL)
         return false;
-      return prepareQSpinBoxExtraParams(propertiesRoot,
+      if (prepareQSpinBoxExtraParams(propertiesRoot,
                     inSingleStep, inStepType,
                     inDisplayIntegerBase,
-                    inPrefix, inSuffix);
+                    inPrefix, inSuffix) == false)
+        return false;
+      return prepareQAbstractSpinBoxExtraParams(propertiesRoot,
+                    inSymbols,
+                    inSeparator,
+                    inAccelerated,
+                    inWrapping,
+                    inValueText,
+                    inMode,
+                    inAlignment,
+                    inTracking);
     }
     // -------------------------------------------------------------------------
     // prepareQSpinBoxParams
@@ -162,22 +219,41 @@ namespace ibc::qt::property
     // addQDoubleSpinBoxNodeWithAllParams
     // -------------------------------------------------------------------------
     static bool addQDoubleSpinBoxNodeWithAllParams(
-                std::shared_ptr<ibc::property::NodeBase> inParent,
-                const char *inName,
-                double inValue,
-                double inMin, double inMax,
-                double inSingleStep, QAbstractSpinBox::StepType inStepType,
-                int inDecimals = 2,
-                const char *inPrefix = NULL, const char *inSuffix = NULL)
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        double inValue,
+        double inMin, double inMax,
+        double inSingleStep, QAbstractSpinBox::StepType inStepType,
+        int inDecimals = 2,
+        const char *inPrefix = NULL, const char *inSuffix = NULL,
+        QAbstractSpinBox::ButtonSymbols inSymbols = QAbstractSpinBox::UpDownArrows,
+        bool inSeparator = false,
+        bool inAccelerated = false,
+        bool inWrapping = false,
+        const char inValueText = NULL,
+        QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
+        Qt::Alignment inAlignment = Qt::AlignLeft,
+        bool inTracking = true)
+
     {
       std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
       propertiesRoot = addQDoubleSpinBoxNode(inParent, inName, inValue, inMin, inMax);
       if (propertiesRoot == NULL)
         return false;
-      return prepareQDoubleSpinBoxExtraParams(propertiesRoot,
+      if (prepareQDoubleSpinBoxExtraParams(propertiesRoot,
                     inSingleStep, inStepType,
                     inDecimals,
-                    inPrefix, inSuffix);
+                    inPrefix, inSuffix) == false)
+        return false;
+      return prepareQAbstractSpinBoxExtraParams(propertiesRoot,
+                    inSymbols,
+                    inSeparator,
+                    inAccelerated,
+                    inWrapping,
+                    inValueText,
+                    inMode,
+                    inAlignment,
+                    inTracking);
     }
     // -------------------------------------------------------------------------
     // prepareQDoubleSpinBoxParams
@@ -219,6 +295,103 @@ namespace ibc::qt::property
                     inPropertiesRoot, "suffix", QString(inSuffix));
       return true;
     }
+
+    // QLineEdit ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // addQLineEditNode
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> addQLineEditNode(
+                        std::shared_ptr<ibc::property::NodeBase> inParent,
+                        const char *inName,
+                        QString inValue,
+                        int inMaxLength = 32767)
+    {
+      std::shared_ptr<ibc::property::Node<QString>> node;
+      node = ibc::property::Node<QString>::createAsChildOf(
+                              inParent, inName, inValue);
+      if (node == NULL)
+        return NULL;
+      return prepareQLineEditParams(node, inMaxLength);
+    }
+    // -------------------------------------------------------------------------
+    // addQLineEditNodeWithAllParams
+    // -------------------------------------------------------------------------
+    static bool addQLineEditNodeWithAllParams(
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        QString &inValue,
+        int inMaxLength = 32767,
+        QLineEdit::EchoMode inEchoMode = QLineEdit::Normal,
+        const char  inMaskStr = NULL,
+        const char  inPlaceholderStr = NULL,
+        bool  inClearButton = false,
+        bool  inDragEnabled = false,
+        Qt::Alignment inAlignment = Qt::AlignLeft | Qt::AlignVCenter,
+        Qt::CursorMoveStyle inStyle = Qt::LogicalMoveStyle)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = addQLineEditNode(inParent, inName, inValue, inMaxLength);
+      if (propertiesRoot == NULL)
+        return false;
+      return prepareQLineEditExtraParams(propertiesRoot,
+                    inEchoMode,
+                    inMaskStr, inPlaceholderStr,
+                    inClearButton, inDragEnabled,
+                    inAlignment, inStyle);
+    }
+    // -------------------------------------------------------------------------
+    // prepareQLineEditParams
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> prepareQLineEditParams(
+          std::shared_ptr<ibc::property::Node<QString>> inNode,
+          int inMaxLength = 32767)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = preparePropertiesRoot(inNode);
+      if (propertiesRoot == NULL)
+        return NULL;
+      //
+      preparePropertyNode<QString>(propertiesRoot, "widget", QString("QLineEdit"));
+      if (inMaxLength != 32767)
+        preparePropertyNode<int>(propertiesRoot, "maxLength", inMaxLength);
+      return propertiesRoot;
+    }
+    // -------------------------------------------------------------------------
+    // prepareQLineEditExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQLineEditExtraParams(
+          std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+          QLineEdit::EchoMode inEchoMode = QLineEdit::Normal,
+          const char  inMaskStr = NULL,
+          const char  inPlaceholderStr = NULL,
+          bool  inClearButton = false,
+          bool  inDragEnabled = false,
+          Qt::Alignment inAlignment = Qt::AlignLeft | Qt::AlignVCenter,
+          Qt::CursorMoveStyle inStyle = Qt::LogicalMoveStyle)
+    {
+      if (inEchoMode != QLineEdit::Normal)
+        preparePropertyNode<QLineEdit::EchoMode>(
+                    inPropertiesRoot, "echoMode", inEchoMode);
+      if (inMaskStr != NULL)
+        preparePropertyNode<QString>(
+                    inPropertiesRoot, "inputMask", QString(inMaskStr));
+      if (inPlaceholderStr != NULL)
+        preparePropertyNode<QString>(
+                    inPropertiesRoot, "placeholderText", QString(inPlaceholderStr));
+      if (inClearButton != false)
+        preparePropertyNode<bool>(
+                    inPropertiesRoot, "clearButtonEnabled", inClearButton);
+      if (inDragEnabled != false)
+        preparePropertyNode<bool>(
+                    inPropertiesRoot, "dragEnabled", inDragEnabled);
+      if (inAlignment != (Qt::AlignLeft | Qt::AlignVCenter))
+        preparePropertyNode<int>(inPropertiesRoot, "alignment", inAlignment);
+      if (inStyle != Qt::LogicalMoveStyle)
+        preparePropertyNode<Qt::CursorMoveStyle>(
+                      inPropertiesRoot, "echoMode", inStyle);
+      return true;
+    }
+
     //
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -233,8 +406,9 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     static SubcontractInterface *getSubcontract(WidgetType inType)
     {
-      static QSpinBoxSubcontract       sQSpinBoxSubcontract;
-      static QDoubleSpinBoxSubcontract sQDobuleSpinBoxSubcontract;
+      static QSpinBoxSubcontract        sQSpinBoxSubcontract;
+      static QDoubleSpinBoxSubcontract  sQDobuleSpinBoxSubcontract;
+      static QLineEditSubcontract       sQLineEditSubcontract;
       //
       switch(inType)
       {
@@ -242,6 +416,8 @@ namespace ibc::qt::property
           return &sQSpinBoxSubcontract;
         case WIDGET_TYPE_QDoubleSpinBox:
           return &sQDobuleSpinBoxSubcontract;
+        case WIDGET_TYPE_QLineEdit:
+          return &sQLineEditSubcontract;
       }
       return NULL;
     }
@@ -278,6 +454,9 @@ namespace ibc::qt::property
         case SubcontractInterface::DATA_TYPE_double:
           type = WIDGET_TYPE_QDoubleSpinBox;
           break;
+        case SubcontractInterface::DATA_TYPE_QString:
+          type = WIDGET_TYPE_QLineEdit;
+          break;
       }
       return type;
     }
@@ -290,7 +469,12 @@ namespace ibc::qt::property
         return WIDGET_TYPE_QSpinBox;
       if (inName == "QDoubleSpinBox")
         return WIDGET_TYPE_QDoubleSpinBox;
+      if (inName == "QDoubleSpinBox")
+        return WIDGET_TYPE_QDoubleSpinBox;
+      if (inName == "QLineEdit")
+        return WIDGET_TYPE_QLineEdit;
       //
+      printf("Internal Error\n");
       return WIDGET_TYPE_NOT_SPECIFIED;
     }
 

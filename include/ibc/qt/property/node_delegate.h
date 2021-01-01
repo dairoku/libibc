@@ -82,8 +82,10 @@ namespace ibc::qt::property
 
       SubcontractInterface  *subcontract;
       subcontract = NodeUtils::getSubcontract(nodeBase);
-      nodeBase->setAuxiliaryDataPointer(subcontract);
+      if (subcontract == NULL)
+        return NULL;
 
+      nodeBase->setAuxiliaryDataPointer(subcontract);
       return subcontract->createEditor(parent, option, index);
     }
     // -------------------------------------------------------------------------
