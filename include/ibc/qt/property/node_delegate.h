@@ -75,17 +75,11 @@ namespace ibc::qt::property
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) const
     {
-      ibc::property::NodeBase  *nodeBase;
-      nodeBase = SubcontractInterface::getNodeBase(index);
-      if (nodeBase == NULL)
-        return NULL;
-
       SubcontractInterface  *subcontract;
-      subcontract = NodeUtils::getSubcontract(nodeBase);
+      subcontract = NodeUtils::prepareSubcontract(index);
       if (subcontract == NULL)
         return NULL;
-
-      nodeBase->setAuxiliaryDataPointer(subcontract);
+      //
       return subcontract->createEditor(parent, option, index);
     }
     // -------------------------------------------------------------------------

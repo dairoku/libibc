@@ -36,11 +36,14 @@
 // Includes --------------------------------------------------------------------
 #include <QStyledItemDelegate>
 #include <QString>
+#include <QStringList>
+#include <climits>
 #include "ibc/property/node.h"
 #include "ibc/qt/property/subcontract_interface.h"
 #include "ibc/qt/property/qspinbox_subcontract.h"
 #include "ibc/qt/property/qdoublespinbox_subcontract.h"
 #include "ibc/qt/property/qlineedit_subcontract.h"
+#include "ibc/qt/property/qcombobox_subcontract.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -59,6 +62,7 @@ namespace ibc::qt::property
       WIDGET_TYPE_QSpinBox    = 1,
       WIDGET_TYPE_QDoubleSpinBox,
       WIDGET_TYPE_QLineEdit,
+      WIDGET_TYPE_QComboBox,
       //
       WIDGET_TYPE_ANY           = 0xFFFF
     };
@@ -392,23 +396,180 @@ namespace ibc::qt::property
       return true;
     }
 
+    // QComboBox ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // addQComboBoxNode
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> addQComboBoxNode(
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        int inValue,
+        int  inItemNum,
+        const char *inItems[],
+        const int  inItemValues[] = NULL)
+    {
+      std::shared_ptr<ibc::property::Node<int>> node;
+      node = ibc::property::Node<int>::createAsChildOf(
+                              inParent, inName, inValue);
+      if (node == NULL)
+        return NULL;
+      return prepareQComboBoxParams(node, inItemNum, inItems, inItemValues);
+    }
+    // -------------------------------------------------------------------------
+    // addQComboBoxNodeWithAllParams
+    // -------------------------------------------------------------------------
+    static bool addQComboBoxNodeWithAllParams(
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        int inValue,
+        int  inItemNum,
+        const char *inItems[],
+        const int  inItemValues[] = NULL,
+        bool  inEditable = false,
+        bool  inDuplicatesEnabled = false,
+        QComboBox::InsertPolicy inIsertPolicy = QComboBox::InsertAtBottom,
+        int inMaxVisibleItems = 10,
+        int inMinimumContentsLength = 0,
+        int inMaxCount = INT_MAX,
+        int inModelColumn = 0,
+        const char *inPlaceholderText = NULL,
+        QComboBox::SizeAdjustPolicy inSizepolicy = QComboBox::AdjustToContentsOnFirstShow,
+        QSize *inIconSize = NULL)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = addQComboBoxNode(
+                    inParent, inName, inValue, inItemNum, inItems, inItemValues);
+      if (propertiesRoot == NULL)
+        return false;
+      return prepareQComboBoxExtraParams(propertiesRoot,
+                    inEditable,
+                    inDuplicatesEnabled,
+                    inIsertPolicy,
+                    inMaxVisibleItems,
+                    inMinimumContentsLength,
+                    inMaxCount,
+                    inModelColumn,
+                    inPlaceholderText,
+                    inSizepolicy,
+                    inIconSize);
+    }
+    // -------------------------------------------------------------------------
+    // prepareQComboBoxParams
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> prepareQComboBoxParams(
+                        std::shared_ptr<ibc::property::Node<int>> inNode,
+                        int  inItemNum,
+                        const char *inItems[],
+                        const int  inItemValues[] = NULL)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = preparePropertiesRoot(inNode);
+      if (propertiesRoot == NULL)
+        return NULL;
+      //
+      preparePropertyNode<QString>(propertiesRoot, "widget", QString("QComboBox"));
+      //preparePropertyNode<int>(propertiesRoot, "itemNum", inItemNum);
+      QStringList items;
+      for (int i = 0; i < inItemNum; i++)
+        items.append(inItems[i]);
+      preparePropertyNode<QStringList>(propertiesRoot, "items", items);
+      if (inItemValues == NULL)
+        return propertiesRoot;
+      //
+      QList<int>  itemValues;
+      for (int i = 0; i < inItemNum; i++)
+        itemValues.append(inItemValues[i]);
+      preparePropertyNode<QList<int>>(propertiesRoot, "itemValues", itemValues);
+      return propertiesRoot;
+    }
+    // -------------------------------------------------------------------------
+    // prepareQComboBoxExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQComboBoxExtraParams(
+        std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+        bool  inEditable = false,
+        bool  inDuplicatesEnabled = false,
+        QComboBox::InsertPolicy inIsertPolicy = QComboBox::InsertAtBottom,
+        int inMaxVisibleItems = 10,
+        int inMinimumContentsLength = 0,
+        int inMaxCount = INT_MAX,
+        int inModelColumn = 0,
+        const char *inPlaceholderText = NULL,
+        QComboBox::SizeAdjustPolicy inSizepolicy = QComboBox::AdjustToContentsOnFirstShow,
+        QSize *inIconSize = NULL)
+    {
+      if (inEditable != false)
+        preparePropertyNode<bool>(
+                    inPropertiesRoot, "editable", inEditable);
+      if (inEditable != false)
+        preparePropertyNode<bool>(
+                    inPropertiesRoot, "duplicatesEnabled", inDuplicatesEnabled);
+      if (inIsertPolicy != QComboBox::InsertAtBottom)
+        preparePropertyNode<QComboBox::InsertPolicy>(
+                    inPropertiesRoot, "insertPolicy", inIsertPolicy);
+      if (inMaxVisibleItems != 10)
+        preparePropertyNode<int>(
+                    inPropertiesRoot, "maxVisibleItems", inMaxVisibleItems);
+      if (inMinimumContentsLength != 0)
+        preparePropertyNode<int>(
+                    inPropertiesRoot, "minimumContentsLength", inMinimumContentsLength);
+      if (inMaxCount != INT_MAX)
+        preparePropertyNode<int>(
+                    inPropertiesRoot, "maxCount", inMaxCount);
+      if (inModelColumn != 0)
+        preparePropertyNode<int>(
+                    inPropertiesRoot, "modelColumn", inModelColumn);
+      if (inPlaceholderText != NULL)
+        preparePropertyNode<QString>(
+                    inPropertiesRoot, "placeholderText", QString(inPlaceholderText));
+      if (inSizepolicy != QComboBox::AdjustToContentsOnFirstShow)
+        preparePropertyNode<QComboBox::SizeAdjustPolicy>(
+                    inPropertiesRoot, "sizeAdjustPolicy", inSizepolicy);
+      if (inIconSize != NULL)
+        preparePropertyNode<QSize>(
+                    inPropertiesRoot, "iconSize", *inIconSize);
+      return true;
+    }
+
     //
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
-    // getSubcontract
+    // prepareSubcontract
     // -------------------------------------------------------------------------
-    static SubcontractInterface *getSubcontract(ibc::property::NodeBase *inNode)
+    static SubcontractInterface *prepareSubcontract(const QModelIndex &inIndex)
     {
-      return getSubcontract(getWidgetTypeFromNode(inNode));
+      ibc::property::NodeBase  *nodeBase;
+      nodeBase = SubcontractInterface::getNodeBase(inIndex);
+      if (nodeBase == NULL)
+        return NULL;
+
+      SubcontractInterface  *subcontract;
+      subcontract = (SubcontractInterface  *)nodeBase->getAuxiliaryDataPointer();
+      if (subcontract != NULL)
+        return subcontract;
+
+      subcontract = selectSubcontract(nodeBase);
+      if (subcontract == NULL)
+        return NULL;
+      nodeBase->setAuxiliaryDataPointer(subcontract);
+      return subcontract;
     }
     // -------------------------------------------------------------------------
-    // getSubcontract
+    // selectSubcontract
     // -------------------------------------------------------------------------
-    static SubcontractInterface *getSubcontract(WidgetType inType)
+    static SubcontractInterface *selectSubcontract(ibc::property::NodeBase *inNode)
+    {
+      return selectSubcontract(getWidgetTypeFromNode(inNode));
+    }
+    // -------------------------------------------------------------------------
+    // selectSubcontract (**)
+    // -------------------------------------------------------------------------
+    static SubcontractInterface *selectSubcontract(WidgetType inType)
     {
       static QSpinBoxSubcontract        sQSpinBoxSubcontract;
       static QDoubleSpinBoxSubcontract  sQDobuleSpinBoxSubcontract;
       static QLineEditSubcontract       sQLineEditSubcontract;
+      static QComboBoxSubcontract       sQComboBoxSubcontract;
       //
       switch(inType)
       {
@@ -418,6 +579,8 @@ namespace ibc::qt::property
           return &sQDobuleSpinBoxSubcontract;
         case WIDGET_TYPE_QLineEdit:
           return &sQLineEditSubcontract;
+        case WIDGET_TYPE_QComboBox:
+          return &sQComboBoxSubcontract;
       }
       return NULL;
     }
@@ -430,17 +593,17 @@ namespace ibc::qt::property
       dataType = SubcontractInterface::getNodeDataType(inNode);
       if (dataType == SubcontractInterface::DATA_TYPE_NOT_SPECIFIED)
         return WIDGET_TYPE_NOT_SPECIFIED;
-      ibc::property::NodeBase *property;
-      property = SubcontractInterface::getPropertiesRoot(inNode);
-      if (property == NULL)
+      ibc::property::NodeBase *properties;
+      properties = SubcontractInterface::getPropertiesRoot(inNode);
+      if (properties == NULL)
         return getWidgetTypeFromDataType(dataType);
       QString name;
-      if (SubcontractInterface::getChildValue<QString>(property, "widget", &name))
+      if (SubcontractInterface::getChildValue<QString>(properties, "widget", &name))
         return getWidgetTypeFromName(name);
       return getWidgetTypeFromDataType(dataType);
     }
     // -------------------------------------------------------------------------
-    // getWidgetTypeFromDataType
+    // getWidgetTypeFromDataType  (*)
     // -------------------------------------------------------------------------
     static WidgetType getWidgetTypeFromDataType(SubcontractInterface::DataType inDataType)
     {
@@ -461,7 +624,7 @@ namespace ibc::qt::property
       return type;
     }
     // -------------------------------------------------------------------------
-    // getWidgetTypeFromName
+    // getWidgetTypeFromName  (*)
     // -------------------------------------------------------------------------
     static WidgetType getWidgetTypeFromName(QString &inName)
     {
@@ -473,6 +636,8 @@ namespace ibc::qt::property
         return WIDGET_TYPE_QDoubleSpinBox;
       if (inName == "QLineEdit")
         return WIDGET_TYPE_QLineEdit;
+      if (inName == "QComboBox")
+        return WIDGET_TYPE_QComboBox;
       //
       printf("Internal Error\n");
       return WIDGET_TYPE_NOT_SPECIFIED;

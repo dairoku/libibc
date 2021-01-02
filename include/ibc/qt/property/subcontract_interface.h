@@ -65,6 +65,7 @@ namespace ibc::qt::property
     };
 
     // Member functions (overrides) --------------------------------------------
+    // for Delegate
     virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option,
                           const QModelIndex &index) = 0;
     virtual void setEditorData(QWidget *editor, const QModelIndex &index) = 0;
@@ -72,6 +73,21 @@ namespace ibc::qt::property
                       const QModelIndex &index) = 0;
     virtual void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
                               const QModelIndex &index) = 0;
+    // for Model
+    // -------------------------------------------------------------------------
+    // getModelData
+    // -------------------------------------------------------------------------
+    virtual QVariant getModelData(const QModelIndex &index)
+    {
+      ibc::property::NodeBase *nodeBase = getNodeBase(index);
+      if (index.column() == 0) // Column is 0
+        return QVariant(nodeBase->getName().c_str());
+      //
+      if (nodeBase->hasValue() == false)  // Has no value
+        return QVariant();
+      //
+      return SubcontractInterface::getQVariant(nodeBase);
+    }
 
     // Static Functions --------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -140,6 +156,15 @@ namespace ibc::qt::property
     // -------------------------------------------------------------------------
     // getNodeDataType
     // -------------------------------------------------------------------------
+    static DataType getNodeDataType(const QModelIndex &inIndex)
+    {
+      ibc::property::NodeBase *nodeBase;
+      nodeBase = (ibc::property::NodeBase *)inIndex.internalPointer();
+      return getNodeDataType(nodeBase);
+    }
+    // -------------------------------------------------------------------------
+    // getNodeDataType  (*)
+    // -------------------------------------------------------------------------
     static DataType getNodeDataType(ibc::property::NodeBase *inNode)
     {
       if (inNode == NULL)
@@ -174,7 +199,7 @@ namespace ibc::qt::property
       return dataType;
     }
     // -------------------------------------------------------------------------
-    // getQVariant
+    // getQVariant  (*)
     // -------------------------------------------------------------------------
     static QVariant getQVariant(ibc::property::NodeBase *inNode)
     {

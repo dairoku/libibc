@@ -38,12 +38,13 @@
 #include <QColor>
 #include "ibc/property/node.h"
 #include "ibc/qt/property/subcontract_interface.h"
+#include "ibc/qt/property/node_utils.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
 {
   // ---------------------------------------------------------------------------
-  // NodeDelegate class
+  // NodeModel class
   // ---------------------------------------------------------------------------
   class NodeModel : public QAbstractItemModel
   {
@@ -191,14 +192,11 @@ namespace ibc::qt::property
       if (role != Qt::DisplayRole)
         return QVariant();
       //
-      ibc::property::NodeBase *nodeBase = getNode(index);
-     if (index.column() == 0) // Column is 0
-        return QVariant(nodeBase->getName().c_str());
-      //
-      if (nodeBase->hasValue() == false)  // Has no value
+      SubcontractInterface *subcontract;
+      subcontract = NodeUtils::prepareSubcontract(index);
+      if (subcontract == NULL)
         return QVariant();
-      //
-      return SubcontractInterface::getQVariant(nodeBase);
+      return subcontract->getModelData(index);
     }
 
   protected:
