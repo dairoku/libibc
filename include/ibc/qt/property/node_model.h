@@ -162,6 +162,7 @@ namespace ibc::qt::property
         return QAbstractItemModel::flags(index);
       // Returns with editable flag, when column != 0
       return Qt::ItemIsEditable | QAbstractItemModel::flags(index);
+      //return QAbstractItemModel::flags(index) | Qt::ItemIsUserCheckable;
     }
     // -------------------------------------------------------------------------
     // headerData
@@ -188,6 +189,9 @@ namespace ibc::qt::property
       {
         return QColor(Qt::green);
       }*/
+
+      /*if (role == Qt::CheckStateRole)
+        return Qt::Unchecked;*/
 
       if (role != Qt::DisplayRole)
         return QVariant();

@@ -73,6 +73,13 @@ namespace ibc::qt::property
                       const QModelIndex &index) = 0;
     virtual void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option,
                               const QModelIndex &index) = 0;
+    virtual bool paint(QPainter *painter, const QStyleOptionViewItem &option,
+            const QModelIndex &index)
+    {
+      UNUSED(painter); UNUSED(option);  UNUSED(index);
+      return false;
+    }
+
     // for Model
     // -------------------------------------------------------------------------
     // getModelData

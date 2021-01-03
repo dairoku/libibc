@@ -44,6 +44,7 @@
 #include "ibc/qt/property/qdoublespinbox_subcontract.h"
 #include "ibc/qt/property/qlineedit_subcontract.h"
 #include "ibc/qt/property/qcombobox_subcontract.h"
+#include "ibc/qt/property/qcheckbox_subcontract.h"
 
 // Namespace -------------------------------------------------------------------
 namespace ibc::qt::property
@@ -63,6 +64,7 @@ namespace ibc::qt::property
       WIDGET_TYPE_QDoubleSpinBox,
       WIDGET_TYPE_QLineEdit,
       WIDGET_TYPE_QComboBox,
+      WIDGET_TYPE_QCheckBox,
       //
       WIDGET_TYPE_ANY           = 0xFFFF
     };
@@ -531,6 +533,119 @@ namespace ibc::qt::property
       return true;
     }
 
+    // QAbstractButton ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // prepareQAbstractButtonExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQAbstractButtonExtraParams(
+        std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+        QIcon *inIcon = NULL,
+        QSize *inIconSize = NULL,
+        bool  inAutoRepeat = false,
+        int   inAutoRepeatDelay = 0,
+        int   inAutoRepeatInterval = 0,
+        bool  inAutoExclusive = false,
+        bool  inCheckable = false,
+        QKeySequence  *inShortcut = NULL)
+    {
+      if (inIcon != NULL)
+        preparePropertyNode<QIcon>(inPropertiesRoot, "icon", *inIcon);
+      if (inIconSize != NULL)
+        preparePropertyNode<QSize>(inPropertiesRoot, "iconSize", *inIconSize);
+      if (inAutoRepeat != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "autoRepeat", inAutoRepeat);
+      if (inAutoRepeat != false && inAutoRepeatDelay != 0)
+        preparePropertyNode<int>(inPropertiesRoot, "autoRepeatDelay", inAutoRepeatDelay);
+      if (inAutoRepeat != false && inAutoRepeatInterval != 0)
+        preparePropertyNode<int>(inPropertiesRoot, "autoRepeatInterval", inAutoRepeatInterval);
+      if (inAutoExclusive != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "autoExclusive", inAutoExclusive);
+      if (inCheckable != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "checkable", inCheckable);
+      if (inShortcut != NULL)
+        preparePropertyNode<QKeySequence>(inPropertiesRoot, "shortcut", *inShortcut);
+    }
+
+    // QCheckBox ----------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // addQCheckBoxNode
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> addQCheckBoxNode(
+                        std::shared_ptr<ibc::property::NodeBase> inParent,
+                        const char *inName,
+                        bool inValue,
+                        const char *inLabel = NULL)
+    {
+      std::shared_ptr<ibc::property::Node<bool>> node;
+      node = ibc::property::Node<bool>::createAsChildOf(
+                              inParent, inName, inValue);
+      if (node == NULL)
+        return NULL;
+      return prepareQCheckBoxParams(node, inLabel);
+    }
+    // -------------------------------------------------------------------------
+    // addQCheckBoxNodeWithAllParams
+    // -------------------------------------------------------------------------
+    static bool addQCheckBoxNodeWithAllParams(
+        std::shared_ptr<ibc::property::NodeBase> inParent,
+        const char *inName,
+        bool inValue,
+        const char *inLabel = NULL,
+        bool  inTristate = false,
+        QIcon *inIcon = NULL,
+        QSize *inIconSize = NULL,
+        bool  inAutoRepeat = false,
+        int   inAutoRepeatDelay = 0,
+        int   inAutoRepeatInterval = 0,
+        bool  inAutoExclusive = false,
+        bool  inCheckable = false,
+        QKeySequence  *inShortcut = NULL)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = addQCheckBoxNode(inParent, inName, inValue, inLabel);
+      if (propertiesRoot == NULL)
+        return false;
+      if (prepareQCheckBoxExtraParams(propertiesRoot, inTristate) == false)
+        return false;
+      return prepareQAbstractButtonExtraParams(propertiesRoot,
+                    inIcon,
+                    inIconSize,
+                    inAutoRepeat,
+                    inAutoRepeatDelay,
+                    inAutoRepeatInterval,
+                    inAutoExclusive,
+                    inCheckable,
+                    inShortcut);
+    }
+    // -------------------------------------------------------------------------
+    // prepareQCheckBoxParams
+    // -------------------------------------------------------------------------
+    static std::shared_ptr<ibc::property::NoValueNode> prepareQCheckBoxParams(
+        std::shared_ptr<ibc::property::Node<bool>> inNode,
+        const char *inLabel = NULL)
+    {
+      std::shared_ptr<ibc::property::NoValueNode> propertiesRoot;
+      propertiesRoot = preparePropertiesRoot(inNode);
+      if (propertiesRoot == NULL)
+        return NULL;
+      //
+      preparePropertyNode<QString>(propertiesRoot, "widget", QString("QCheckBox"));
+      if (inLabel != NULL)
+        preparePropertyNode<QString>(propertiesRoot, "text", QString(inLabel));
+      return propertiesRoot;
+    }
+    // -------------------------------------------------------------------------
+    // prepareQCheckBoxExtraParams
+    // -------------------------------------------------------------------------
+    static bool prepareQCheckBoxExtraParams(
+                std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
+                bool inTristate = false)
+    {
+      if (inTristate != false)
+        preparePropertyNode<bool>(inPropertiesRoot, "tristate", inTristate);
+      return true;
+    }
+
     //
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -570,6 +685,7 @@ namespace ibc::qt::property
       static QDoubleSpinBoxSubcontract  sQDobuleSpinBoxSubcontract;
       static QLineEditSubcontract       sQLineEditSubcontract;
       static QComboBoxSubcontract       sQComboBoxSubcontract;
+      static QCheckBoxSubcontract       sQCheckBoxSubcontract;
       //
       switch(inType)
       {
@@ -581,6 +697,8 @@ namespace ibc::qt::property
           return &sQLineEditSubcontract;
         case WIDGET_TYPE_QComboBox:
           return &sQComboBoxSubcontract;
+        case WIDGET_TYPE_QCheckBox:
+          return &sQCheckBoxSubcontract;
       }
       return NULL;
     }
@@ -638,6 +756,8 @@ namespace ibc::qt::property
         return WIDGET_TYPE_QLineEdit;
       if (inName == "QComboBox")
         return WIDGET_TYPE_QComboBox;
+      if (inName == "QCheckBox")
+        return WIDGET_TYPE_QCheckBox;
       //
       printf("Internal Error\n");
       return WIDGET_TYPE_NOT_SPECIFIED;

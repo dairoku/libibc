@@ -124,9 +124,15 @@ namespace ibc::qt::property
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
             const QModelIndex &index) const
     {
-      QStyleOptionViewItemV3 opt = option;
-      QStyledItemDelegate::paint(painter, opt, index);
+      SubcontractInterface *subcontract;
+      subcontract = SubcontractInterface::getSubcontract(index);
+      bool  skipOriginalPaint = false;
+      if (subcontract != NULL)
+        skipOriginalPaint = subcontract->paint(painter, option, index);
+      if (skipOriginalPaint == false)
+        QStyledItemDelegate::paint(painter, option, index);
       //
+      QStyleOptionViewItemV3 opt = option;
       opt.palette.setCurrentColorGroup(QPalette::Active);
       QColor color = static_cast<QRgb>(QApplication::style()->styleHint(
                                         QStyle::SH_Table_GridLineColor, &opt));
