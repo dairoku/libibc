@@ -80,7 +80,7 @@ namespace ibc::qt::property
         bool inSeparator = false,
         bool inAccelerated = false,
         bool inWrapping = false,
-        const char inValueText = NULL,
+        const char *inValueText = NULL,
         QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
         Qt::Alignment inAlignment = Qt::AlignLeft,
         bool inTracking = true)
@@ -139,7 +139,7 @@ namespace ibc::qt::property
         bool inSeparator = false,
         bool inAccelerated = false,
         bool inWrapping = false,
-        const char inValueText = NULL,
+        const char *inValueText = NULL,
         QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
         Qt::Alignment inAlignment = Qt::AlignLeft,
         bool inTracking = true)
@@ -236,7 +236,7 @@ namespace ibc::qt::property
         bool inSeparator = false,
         bool inAccelerated = false,
         bool inWrapping = false,
-        const char inValueText = NULL,
+        const char *inValueText = NULL,
         QAbstractSpinBox::CorrectionMode inMode = QAbstractSpinBox::CorrectToPreviousValue,
         Qt::Alignment inAlignment = Qt::AlignLeft,
         bool inTracking = true)
@@ -328,8 +328,8 @@ namespace ibc::qt::property
         QString &inValue,
         int inMaxLength = 32767,
         QLineEdit::EchoMode inEchoMode = QLineEdit::Normal,
-        const char  inMaskStr = NULL,
-        const char  inPlaceholderStr = NULL,
+        const char  *inMaskStr = NULL,
+        const char  *inPlaceholderStr = NULL,
         bool  inClearButton = false,
         bool  inDragEnabled = false,
         Qt::Alignment inAlignment = Qt::AlignLeft | Qt::AlignVCenter,
@@ -368,8 +368,8 @@ namespace ibc::qt::property
     static bool prepareQLineEditExtraParams(
           std::shared_ptr<ibc::property::NoValueNode> inPropertiesRoot,
           QLineEdit::EchoMode inEchoMode = QLineEdit::Normal,
-          const char  inMaskStr = NULL,
-          const char  inPlaceholderStr = NULL,
+          const char  *inMaskStr = NULL,
+          const char  *inPlaceholderStr = NULL,
           bool  inClearButton = false,
           bool  inDragEnabled = false,
           Qt::Alignment inAlignment = Qt::AlignLeft | Qt::AlignVCenter,
@@ -564,6 +564,7 @@ namespace ibc::qt::property
         preparePropertyNode<bool>(inPropertiesRoot, "checkable", inCheckable);
       if (inShortcut != NULL)
         preparePropertyNode<QKeySequence>(inPropertiesRoot, "shortcut", *inShortcut);
+      return true;
     }
 
     // QCheckBox ----------------------------------------------------------------
@@ -699,6 +700,8 @@ namespace ibc::qt::property
           return &sQComboBoxSubcontract;
         case WIDGET_TYPE_QCheckBox:
           return &sQCheckBoxSubcontract;
+        default:
+          break;
       }
       return NULL;
     }
@@ -737,6 +740,8 @@ namespace ibc::qt::property
           break;
         case SubcontractInterface::DATA_TYPE_QString:
           type = WIDGET_TYPE_QLineEdit;
+          break;
+        default:
           break;
       }
       return type;

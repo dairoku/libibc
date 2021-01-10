@@ -122,7 +122,7 @@ namespace ibc::qt::property
         else
         {
           // Sanity check for the top level
-          if (row >= mRootNode->getChildrenNum())
+          if (row >= (int )mRootNode->getChildrenNum())
             return QModelIndex(); // something wrong or no items
           return createIndex(row, column, mRootNode->getChild(row).get());
         }
@@ -132,7 +132,7 @@ namespace ibc::qt::property
         return QModelIndex(); // Out of index
 
       ibc::property::NodeBase *parentNode = getNode(parent);
-      if (row >= parentNode->getChildrenNum())
+      if (row >= (int )parentNode->getChildrenNum())
         return QModelIndex(); // Out of index
 
       return createIndex(row, column, parentNode->getChild(row).get());

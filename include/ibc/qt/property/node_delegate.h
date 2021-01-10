@@ -132,7 +132,7 @@ namespace ibc::qt::property
       if (skipOriginalPaint == false)
         QStyledItemDelegate::paint(painter, option, index);
       //
-      QStyleOptionViewItemV3 opt = option;
+      QStyleOptionViewItem opt = option;
       opt.palette.setCurrentColorGroup(QPalette::Active);
       QColor color = static_cast<QRgb>(QApplication::style()->styleHint(
                                         QStyle::SH_Table_GridLineColor, &opt));
@@ -141,8 +141,8 @@ namespace ibc::qt::property
       if (index.column() == 1)
       {
         // This is to draw a vertical line between columns
-        int left = (option.direction == Qt::LeftToRight) ? option.rect.left() : option.rect.right();
-        painter->drawLine(left, option.rect.y(), left, option.rect.bottom());
+        int left = (opt.direction == Qt::LeftToRight) ? opt.rect.left() : opt.rect.right();
+        painter->drawLine(left, opt.rect.y(), left, opt.rect.bottom());
       }
       painter->restore();
     }

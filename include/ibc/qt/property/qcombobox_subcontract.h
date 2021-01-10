@@ -119,8 +119,9 @@ namespace ibc::qt::property
           editor->setMinimumContentsLength(value_int);
         if (getChildValue<int>(properties, "modelColumn", &value_int))
           editor->setModelColumn(value_int);
-        if (getChildValue<QString>(properties, "placeholderText", &value_qstring))
-          editor->setPlaceholderText(value_qstring);
+// only if QT > 5.15
+//        if (getChildValue<QString>(properties, "placeholderText", &value_qstring))
+//          editor->setPlaceholderText(value_qstring);
         if (getChildValue<QComboBox::SizeAdjustPolicy>(properties, "sizeAdjustPolicy", &value_sizepolicy))
           editor->setSizeAdjustPolicy(value_sizepolicy);
       }
