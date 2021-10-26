@@ -72,9 +72,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     // [TODO] should use _byteswap_ushort() with VC++ compiler
     //
-    static uint16  swap(uint16 inValue)
+    static uint16_t  swap(uint16_t inValue)
     {
-      uint16  result;
+      uint16_t  result;
       result  = inValue << 8;
       result |= inValue >> 8;
       return result;
@@ -82,9 +82,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     // swap
     // -------------------------------------------------------------------------
-    static uint32  swap(uint32 inValue)
+    static uint32_t  swap(uint32_t inValue)
     {
-      uint32  result;
+      uint32_t  result;
       result  = inValue << 24;
       result |= (inValue&0x0000FF00) << 8;
       result |= (inValue&0x00FF0000) >> 8;
@@ -95,9 +95,9 @@ namespace ibc
     // swap
     // -------------------------------------------------------------------------
     // TODO : might need to use swap32 twice instead
-    static uint64  swap(uint64 inValue)
+    static uint64_t  swap(uint64_t inValue)
     {
-      uint64  result;
+      uint64_t  result;
       result  = inValue << 56;
       result |= (inValue&0x000000000000FF00) << 40;
       result |= (inValue&0x0000000000FF0000) << 24;
@@ -118,10 +118,10 @@ namespace ibc
       union
       {
        float  value_float;
-       uint32 value_uint32;
+       uint32_t value_uint32_t;
       } u;
       u.value_float = inValue;
-      u.value_uint32 = swap(u.value_uint32);
+      u.value_uint32_t = swap(u.value_uint32_t);
       return u.value_float;
     }
     // -------------------------------------------------------------------------
@@ -134,10 +134,10 @@ namespace ibc
       union
       {
        double  value_double;
-       uint64 value_uint64;
+       uint64_t value_uint64_t;
       } u;
       u.value_double = inValue;
-      u.value_uint64 = swap(u.value_uint64);
+      u.value_uint64_t = swap(u.value_uint64_t);
       return u.value_double;
     }
     // -------------------------------------------------------------------------

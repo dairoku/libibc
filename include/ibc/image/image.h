@@ -211,7 +211,7 @@ namespace ibc
     BufferType      mBufferType;
     DataType        mDataType;
     EndianType      mEndian;
-    uint32          mFourCC;
+    uint32_t          mFourCC;
     unsigned int    mComponentsPerPixel;
 
     // Constructors and Destructor ---------------------------------------------
@@ -232,7 +232,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     ImageType(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
                 EndianType inEndian = ENDIAN_TYPE_HOST,
-                uint32 inFourCC = 0,
+                uint32_t inFourCC = 0,
                 unsigned int inComponentsPerPixel = 0)
     {
       set(inPixelType, inBufferType, inDataType, inEndian,
@@ -316,7 +316,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     void  set(PixelType inPixelType, BufferType inBufferType, DataType inDataType,
                 EndianType inEndian = ENDIAN_TYPE_HOST,
-                uint32 inFourCC = 0,
+                uint32_t inFourCC = 0,
                 unsigned int inComponentsPerPixel = 0)
     {
       setPixelType(inPixelType, inComponentsPerPixel);
@@ -417,7 +417,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // hasMacroPixelStructure
     // -------------------------------------------------------------------------
-    static bool  hasMacroPixelStructure(PixelType inType, uint32 inFourCC = 0)
+    static bool  hasMacroPixelStructure(PixelType inType, uint32_t inFourCC = 0)
     {
       switch (inType)
       {

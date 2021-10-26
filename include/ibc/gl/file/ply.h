@@ -897,22 +897,22 @@ namespace ibc { namespace gl { namespace file
       {
         case DATA_TYPE_INT8:
         case DATA_TYPE_CHAR:
-          return (double )(*((int8 *)data));
+          return (double )(*((int8_t *)data));
         case DATA_TYPE_UINT8:
         case DATA_TYPE_UCHAR:
-          return (double )(*((uint8 *)data));
+          return (double )(*((uint8_t *)data));
         case DATA_TYPE_INT16:
         case DATA_TYPE_SHORT:
-          return (double )(*((int16 *)data));
+          return (double )(*((int16_t *)data));
         case DATA_TYPE_UINT16:
         case DATA_TYPE_USHORT:
-          return (double )(*((uint16 *)data));
+          return (double )(*((uint16_t *)data));
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          return (double )(*((int32  *)data));
+          return (double )(*((int32_t  *)data));
         case DATA_TYPE_UINT32:
         case DATA_TYPE_UINT:
-          return (double )(*((uint32  *)data));
+          return (double )(*((uint32_t  *)data));
         case DATA_TYPE_FLOAT32:
         case DATA_TYPE_FLOAT:
           return (double )(*((float  *)data));
@@ -937,27 +937,27 @@ namespace ibc { namespace gl { namespace file
       {
         case DATA_TYPE_INT8:
         case DATA_TYPE_CHAR:
-          *((int8 *)data) = (int8 )inValue;
+          *((int8_t *)data) = (int8_t )inValue;
           break;
         case DATA_TYPE_UINT8:
         case DATA_TYPE_UCHAR:
-          *((uint8 *)data) = (uint8 )inValue;
+          *((uint8_t *)data) = (uint8_t )inValue;
           break;
         case DATA_TYPE_INT16:
         case DATA_TYPE_SHORT:
-          *((int16 *)data) = (int16 )inValue;
+          *((int16_t *)data) = (int16_t )inValue;
           break;
         case DATA_TYPE_UINT16:
         case DATA_TYPE_USHORT:
-          *((uint16 *)data) = (uint16 )inValue;
+          *((uint16_t *)data) = (uint16_t )inValue;
           break;
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          *((int32 *)data) = (int32 )inValue;
+          *((int32_t *)data) = (int32_t )inValue;
           break;
         case DATA_TYPE_UINT32:
         case DATA_TYPE_UINT:
-          *((uint32 *)data) = (uint32 )inValue;
+          *((uint32_t *)data) = (uint32_t )inValue;
           break;
         case DATA_TYPE_FLOAT32:
         case DATA_TYPE_FLOAT:
