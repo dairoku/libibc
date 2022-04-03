@@ -37,3 +37,6 @@
 # Temporary directories
 tmp/
 temp/
+build/
+cmake-build-debug/
+.idea/

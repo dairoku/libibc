@@ -1,27 +1,14 @@
 // =============================================================================
 //  endian.h
 //
-//  MIT License
+//  Written in 2019 by Dairoku Sekiguchi (sekiguchi at acm dot org)
 //
-//  Copyright (c) 2019 Dairoku Sekiguchi
+//  To the extent possible under law, the author(s) have dedicated all copyright
+//  and related and neighboring rights to this software to the public domain worldwide.
+//  This software is distributed without any warranty.
 //
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//  SOFTWARE.
+//  You should have received a copy of the CC0 Public Domain Dedication along with
+//  this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 // =============================================================================
 /*!
   \file     ibc/base/endian.h
@@ -72,9 +59,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     // [TODO] should use _byteswap_ushort() with VC++ compiler
     //
-    static uint16  swap(uint16 inValue)
+    static uint16_t  swap(uint16_t inValue)
     {
-      uint16  result;
+      uint16_t  result;
       result  = inValue << 8;
       result |= inValue >> 8;
       return result;
@@ -82,9 +69,9 @@ namespace ibc
     // -------------------------------------------------------------------------
     // swap
     // -------------------------------------------------------------------------
-    static uint32  swap(uint32 inValue)
+    static uint32_t  swap(uint32_t inValue)
     {
-      uint32  result;
+      uint32_t  result;
       result  = inValue << 24;
       result |= (inValue&0x0000FF00) << 8;
       result |= (inValue&0x00FF0000) >> 8;
@@ -95,9 +82,9 @@ namespace ibc
     // swap
     // -------------------------------------------------------------------------
     // TODO : might need to use swap32 twice instead
-    static uint64  swap(uint64 inValue)
+    static uint64_t  swap(uint64_t inValue)
     {
-      uint64  result;
+      uint64_t  result;
       result  = inValue << 56;
       result |= (inValue&0x000000000000FF00) << 40;
       result |= (inValue&0x0000000000FF0000) << 24;
@@ -118,10 +105,10 @@ namespace ibc
       union
       {
        float  value_float;
-       uint32 value_uint32;
+       uint32_t value_uint32_t;
       } u;
       u.value_float = inValue;
-      u.value_uint32 = swap(u.value_uint32);
+      u.value_uint32_t = swap(u.value_uint32_t);
       return u.value_float;
     }
     // -------------------------------------------------------------------------
@@ -134,10 +121,10 @@ namespace ibc
       union
       {
        double  value_double;
-       uint64 value_uint64;
+       uint64_t value_uint64_t;
       } u;
       u.value_double = inValue;
-      u.value_uint64 = swap(u.value_uint64);
+      u.value_uint64_t = swap(u.value_uint64_t);
       return u.value_double;
     }
     // -------------------------------------------------------------------------

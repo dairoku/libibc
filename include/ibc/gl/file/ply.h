@@ -1,27 +1,14 @@
 // =============================================================================
 //  ply.h
 //
-//  MIT License
+//  Written in 2019 by Dairoku Sekiguchi (sekiguchi at acm dot org)
 //
-//  Copyright (c) 2019 Dairoku Sekiguchi
+//  To the extent possible under law, the author(s) have dedicated all copyright
+//  and related and neighboring rights to this software to the public domain worldwide.
+//  This software is distributed without any warranty.
 //
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//  SOFTWARE.
+//  You should have received a copy of the CC0 Public Domain Dedication along with
+//  this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 // =============================================================================
 /*!
   \file     ibc/gl/file/ply.h
@@ -897,22 +884,22 @@ namespace ibc { namespace gl { namespace file
       {
         case DATA_TYPE_INT8:
         case DATA_TYPE_CHAR:
-          return (double )(*((int8 *)data));
+          return (double )(*((int8_t *)data));
         case DATA_TYPE_UINT8:
         case DATA_TYPE_UCHAR:
-          return (double )(*((uint8 *)data));
+          return (double )(*((uint8_t *)data));
         case DATA_TYPE_INT16:
         case DATA_TYPE_SHORT:
-          return (double )(*((int16 *)data));
+          return (double )(*((int16_t *)data));
         case DATA_TYPE_UINT16:
         case DATA_TYPE_USHORT:
-          return (double )(*((uint16 *)data));
+          return (double )(*((uint16_t *)data));
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          return (double )(*((int32  *)data));
+          return (double )(*((int32_t  *)data));
         case DATA_TYPE_UINT32:
         case DATA_TYPE_UINT:
-          return (double )(*((uint32  *)data));
+          return (double )(*((uint32_t  *)data));
         case DATA_TYPE_FLOAT32:
         case DATA_TYPE_FLOAT:
           return (double )(*((float  *)data));
@@ -937,27 +924,27 @@ namespace ibc { namespace gl { namespace file
       {
         case DATA_TYPE_INT8:
         case DATA_TYPE_CHAR:
-          *((int8 *)data) = (int8 )inValue;
+          *((int8_t *)data) = (int8_t )inValue;
           break;
         case DATA_TYPE_UINT8:
         case DATA_TYPE_UCHAR:
-          *((uint8 *)data) = (uint8 )inValue;
+          *((uint8_t *)data) = (uint8_t )inValue;
           break;
         case DATA_TYPE_INT16:
         case DATA_TYPE_SHORT:
-          *((int16 *)data) = (int16 )inValue;
+          *((int16_t *)data) = (int16_t )inValue;
           break;
         case DATA_TYPE_UINT16:
         case DATA_TYPE_USHORT:
-          *((uint16 *)data) = (uint16 )inValue;
+          *((uint16_t *)data) = (uint16_t )inValue;
           break;
         case DATA_TYPE_INT32:
         case DATA_TYPE_INT:
-          *((int32 *)data) = (int32 )inValue;
+          *((int32_t *)data) = (int32_t )inValue;
           break;
         case DATA_TYPE_UINT32:
         case DATA_TYPE_UINT:
-          *((uint32 *)data) = (uint32 )inValue;
+          *((uint32_t *)data) = (uint32_t )inValue;
           break;
         case DATA_TYPE_FLOAT32:
         case DATA_TYPE_FLOAT:

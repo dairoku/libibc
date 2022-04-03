@@ -1,27 +1,14 @@
 // =============================================================================
 //  log.h
 //
-//  MIT License
+//  Written in 2019 by Dairoku Sekiguchi (sekiguchi at acm dot org)
 //
-//  Copyright (c) 2019 Dairoku Sekiguchi
+//  To the extent possible under law, the author(s) have dedicated all copyright
+//  and related and neighboring rights to this software to the public domain worldwide.
+//  This software is distributed without any warranty.
 //
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in all
-//  copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-//  SOFTWARE.
+//  You should have received a copy of the CC0 Public Domain Dedication along with
+//  this software. If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
 // =============================================================================
 /*!
   \file     ibc/base/log.h
@@ -118,12 +105,12 @@ namespace ibc
   {
   public:
     // Enum --------------------------------------------------------------------
-    const static uint32 INFO_MSG    = 0x00000001;
-    const static uint32 WARNING_MSG = 0x00000002;
-    const static uint32 ERROR_MSG   = 0x00000004;
-    const static uint32 DUMP_MSG    = 0x00000008;
-    const static uint32 TRACE_MSG   = 0x40000000;
-    const static uint32 DEBUG_MSG   = 0x80000000;
+    const static uint32_t INFO_MSG    = 0x00000001;
+    const static uint32_t WARNING_MSG = 0x00000002;
+    const static uint32_t ERROR_MSG   = 0x00000004;
+    const static uint32_t DUMP_MSG    = 0x00000008;
+    const static uint32_t TRACE_MSG   = 0x40000000;
+    const static uint32_t DEBUG_MSG   = 0x80000000;
 
     enum  DumpType
     {
@@ -133,12 +120,12 @@ namespace ibc
     };
 
     // Constatns ---------------------------------------------------------------
-    const static uint8  GLOBAL_LEVEL  = 0;
-    const static uint8  NORMAL_LEVEL  = 127;
-    const static uint8  DETAIL_LEVEL  = 255;
+    const static uint8_t  GLOBAL_LEVEL  = 0;
+    const static uint8_t  NORMAL_LEVEL  = 127;
+    const static uint8_t  DETAIL_LEVEL  = 255;
 
     // Member Functions --------------------------------------------------------
-    virtual void  write(uint32 inType, uint8 inLenvel,
+    virtual void  write(uint32_t inType, uint8_t inLenvel,
                         const char *inLocation, const char *inFuncName,
                         const char *inMessage, ...) = 0;
     virtual void  dump(DumpType inDumpType, const char *inDumpName,
@@ -163,35 +150,35 @@ namespace ibc
     // -------------------------------------------------------------------------
     // getLogOutTypeMask
     // -------------------------------------------------------------------------
-    uint32 getLogOutTypeMask()
+    uint32_t getLogOutTypeMask()
     {
       return mOutTypeMask;
     }
     // -------------------------------------------------------------------------
     // setLogOutTypeMask
     // -------------------------------------------------------------------------
-    void  setLogOutTypeMask(uint32 inOutTypeMask)
+    void  setLogOutTypeMask(uint32_t inOutTypeMask)
     {
       mOutTypeMask = inOutTypeMask;
     }
     // -------------------------------------------------------------------------
     // getLogOutMaxLevel
     // -------------------------------------------------------------------------
-    uint8 getLogOutMaxLevel()
+    uint8_t getLogOutMaxLevel()
     {
       return mOutMaxLevel;
     }
     // -------------------------------------------------------------------------
     // setLogOutLevel
     // -------------------------------------------------------------------------
-    void  setLogOutMaxLevel(uint8 inOutMaxLevel)
+    void  setLogOutMaxLevel(uint8_t inOutMaxLevel)
     {
       mOutMaxLevel = inOutMaxLevel;
     }
     // -------------------------------------------------------------------------
     // isLogOutMessage
     // -------------------------------------------------------------------------
-    bool  isLogOutMessage(uint32 inType, uint8 inLevel)
+    bool  isLogOutMessage(uint32_t inType, uint8_t inLevel)
     {
       if ((inType & mOutTypeMask) == 0)
         return false;
@@ -203,7 +190,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // makeTypeStr
     // -------------------------------------------------------------------------
-    static void makeTypeStr(uint32 inType, char *inBuf, const size_t inBufSize)
+    static void makeTypeStr(uint32_t inType, char *inBuf, const size_t inBufSize)
     {
       switch (inType)
       {
@@ -233,7 +220,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // makeLevelStr
     // -------------------------------------------------------------------------
-    static void makeLevelStr(uint8 inLevel, char *inBuf, size_t inBufSize)
+    static void makeLevelStr(uint8_t inLevel, char *inBuf, size_t inBufSize)
     {
       ::snprintf(inBuf, inBufSize, "[LEVEL:%03d] ", (int )inLevel);
     }
@@ -266,14 +253,14 @@ namespace ibc
 
   protected:
     // Member variables (protected) --------------------------------------------
-    uint32 mOutTypeMask;
-    uint8 mOutMaxLevel;
+    uint32_t mOutTypeMask;
+    uint8_t mOutMaxLevel;
 
     // Constructor -------------------------------------------------------------
     // -------------------------------------------------------------------------
     // LogBase
     // -------------------------------------------------------------------------
-    LogBase(uint32 inOutTypeMask, uint8 inOutMaxLenvel)
+    LogBase(uint32_t inOutTypeMask, uint8_t inOutMaxLenvel)
     {
       mOutTypeMask  = inOutTypeMask;
       mOutMaxLevel  = inOutMaxLenvel;
@@ -293,7 +280,7 @@ namespace ibc
     // StreamLog
     // -------------------------------------------------------------------------
     StreamLog(std::ostream *inMessageStream, std::ostream *inErrorStream,
-              uint32 inOutTypeMask, uint8 inOutMaxLenvel)
+              uint32_t inOutTypeMask, uint8_t inOutMaxLenvel)
       : LogBase(inOutTypeMask, inOutMaxLenvel)
     {
       mMessageStream  = inMessageStream;
@@ -309,7 +296,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // write
     // -------------------------------------------------------------------------
-    virtual void  write(uint32 inType, uint8 inLevel,
+    virtual void  write(uint32_t inType, uint8_t inLevel,
                         const char *inLocation, const char *inFuncName,
                         const char *inMessage, ...)
     {
@@ -364,7 +351,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     virtual void  dump(DumpType inDumpType, const char *inDumpName,
                             const char *inLocation, const char *inFuncName,
-                            const uint8 *inData, size_t inDataLen)
+                            const uint8_t *inData, size_t inDataLen)
     {
       UNUSED(inDumpType);
       UNUSED(inDumpName);
@@ -402,7 +389,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // ConsoleLog
     // -------------------------------------------------------------------------
-    ConsoleLog(uint32 inOutTypeMask, uint8 inOutMaxLenvel)
+    ConsoleLog(uint32_t inOutTypeMask, uint8_t inOutMaxLenvel)
       : StreamLog(&(std::cout), &(std::cerr), inOutTypeMask, inOutMaxLenvel)
     {
     }
@@ -423,7 +410,7 @@ namespace ibc
     // -------------------------------------------------------------------------
     // write
     // -------------------------------------------------------------------------
-    virtual void  write(uint32 inType, uint8 inLenvel,
+    virtual void  write(uint32_t inType, uint8_t inLenvel,
                         const char *inLocation, const char *inFuncName,
                         const char *inMessage, ...)
     {
