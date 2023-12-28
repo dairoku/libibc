@@ -133,6 +133,7 @@ namespace ibc
       m_mouse_y = button_event->y;
       mOffsetXOrg= mOffsetX;
       mOffsetYOrg = mOffsetY;
+      return true;
     }
     // -------------------------------------------------------------------------
     // on_button_press_event
